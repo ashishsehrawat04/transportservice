@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\City;
 use App\Models\CityRoute;
+use App\Models\TransportAuthSetting;
 use App\Models\TransportLead;
 use App\Models\TransportServicePrice;
 use Illuminate\Validation\Rule;
@@ -321,6 +322,27 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+    }
+
+    public function AdminAuthSettings()
+    {
+        $settings = TransportAuthSetting::current();
+
+        return view('admin.auth-settings', compact('settings'));
+    }
+
+    public function AdminSaveAuthSettings(Request $request)
+    {
+        $settings = TransportAuthSetting::current();
+
+        $settings->update([
+            'email_login_enabled' => $request->has('email_login_enabled'),
+            'mobile_login_enabled' => $request->has('mobile_login_enabled'),
+            'google_login_enabled' => $request->has('google_login_enabled'),
+            'admin_approval_required' => $request->has('admin_approval_required'),
+        ]);
+
+        return redirect()->route('admin.auth_settings')->with('success', 'Auth settings updated successfully');
     }
 
     private function calculateTransportLeadPrice(array $data, TransportServicePrice $price, CityRoute $route): array

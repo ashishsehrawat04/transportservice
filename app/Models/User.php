@@ -21,9 +21,13 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'mobile',
         'password',
         'slug',
         'role',
+        'status',
+        'login_type',
+        'wallet_balance',
     ];
 
     /**
@@ -47,5 +51,25 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function transportLeads()
+    {
+        return $this->hasMany(TransportLead::class);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(TransportCartItem::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(ShipmentPayment::class);
+    }
+
+    public function walletTransactions()
+    {
+        return $this->hasMany(WalletTransaction::class);
     }
 }

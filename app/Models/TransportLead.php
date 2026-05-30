@@ -69,4 +69,14 @@ class TransportLead extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
+
+    public function payments()
+    {
+        return $this->hasMany(ShipmentPayment::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(ShipmentRefund::class);
+    }
 }

@@ -240,6 +240,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.auth_settings') ? 'active' : '' }}">
+                    <a href="{{ route('admin.auth_settings') }} ">
+                    <i class="fas fa-user-lock"></i>
+                    <p>Auth Settings</p>
+                    </a>
+                </li>
+
             </ul>
           </div>
         </div>

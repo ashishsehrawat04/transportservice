@@ -153,7 +153,7 @@
                                     </ul>
                                 </li>
                                 <li><a href="faq.html">FAQ's</a></li>
-                                <li><a href="track-and-trace.html">Track & Trace</a></li>
+                                <li><a href="{{ route('shipment.track') }}">Track & Trace</a></li>
                                 <li><a href="certification.html">Certification</a></li>
                                 <li><a href="terms-and-conditions.html">Terms & Conditions</a></li>
                                 <li><a href="pricing-plan.html">Pricing Plan</a></li>
@@ -162,9 +162,18 @@
                             </ul>
                         </li>
                         <li class="menu-item-has-children">
-                            <a href="shipment.html" class="drop-down">
+                            <a href="{{ route('shipment.cart') }}" class="drop-down">
                                 Shipment
+                                <i class="bi bi-caret-down-fill"></i>
                             </a>
+                            <i class="bi bi-plus dropdown-icon"></i>
+                            <ul class="sub-menu">
+                                <li><a href="{{ route('shipment.add_item') }}">Add Item</a></li>
+                                <li><a href="{{ route('shipment.cart') }}">My Cart</a></li>
+                                @auth
+                                    <li><a href="{{ route('shipment.leads') }}">My Leads</a></li>
+                                @endauth
+                            </ul>
                         </li>
                         <li class="menu-item-has-children">
                             <a href="#" class="drop-down">
@@ -179,7 +188,7 @@
                             </ul>
                         </li>
                     </ul>
-                    <a class="primary-btn1 btn-hover d-xl-none" href="track-and-trace.html">
+                    <a class="primary-btn1 btn-hover d-xl-none" href="{{ route('shipment.track') }}">
                         Track & Trace
                         <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
                             <g>
@@ -258,7 +267,7 @@
                             </svg>
                         </a> -->
                     </div>
-                    <a class="primary-btn1 white-bg btn-hover d-xl-flex d-none" href="track-and-trace.html">
+                    <a class="primary-btn1 white-bg btn-hover d-xl-flex d-none" href="{{ route('shipment.track') }}">
                         Track & Trace
                         <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
                             <g>
@@ -452,35 +461,3 @@
 
     @section('content')
     @show
-
-
-
-    <!-- Footer Section End -->
-    <!--  Main jQuery  -->
-    <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
-    <script src="{{ asset('assets/js/jquery-ui.js') }}"></script>
-    <script src="{{ asset('assets/js/moment.min.js') }}"></script>
-    <script src="{{ asset('assets/js/daterangepicker.min.js') }}"></script>
-
-    <!-- Popper and Bootstrap JS -->
-    <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/popper.min.js') }}"></script>
-    <!-- Swiper slider JS -->
-    <script src="{{ asset('assets/js/swiper-bundle.min.js') }}"></script>
-    <script src="{{ asset('assets/js/slick.js') }}"></script>
-    <!-- Waypoints JS -->
-    <script src="{{ asset('assets/js/waypoints.min.js') }}"></script>
-    <!-- Counterup JS -->
-    <script src="{{ asset('assets/js/jquery.counterup.min.js') }}"></script>
-    <!-- Wow JS -->
-    <script src="{{ asset('assets/js/wow.min.js') }}"></script>
-    <!-- Gsap  JS -->
-    <script src="{{ asset('assets/js/gsap.min.js') }}"></script>
-    <script src="{{ asset('assets/js/ScrollTrigger.min.js') }}"></script>
-    <script src="{{ asset('assets/js/jquery.fancybox.min.js') }}"></script>
-    <!-- Custom JS -->
-    <script src="{{ asset('assets/js/select-dropdown.js') }}"></script>
-    <script src="{{ asset('assets/js/custom.js') }}"></script>
-</body>
-
-</html>

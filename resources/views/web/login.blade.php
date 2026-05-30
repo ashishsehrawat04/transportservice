@@ -37,6 +37,12 @@
                         <h2>Login OneTrack</h2>
                         <span>Don’t have an account! <a href="{{ route('register') }}">Sign Up </a> now</span>
                     </div>
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    @if(session('dev_otp'))
+                        <div class="alert alert-info">Development OTP: {{ session('dev_otp') }}</div>
+                    @endif
                     <div class="login-registration-form">
                         <form action="{{ route('login') }}" method="POST">
                             @csrf
@@ -67,6 +73,42 @@
                                             d="M5.83333 4.16667V0H4.16667V4.16667H0V5.83333H4.16667V10H5.83333V5.83333H10V4.16667H5.83333Z" />
                                     </g>
                                 </svg>
+                                <span></span>
+                            </button>
+                        </form>
+
+                        <hr>
+
+                        <form action="{{ route('login.mobile.send_otp') }}" method="POST" class="mb-3">
+                            @csrf
+                            <div class="form-inner mb-20">
+                                <label>Mobile Number</label>
+                                <input type="text" name="mobile" value="{{ old('mobile') }}" placeholder="9876543210">
+                                @error('mobile')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <button type="submit" class="primary-btn2 btn-hover">
+                                Send OTP
+                                <span></span>
+                            </button>
+                        </form>
+
+                        <form action="{{ route('login.mobile.verify') }}" method="POST">
+                            @csrf
+                            <div class="form-inner mb-20">
+                                <label>Mobile Number</label>
+                                <input type="text" name="mobile" value="{{ old('mobile') }}" placeholder="9876543210">
+                            </div>
+                            <div class="form-inner mb-20">
+                                <label>OTP</label>
+                                <input type="text" name="otp" placeholder="6 digit OTP">
+                                @error('otp')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <button type="submit" class="primary-btn2 btn-hover">
+                                Verify OTP
                                 <span></span>
                             </button>
                         </form>

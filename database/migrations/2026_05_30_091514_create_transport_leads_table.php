@@ -104,4 +104,6 @@ return new class extends Migration
     {
         Schema::dropIfExists('transport_leads');
     }
+
+
 };

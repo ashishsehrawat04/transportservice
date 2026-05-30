@@ -48,6 +48,38 @@ class ApiController extends Controller
             }
     }
 
+    public function AdminGetUserDetails($id)
+    {
+        try {
+            $user = User::with([
+                'transportLeads.fromCity:id,name',
+                'transportLeads.toCity:id,name',
+                'payments',
+                'walletTransactions',
+            ])->find($id);
+
+            if (!$user) {
+                return Response::error(
+                    'User not found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $user,
+                'User details fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
     public function AdminGetCityRoutes()
     {
         try {
