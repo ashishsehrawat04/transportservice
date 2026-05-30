@@ -10,14 +10,72 @@ use App\Models\CityRoute;
 use App\Models\TransportAuthSetting;
 use App\Models\TransportLead;
 use App\Models\TransportServicePrice;
+use App\Models\ShipmentPayment;
+use App\Services\ShipmentPricingService;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
+    public function __construct(
+        private ShipmentPricingService $pricingService
+    ) {
+    }
+
     public function AdminDashboard()
     {
-        return view('admin.dashboard');
+        $leadStatusCounts = TransportLead::selectRaw('admin_status, COUNT(*) as total')
+            ->groupBy('admin_status')
+            ->pluck('total', 'admin_status');
+
+        $paymentStatusCounts = TransportLead::selectRaw('payment_status, COUNT(*) as total')
+            ->groupBy('payment_status')
+            ->pluck('total', 'payment_status');
+
+        $monthlyLabels = [];
+        $monthlyLeadCounts = [];
+        $monthlyRevenue = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $monthlyLabels[] = $date->format('M Y');
+            $monthlyLeadCounts[] = TransportLead::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            $monthlyRevenue[] = (float) ShipmentPayment::where('status', 'success')
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->sum('amount');
+        }
+
+        $dashboard = [
+            'totalUsers' => User::where('role', 'user')->count(),
+            'pendingUsers' => User::where('role', 'user')->where('status', 'pending')->count(),
+            'totalRoutes' => CityRoute::count(),
+            'activeRoutes' => CityRoute::where('is_active', true)->count(),
+            'totalLeads' => TransportLead::count(),
+            'pendingLeads' => (int) ($leadStatusCounts['pending'] ?? 0),
+            'approvedLeads' => (int) ($leadStatusCounts['approved'] ?? 0),
+            'deliveredLeads' => (int) ($leadStatusCounts['delivered'] ?? 0),
+            'paidLeads' => (int) ($paymentStatusCounts['paid'] ?? 0),
+            'unpaidLeads' => (int) ($paymentStatusCounts['unpaid'] ?? 0),
+            'totalRevenue' => (float) ShipmentPayment::where('status', 'success')->sum('amount'),
+            'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+        ];
+
+        $recentLeads = TransportLead::with(['user:id,name,email,mobile', 'fromCity:id,name', 'toCity:id,name'])
+            ->latest()
+            ->limit(8)
+            ->get();
+        $recentPayments = ShipmentPayment::with(['user:id,name,email,mobile'])
+            ->latest()
+            ->limit(8)
+            ->get();
+        $recentUsers = User::latest()
+            ->limit(6)
+            ->get();
+
+        return view('admin.dashboard', compact('dashboard', 'recentLeads', 'recentPayments', 'recentUsers', 'monthlyLabels', 'monthlyLeadCounts', 'monthlyRevenue'));
     }
 
     public function AdminUsers()
@@ -220,6 +278,25 @@ class AdminController extends Controller
         return view('admin.transport-leads');
     }
 
+    public function AdminPayments()
+    {
+        $paymentStatusCounts = ShipmentPayment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $paymentStats = [
+            'totalPayments' => ShipmentPayment::count(),
+            'successPayments' => (int) ($paymentStatusCounts['success'] ?? 0),
+            'pendingPayments' => (int) ($paymentStatusCounts['pending'] ?? 0),
+            'refundedPayments' => (int) ($paymentStatusCounts['refunded'] ?? 0),
+            'failedPayments' => (int) ($paymentStatusCounts['failed'] ?? 0),
+            'totalRevenue' => (float) ShipmentPayment::where('status', 'success')->sum('amount'),
+            'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+        ];
+
+        return view('admin.payments', compact('paymentStats'));
+    }
+
     public function AdminManageTransportLead($id = null)
     {
         $transportLead = $id ? TransportLead::find($id) : new TransportLead();
@@ -272,7 +349,7 @@ class AdminController extends Controller
             'special_instructions' => ['nullable', 'string'],
         ]);
 
-        $price = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
+        $price = $this->priceForItemType($validated['item_type'] ?? null);
 
         if (!$price) {
             return back()->withInput()->with('error', 'Please add an active transport service price first');
@@ -294,20 +371,25 @@ class AdminController extends Controller
             return back()->withInput()->with('error', 'Please add an active city route for selected cities first');
         }
 
-        $validated = array_merge($validated, $this->calculateTransportLeadPrice($validated, $price, $route));
+        $validated = array_merge($validated, $this->pricingService->calculateFromDimensions($validated, $price, $route));
         $validated['item_type'] = $validated['item_type'] ?: $price->item_type;
 
         if (!$transportLead) {
             $validated['tracking_number'] = $this->generateTrackingNumber();
         }
 
+        $oldPaymentStatus = $transportLead?->payment_status;
+        $oldTransactionId = $transportLead?->transaction_id;
+
         if ($transportLead) {
             $transportLead->update($validated);
             $message = 'Transport lead updated successfully';
         } else {
-            TransportLead::create($validated);
+            $transportLead = TransportLead::create($validated);
             $message = 'Transport lead added successfully';
         }
+
+        $this->recordLeadPaymentIfNeeded($transportLead->fresh(), $oldPaymentStatus, $oldTransactionId);
 
         return redirect()->route('admin.transport_leads')->with('success', $message);
     }
@@ -345,49 +427,6 @@ class AdminController extends Controller
         return redirect()->route('admin.auth_settings')->with('success', 'Auth settings updated successfully');
     }
 
-    private function calculateTransportLeadPrice(array $data, TransportServicePrice $price, CityRoute $route): array
-    {
-        $quantity = (int) $data['quantity'];
-        $volumeCft = 0;
-
-        if (!empty($data['length_cm']) && !empty($data['width_cm']) && !empty($data['height_cm'])) {
-            $volumeCft = round(((float) $data['length_cm'] * (float) $data['width_cm'] * (float) $data['height_cm']) / 28316.8466, 2);
-        }
-
-        $totalWeight = (float) $data['weight_kg'] * $quantity;
-        $totalVolume = $volumeCft * $quantity;
-        $basePrice = (float) $price->base_price;
-        $weightCharge = round($totalWeight * (float) $price->weight_rate_per_kg, 2);
-        $volumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
-        $distanceCharge = round((float) $route->distance_km * (float) $price->distance_rate_per_km, 2);
-        $subtotal = round(($basePrice + $weightCharge + $volumeCharge + $distanceCharge) * (float) $price->multiplier, 2);
-
-        if ($subtotal < (float) $price->min_charge) {
-            $subtotal = (float) $price->min_charge;
-        }
-
-        if ($price->max_charge && $subtotal > (float) $price->max_charge) {
-            $subtotal = (float) $price->max_charge;
-        }
-
-        $taxAmount = (float) ($data['tax_amount'] ?? 0);
-        $discountAmount = (float) ($data['discount_amount'] ?? 0);
-
-        return [
-            'volume_cft' => $volumeCft,
-            'distance_km' => $route->distance_km,
-            'base_price' => $basePrice,
-            'weight_charge' => $weightCharge,
-            'volume_charge' => $volumeCharge,
-            'distance_charge' => $distanceCharge,
-            'multiplier_applied' => $price->multiplier,
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'discount_amount' => $discountAmount,
-            'total_payment' => max(0, round($subtotal + $taxAmount - $discountAmount, 2)),
-        ];
-    }
-
     private function generateTrackingNumber(): string
     {
         do {
@@ -395,6 +434,62 @@ class AdminController extends Controller
         } while (TransportLead::where('tracking_number', $trackingNumber)->exists());
 
         return $trackingNumber;
+    }
+
+    private function recordLeadPaymentIfNeeded(TransportLead $lead, ?string $oldPaymentStatus, ?string $oldTransactionId): void
+    {
+        if (!in_array($lead->payment_status, ['partial', 'paid', 'refunded'])) {
+            return;
+        }
+
+        $paymentChanged = $oldPaymentStatus !== $lead->payment_status;
+        $transactionChanged = $lead->transaction_id && $oldTransactionId !== $lead->transaction_id;
+
+        if (!$paymentChanged && !$transactionChanged) {
+            return;
+        }
+
+        ShipmentPayment::create([
+            'invoice_number' => $this->generateInvoiceNumber(),
+            'user_id' => $lead->user_id,
+            'transport_lead_id' => $lead->id,
+            'amount' => $lead->total_payment,
+            'method' => $lead->payment_method ?: 'cash',
+            'status' => match ($lead->payment_status) {
+                'paid' => 'success',
+                'refunded' => 'refunded',
+                default => 'pending',
+            },
+            'transaction_id' => $lead->transaction_id,
+            'notes' => 'Payment status updated from lead admin panel.',
+        ]);
+    }
+
+    private function generateInvoiceNumber(): string
+    {
+        do {
+            $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (ShipmentPayment::where('invoice_number', $invoiceNumber)->exists());
+
+        return $invoiceNumber;
+    }
+
+    private function priceForItemType(?string $itemType): ?TransportServicePrice
+    {
+        $query = TransportServicePrice::where('is_active', true);
+
+        if ($itemType) {
+            $matchedPrice = (clone $query)
+                ->where('item_type', $itemType)
+                ->orderBy('id')
+                ->first();
+
+            if ($matchedPrice) {
+                return $matchedPrice;
+            }
+        }
+
+        return $query->orderBy('id')->first();
     }
 
     private function syncCitiesFromRoutes(): void

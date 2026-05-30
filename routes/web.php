@@ -11,10 +11,6 @@ Route::get('/', function () {
     return view('web.index');
 });
 
-Route::GET('/admin', function () {
-    return view('admin.dashboard');
-})->middleware('auth')->name('admin.dashboard');
-
 Route::GET('/admin/city-routes', function () {
     return view('admin.city-routes');
 })->middleware('auth')->name('admin.city_routes');
@@ -38,7 +34,7 @@ Route::get('/track-and-trace', [WebController::class, 'trackShipment'])->name('s
 
 // admin routes
 
-Route::get('/admin', [AdminController::class, 'AdminDashboard'])->name('admin.dashboard');
+Route::get('/admin', [AdminController::class, 'AdminDashboard'])->middleware('auth')->name('admin.dashboard');
 Route::get('/admin/users', [AdminController::class, 'AdminUsers'])->name('admin.users');
 Route::get('/admin/get-users', [ApiController::class, 'AdminGetUsers'])->name('adminget.users');
 Route::get('/admin/get-users/{id}', [ApiController::class, 'AdminGetUserDetails'])->name('adminget.user.details');
@@ -62,6 +58,9 @@ Route::get('/admin/transport-leads/manage/{id?}', [AdminController::class, 'Admi
 Route::post('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminSaveTransportLead'])->middleware('auth')->name('admin.save.transport_lead');
 Route::get('/admin/transport-leads/delete/{id}', [AdminController::class, 'AdminDeleteTransportLead'])->middleware('auth')->name('admin.delete.transport_lead');
 Route::get('/admin/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');
+
+Route::get('/admin/payments', [AdminController::class, 'AdminPayments'])->middleware('auth')->name('admin.payments');
+Route::get('/admin/get-payments', [ApiController::class, 'AdminGetPayments'])->middleware('auth')->name('adminget.payments');
 
 Route::get('/admin/auth-settings', [AdminController::class, 'AdminAuthSettings'])->middleware('auth')->name('admin.auth_settings');
 Route::post('/admin/auth-settings', [AdminController::class, 'AdminSaveAuthSettings'])->middleware('auth')->name('admin.save.auth_settings');

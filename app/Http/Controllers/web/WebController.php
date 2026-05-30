@@ -80,11 +80,12 @@ class WebController extends Controller
             ->get();
         $cartTotal = 0;
 
-        $cartItems->each(function (TransportCartItem $item) use ($price, &$cartTotal) {
+        $cartItems->each(function (TransportCartItem $item) use (&$cartTotal) {
             $item->calculated_price = 0;
             $item->price_error = null;
+            $itemPrice = $this->priceForItemType($item->item_type);
 
-            if (!$price) {
+            if (!$itemPrice) {
                 $item->price_error = 'Price not set';
                 return;
             }
@@ -96,7 +97,7 @@ class WebController extends Controller
                 return;
             }
 
-            $breakdown = $this->pricingService->calculateCartItem($item, $price, $route);
+            $breakdown = $this->pricingService->calculateCartItem($item, $itemPrice, $route);
             $item->price_breakdown = $breakdown;
             $item->calculated_price = $breakdown['total_payment'];
             $cartTotal += $item->calculated_price;
@@ -166,13 +167,18 @@ class WebController extends Controller
         }
 
         foreach ($cartItems as $item) {
+            if (!$this->priceForItemType($item->item_type)) {
+                return back()->with('error', 'Please add an active transport service price for all cart items before saving to leads.');
+            }
+
             if (!$this->findRoute($item)) {
                 return back()->with('error', 'Please add an active city route for all cart items before saving to leads.');
             }
         }
 
-        DB::transaction(function () use ($cartItems, $price) {
+        DB::transaction(function () use ($cartItems) {
             foreach ($cartItems as $item) {
+                $price = $this->priceForItemType($item->item_type);
                 $route = $this->findRoute($item);
                 $breakdown = $this->pricingService->calculateCartItem($item, $price, $route);
 
@@ -213,7 +219,7 @@ class WebController extends Controller
 
     private function updateCartEstimate(TransportCartItem $item): void
     {
-        $price = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
+        $price = $this->priceForItemType($item->item_type);
         $item->load(['fromCity', 'toCity']);
         $route = $this->findRoute($item);
 
@@ -224,6 +230,24 @@ class WebController extends Controller
         $item->update([
             'estimated_total' => $this->pricingService->calculateCartItem($item, $price, $route)['total_payment'],
         ]);
+    }
+
+    private function priceForItemType(?string $itemType): ?TransportServicePrice
+    {
+        $query = TransportServicePrice::where('is_active', true);
+
+        if ($itemType) {
+            $matchedPrice = (clone $query)
+                ->where('item_type', $itemType)
+                ->orderBy('id')
+                ->first();
+
+            if ($matchedPrice) {
+                return $matchedPrice;
+            }
+        }
+
+        return $query->orderBy('id')->first();
     }
 
     private function findRoute(TransportCartItem $item): ?CityRoute

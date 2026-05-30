@@ -9,6 +9,7 @@ use App\Helpers\Response;
 use App\Models\CityRoute;
 use App\Models\TransportLead;
 use App\Models\TransportServicePrice;
+use App\Models\ShipmentPayment;
 
 
 class ApiController extends Controller
@@ -151,6 +152,39 @@ class ApiController extends Controller
             return Response::success(
                 $leads,
                 'Transport leads fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetPayments()
+    {
+        try {
+            $payments = ShipmentPayment::with([
+                    'user:id,name,email,mobile',
+                    'transportLead:id,tracking_number,item_name,from_city_id,to_city_id',
+                    'transportLead.fromCity:id,name',
+                    'transportLead.toCity:id,name',
+                ])
+                ->latest()
+                ->get();
+
+            if ($payments->isEmpty()) {
+                return Response::error(
+                    'No payments found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $payments,
+                'Payments fetched successfully',
                 200
             );
 

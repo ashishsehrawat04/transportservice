@@ -70,102 +70,220 @@
     }
   }
 
-  /* FULL SCREEN OVERLAY */
-#gsLoader{
+  #gsLoader{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,0.92);
-    backdrop-filter:blur(6px);
+    background:radial-gradient(circle at center, rgba(20,36,32,.96), rgba(4,8,10,.98));
+    backdrop-filter:blur(7px);
     display:none;
     align-items:center;
     justify-content:center;
     z-index:999999;
-}
+  }
 
-/* CENTER EVERYTHING PERFECTLY */
-.gs-wrapper{
-    position:relative;
-    width:260px;
-    height:260px;
+  .gs-wrapper{
+    width:min(520px, 88vw);
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
-}
+    gap:22px;
+  }
 
-/* 🔥 ROTATING RING */
-.gs-ring{
-    position:absolute;
-    width:260px;
-    height:260px;
-    border-radius:50%;
-    background:conic-gradient(
-        #00ff66,
-        #00cc44,
-        #ffcc00,
-        #ff7a00,
-        #00ff66
-    );
-    animation:spin 2.5s linear infinite;
-    filter:blur(1px) drop-shadow(0 0 25px #00ff66);
-}
-
-/* INNER BLACK CIRCLE */
-.gs-logo{
-    width:200px;
-    height:200px;
-    background:#050505;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:2;
-    box-shadow:0 0 45px rgba(0,255,100,.35);
-}
-
-/* LOGO ANIMATION */
-.gs-logo img{
-    width:339px;
-    animation:pulse 2s ease-in-out infinite;
-}
-
-/* TEXT */
-.gs-text{
-    color:#fff;
-    /* margin-top:25px; */
-    font-size:22px;
-    letter-spacing:3px;
-}
-
-/* PROGRESS BAR */
-.gs-progress{
-    width:260px;
-    height:6px;
-    background:#222;
-    border-radius:20px;
-    margin-top:15px;
+  .transport-loader-scene{
+    position:relative;
+    width:100%;
+    height:180px;
     overflow:hidden;
-}
+  }
 
-.gs-bar{
-    width:40%;
+  .loader-skyline{
+    position:absolute;
+    left:8%;
+    right:8%;
+    bottom:76px;
+    height:42px;
+    background:
+      linear-gradient(#26343a 0 0) 0 14px/28px 28px no-repeat,
+      linear-gradient(#2f4248 0 0) 45px 0/35px 42px no-repeat,
+      linear-gradient(#26343a 0 0) 100px 18px/44px 24px no-repeat,
+      linear-gradient(#2f4248 0 0) 170px 6px/38px 36px no-repeat,
+      linear-gradient(#26343a 0 0) 235px 20px/70px 22px no-repeat,
+      linear-gradient(#2f4248 0 0) right 10px/58px 32px no-repeat;
+    opacity:.7;
+  }
+
+  .loader-road{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:34px;
+    height:54px;
+    border-radius:999px;
+    background:linear-gradient(180deg,#333b40,#161b1e);
+    box-shadow:0 20px 55px rgba(0,0,0,.42), inset 0 2px 0 rgba(255,255,255,.12);
+  }
+
+  .loader-road:before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    top:25px;
+    height:4px;
+    background:repeating-linear-gradient(90deg, #f7c948 0 44px, transparent 44px 76px);
+    animation:roadMove .7s linear infinite;
+  }
+
+  .loader-truck{
+    position:absolute;
+    left:-210px;
+    bottom:72px;
+    width:178px;
+    height:66px;
+    animation:truckDrive 2.35s linear infinite;
+  }
+
+  .truck-box{
+    position:absolute;
+    left:0;
+    top:12px;
+    width:108px;
+    height:46px;
+    border-radius:8px 10px 8px 8px;
+    background:linear-gradient(135deg,#18a058,#0f7f45);
+    box-shadow:0 10px 22px rgba(0,0,0,.25);
+  }
+
+  .truck-cab{
+    position:absolute;
+    right:8px;
+    top:22px;
+    width:60px;
+    height:36px;
+    border-radius:8px 18px 8px 4px;
+    background:linear-gradient(135deg,#ffb703,#f47c20);
+    box-shadow:0 10px 22px rgba(0,0,0,.25);
+  }
+
+  .truck-cab:before{
+    content:"";
+    position:absolute;
+    right:13px;
+    top:7px;
+    width:21px;
+    height:13px;
+    border-radius:4px;
+    background:#c9f3ff;
+  }
+
+  .truck-light{
+    position:absolute;
+    right:4px;
+    bottom:8px;
+    width:9px;
+    height:7px;
+    border-radius:3px;
+    background:#fff7a8;
+    box-shadow:12px 0 24px rgba(255,247,168,.8);
+  }
+
+  .wheel{
+    position:absolute;
+    bottom:0;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:#070b0d;
+    border:5px solid #9da8ae;
+    animation:wheelSpin .55s linear infinite;
+  }
+
+  .wheel-left{ left:26px; }
+  .wheel-right{ right:28px; }
+
+  .loader-car{
+    position:absolute;
+    left:6%;
+    bottom:60px;
+    width:72px;
+    height:28px;
+    border-radius:20px 24px 8px 8px;
+    background:#39a2ff;
+    opacity:.9;
+    animation:carDrive 2.1s linear infinite;
+  }
+
+  .loader-car:before{
+    content:"";
+    position:absolute;
+    left:20px;
+    top:-10px;
+    width:32px;
+    height:16px;
+    border-radius:16px 16px 0 0;
+    background:#bdefff;
+  }
+
+  .loader-car:after{
+    content:"";
+    position:absolute;
+    left:10px;
+    right:10px;
+    bottom:-6px;
+    height:10px;
+    background:radial-gradient(circle,#111 0 5px, transparent 6px) left center/20px 10px no-repeat,
+               radial-gradient(circle,#111 0 5px, transparent 6px) right center/20px 10px no-repeat;
+  }
+
+  .gs-text{
+    color:#fff;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  .gs-progress{
+    width:min(380px, 76vw);
+    height:7px;
+    background:rgba(255,255,255,.16);
+    border-radius:20px;
+    overflow:hidden;
+  }
+
+  .gs-bar{
+    width:45%;
     height:100%;
-    background:linear-gradient(90deg,#00ff66,#ff7a00);
-    animation:loading 1.6s linear infinite;
-}
+    border-radius:20px;
+    background:linear-gradient(90deg,#18a058,#ffb703,#18a058);
+    animation:loading 1.15s linear infinite;
+  }
 
-/* ANIMATIONS */
-@keyframes spin{
-    100%{ transform:rotate(360deg); }
-}
-@keyframes pulse{
-    0%,100%{ transform:scale(1); }
-    50%{ transform:scale(1.12); }
-}
-@keyframes loading{
+  @keyframes roadMove{
+    to{ background-position:-76px 0; }
+  }
+
+  @keyframes truckDrive{
+    0%{ transform:translateX(-40px) translateY(0); }
+    25%{ transform:translateX(160px) translateY(-4px); }
+    50%{ transform:translateX(360px) translateY(0); }
+    75%{ transform:translateX(560px) translateY(-4px); }
+    100%{ transform:translateX(760px) translateY(0); }
+  }
+
+  @keyframes wheelSpin{
+    to{ transform:rotate(360deg); }
+  }
+
+  @keyframes carDrive{
+    0%{ transform:translateX(-120px); }
+    100%{ transform:translateX(560px); }
+  }
+
+  @keyframes loading{
     0%{ transform:translateX(-120%); }
-    100%{ transform:translateX(260%); }
-}
+    100%{ transform:translateX(230%); }
+  }
     </style>
 
   <body>
@@ -237,6 +355,13 @@
                     <a href="{{ route('admin.transport_leads') }} ">
                     <i class="fas fa-truck"></i>
                     <p>Transport Leads</p>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.payments') ? 'active' : '' }}">
+                    <a href="{{ route('admin.payments') }} ">
+                    <i class="fas fa-credit-card"></i>
+                    <p>Payments</p>
                     </a>
                 </li>
 
@@ -313,6 +438,9 @@
                   <a
                     class="nav-link dropdown-toggle"  href="#" id="messageDropdown"  role="button"  data-bs-toggle="dropdown" aria-haspopup="true"  aria-expanded="false">
                     <i class="fa fa-envelope"></i>
+                    @if(($adminHeader['recentLeads'] ?? collect())->count())
+                      <span class="notification">{{ ($adminHeader['recentLeads'] ?? collect())->count() }}</span>
+                    @endif
                   </a>
                   <ul
                     class="dropdown-menu messages-notif-box animated fadeIn"
@@ -322,73 +450,36 @@
                       <div
                         class="dropdown-title d-flex justify-content-between align-items-center"
                       >
-                        Messages
-                        <a href="#" class="small">Mark all as read</a>
+                        Recent Leads
+                        <a href="{{ route('admin.transport_leads') }}" class="small">View all</a>
                       </div>
                     </li>
                     <li>
                       <div class="message-notif-scroll scrollbar-outer">
                         <div class="notif-center">
-                          <a href="#">
-                            <div class="notif-img">
-                              <img
-                                src="{{ asset('assets/admin/img/jm_denis.jpg') }}"
-                                alt="Img Profile"
-                              />
-                            </div>
-                            <div class="notif-content">
-                              <span class="subject">Jimmy Denis</span>
-                              <span class="block"> How are you ? </span>
-                              <span class="time">5 minutes ago</span>
-                            </div>
-                          </a>
-                          <a href="#">
-                            <div class="notif-img">
-                              <img
-                                src="{{ asset('assets/admin/img/chadengle.jpg') }}"
-                                alt="Img Profile"
-                              />
-                            </div>
-                            <div class="notif-content">
-                              <span class="subject">Chad</span>
-                              <span class="block"> Ok, Thanks ! </span>
-                              <span class="time">12 minutes ago</span>
-                            </div>
-                          </a>
-                          <a href="#">
-                            <div class="notif-img">
-                              <img
-                                src="{{ asset('assets/admin/img/mlane.jpg') }}"
-                                alt="Img Profile"
-                              />
-                            </div>
-                            <div class="notif-content">
-                              <span class="subject">Jhon Doe</span>
-                              <span class="block">
-                                Ready for the meeting today...
-                              </span>
-                              <span class="time">12 minutes ago</span>
-                            </div>
-                          </a>
-                          <a href="#">
-                            <div class="notif-img">
-                              <img
-                                src="{{ asset('assets/admin/img/talha.jpg') }}"
-                                alt="Img Profile"
-                              />
-                            </div>
-                            <div class="notif-content">
-                              <span class="subject">Talha</span>
-                              <span class="block"> Hi, Apa Kabar ? </span>
-                              <span class="time">17 minutes ago</span>
-                            </div>
-                          </a>
+                          @forelse(($adminHeader['recentLeads'] ?? collect()) as $lead)
+                            <a href="{{ route('admin.manage.transport_lead', $lead->id) }}">
+                              <div class="notif-icon notif-primary">
+                                <i class="fas fa-truck"></i>
+                              </div>
+                              <div class="notif-content">
+                                <span class="subject">{{ $lead->tracking_number ?? 'New Lead' }}</span>
+                                <span class="block">
+                                  {{ optional($lead->user)->name ?? 'Customer' }} -
+                                  {{ optional($lead->fromCity)->name ?? '-' }} to {{ optional($lead->toCity)->name ?? '-' }}
+                                </span>
+                                <span class="time">{{ $lead->created_at?->diffForHumans() }}</span>
+                              </div>
+                            </a>
+                          @empty
+                            <div class="px-3 py-4 text-center text-muted">No recent leads</div>
+                          @endforelse
                         </div>
                       </div>
                     </li>
                     <li>
-                      <a class="see-all" href="javascript:void(0);"
-                        >See all messages<i class="fa fa-angle-right"></i>
+                      <a class="see-all" href="{{ route('admin.transport_leads') }}"
+                        >See all leads<i class="fa fa-angle-right"></i>
                       </a>
                     </li>
                   </ul>
@@ -397,7 +488,9 @@
                   <a class="nav-link dropdown-toggle"  href="#"  id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true"  aria-expanded="false"
                   >
                     <i class="fa fa-bell"></i>
-                    <span class="notification">4</span>
+                    @if(($adminHeader['notificationCount'] ?? 0) > 0)
+                      <span class="notification">{{ $adminHeader['notificationCount'] }}</span>
+                    @endif
                   </a>
                   <ul
                     class="dropdown-menu notif-box animated fadeIn"
@@ -405,61 +498,60 @@
                   >
                     <li>
                       <div class="dropdown-title">
-                        You have 4 new notification
+                        You have {{ $adminHeader['notificationCount'] ?? 0 }} CRM alerts
                       </div>
                     </li>
                     <li>
                       <div class="notif-scroll scrollbar-outer">
                         <div class="notif-center">
-                          <a href="#">
+                          <a href="{{ route('admin.transport_leads') }}">
                             <div class="notif-icon notif-primary">
-                              <i class="fa fa-user-plus"></i>
+                              <i class="fas fa-truck-loading"></i>
                             </div>
                             <div class="notif-content">
-                              <span class="block"> New user registered </span>
-                              <span class="time">5 minutes ago</span>
+                              <span class="block">{{ number_format($adminHeader['pendingLeads'] ?? 0) }} pending transport leads</span>
+                              <span class="time">Needs admin review</span>
                             </div>
                           </a>
-                          <a href="#">
+                          <a href="{{ route('admin.payments') }}">
                             <div class="notif-icon notif-success">
-                              <i class="fa fa-comment"></i>
+                              <i class="fas fa-credit-card"></i>
                             </div>
                             <div class="notif-content">
                               <span class="block">
-                                Rahmad commented on Admin
+                                {{ number_format($adminHeader['pendingPayments'] ?? 0) }} pending payments
                               </span>
-                              <span class="time">12 minutes ago</span>
+                              <span class="time">Today revenue {{ number_format($adminHeader['todayRevenue'] ?? 0, 2) }}</span>
                             </div>
                           </a>
-                          <a href="#">
-                            <div class="notif-img">
-                              <img
-                                src="{{ asset('assets/admin/img/profile2.jpg') }}"
-                                alt="Img Profile"
-                              />
+                          <a href="{{ route('admin.users') }}">
+                            <div class="notif-icon notif-warning">
+                              <i class="fas fa-user-clock"></i>
                             </div>
                             <div class="notif-content">
                               <span class="block">
-                                Reza send messages to you
+                                {{ number_format($adminHeader['pendingUsers'] ?? 0) }} users pending approval
                               </span>
-                              <span class="time">12 minutes ago</span>
+                              <span class="time">User CRM</span>
                             </div>
                           </a>
-                          <a href="#">
-                            <div class="notif-icon notif-danger">
-                              <i class="fa fa-heart"></i>
+                          @foreach(($adminHeader['recentPayments'] ?? collect())->take(1) as $payment)
+                          <a href="{{ route('admin.payments') }}">
+                            <div class="notif-icon notif-secondary">
+                              <i class="fas fa-file-invoice-dollar"></i>
                             </div>
                             <div class="notif-content">
-                              <span class="block"> Farrah liked Admin </span>
-                              <span class="time">17 minutes ago</span>
+                              <span class="block">Latest invoice {{ $payment->invoice_number ?? '-' }}</span>
+                              <span class="time">{{ number_format($payment->amount, 2) }} - {{ ucfirst($payment->status) }}</span>
                             </div>
                           </a>
+                          @endforeach
                         </div>
                       </div>
                     </li>
                     <li>
-                      <a class="see-all" href="javascript:void(0);"
-                        >See all notifications<i class="fa fa-angle-right"></i>
+                      <a class="see-all" href="{{ route('admin.dashboard') }}"
+                        >Open dashboard<i class="fa fa-angle-right"></i>
                       </a>
                     </li>
                   </ul>
@@ -471,65 +563,65 @@
                   <div class="dropdown-menu quick-actions animated fadeIn">
                     <div class="quick-actions-header">
                       <span class="title mb-1">Quick Actions</span>
-                      <span class="subtitle op-7">Shortcuts</span>
+                      <span class="subtitle op-7">{{ number_format($adminHeader['notificationCount'] ?? 0) }} active alerts</span>
                     </div>
                     <div class="quick-actions-scroll scrollbar-outer">
                       <div class="quick-actions-items">
                         <div class="row m-0">
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.manage.transport_lead') }}">
                             <div class="quick-actions-item">
                               <div class="avatar-item bg-danger rounded-circle">
-                                <i class="far fa-calendar-alt"></i>
+                                <i class="fas fa-plus"></i>
                               </div>
-                              <span class="text">Calendar</span>
+                              <span class="text">New Lead</span>
                             </div>
                           </a>
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.transport_leads') }}">
                             <div class="quick-actions-item">
                               <div
                                 class="avatar-item bg-warning rounded-circle"
                               >
-                                <i class="fas fa-map"></i>
+                                <i class="fas fa-truck"></i>
                               </div>
-                              <span class="text">Maps</span>
+                              <span class="text">Leads {{ number_format($adminHeader['pendingLeads'] ?? 0) }}</span>
                             </div>
                           </a>
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.city_routes') }}">
                             <div class="quick-actions-item">
                               <div class="avatar-item bg-info rounded-circle">
-                                <i class="fas fa-file-excel"></i>
+                                <i class="fas fa-road"></i>
                               </div>
-                              <span class="text">Reports</span>
+                              <span class="text">Routes</span>
                             </div>
                           </a>
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.transport_prices') }}">
                             <div class="quick-actions-item">
                               <div
                                 class="avatar-item bg-success rounded-circle"
                               >
-                                <i class="fas fa-envelope"></i>
+                                <i class="fas fa-rupee-sign"></i>
                               </div>
-                              <span class="text">Emails</span>
+                              <span class="text">Prices</span>
                             </div>
                           </a>
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.payments') }}">
                             <div class="quick-actions-item">
                               <div
                                 class="avatar-item bg-primary rounded-circle"
                               >
                                 <i class="fas fa-file-invoice-dollar"></i>
                               </div>
-                              <span class="text">Invoice</span>
+                              <span class="text">Payments {{ number_format($adminHeader['pendingPayments'] ?? 0) }}</span>
                             </div>
                           </a>
-                          <a class="col-6 col-md-4 p-0" href="#">
+                          <a class="col-6 col-md-4 p-0" href="{{ route('admin.users') }}">
                             <div class="quick-actions-item">
                               <div
                                 class="avatar-item bg-secondary rounded-circle"
                               >
-                                <i class="fas fa-credit-card"></i>
+                                <i class="fas fa-users"></i>
                               </div>
-                              <span class="text">Payments</span>
+                              <span class="text">Users {{ number_format($adminHeader['pendingUsers'] ?? 0) }}</span>
                             </div>
                           </a>
                         </div>
@@ -546,7 +638,7 @@
                     </div>
                     <span class="profile-username">
                       <span class="op-7">Hi,</span>
-                      <span class="fw-bold">{{ session('user_name') }}</span>
+                      <span class="fw-bold">{{ auth()->user()->name ?? 'Admin' }}</span>
                     </span>
                   </a>
                  <ul class="dropdown-menu dropdown-menu-end dropdown-user animated fadeIn">
@@ -558,21 +650,28 @@
                             />
                           </div>
                           <div class="u-text">
-                            <h4>{{ session('user_name') }}</h4>
-                            <p class="text-muted">{{ session('user_email') }}</p>
-                            <a  href=""  class="btn btn-xs btn-secondary btn-sm">View Profile</a>
+                            <h4>{{ auth()->user()->name ?? 'Admin' }}</h4>
+                            <p class="text-muted">{{ auth()->user()->email ?? auth()->user()->mobile ?? '-' }}</p>
+                            @if(auth()->user()?->slug)
+                              <a href="{{ route('admin.edit.users', auth()->user()->slug) }}" class="btn btn-xs btn-secondary btn-sm">View Profile</a>
+                            @endif
                           </div>
                         </div>
                       </li>
                       <li>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">My Profile</a>
-                        <a class="dropdown-item" href="#">My Balance</a>
-                        <a class="dropdown-item" href="#">Inbox</a>
+                        @if(auth()->user()?->slug)
+                          <a class="dropdown-item" href="{{ route('admin.edit.users', auth()->user()->slug) }}">My Profile</a>
+                        @endif
+                        <a class="dropdown-item" href="{{ route('admin.payments') }}">Today Revenue: {{ number_format($adminHeader['todayRevenue'] ?? 0, 2) }}</a>
+                        <a class="dropdown-item" href="{{ route('admin.transport_leads') }}">Pending Leads: {{ number_format($adminHeader['pendingLeads'] ?? 0) }}</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#">Account Setting</a>
+                        <a class="dropdown-item" href="{{ route('admin.auth_settings') }}">Account Setting</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="">Logout</a>
+                        <form action="{{ route('logout') }}" method="POST">
+                          @csrf
+                          <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
                       </li>
                     </div>
                   </ul>
@@ -810,11 +909,18 @@
     <!-- ===== GRAMEEN SEVA LOADER START ===== -->
 <div id="gsLoader">
     <div class="gs-wrapper">
-
-
-        <!-- <div class="gs-logo">
-            </div> -->
-            <img style="width:300px;margin-bottom: -52px;" src="{{ asset('assets/admin/img/logo.png') }}" alt="logo">
+        <div class="transport-loader-scene">
+            <div class="loader-skyline"></div>
+            <div class="loader-road"></div>
+            <div class="loader-car"></div>
+            <div class="loader-truck">
+                <div class="truck-box"></div>
+                <div class="truck-cab"></div>
+                <div class="truck-light"></div>
+                <div class="wheel wheel-left"></div>
+                <div class="wheel wheel-right"></div>
+            </div>
+        </div>
 
         <div class="gs-text">Please Wait...</div>
 
@@ -924,6 +1030,31 @@
     });
 
     $(document).on("submit", "form", function () {
+        showLoader();
+    });
+
+    $(document).on("click", "a[href]", function (event) {
+        const link = this;
+        const href = link.getAttribute("href") || "";
+        const hasInlineConfirm = (link.getAttribute("onclick") || "").includes("confirm");
+        const isModifiedClick = event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target === "_blank";
+        const shouldShowForAdminAction =
+            href.includes("/admin/") &&
+            (
+                href.includes("/manage") ||
+                href.includes("/edit/") ||
+                href.includes("/delete/")
+            );
+
+        if (isModifiedClick || href === "#" || href.startsWith("javascript:") || !shouldShowForAdminAction) {
+            return;
+        }
+
+        if (href.includes("/delete/") && !hasInlineConfirm && !window.confirm("Are you sure?")) {
+            event.preventDefault();
+            return;
+        }
+
         showLoader();
     });
 

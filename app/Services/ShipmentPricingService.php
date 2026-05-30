@@ -10,18 +10,26 @@ class ShipmentPricingService
 {
     public function calculateCartItem(TransportCartItem $item, TransportServicePrice $price, CityRoute $route): array
     {
-        $quantity = (int) $item->quantity;
+        return $this->calculateFromDimensions([
+            'quantity' => $item->quantity,
+            'length_cm' => $item->length_cm,
+            'width_cm' => $item->width_cm,
+            'height_cm' => $item->height_cm,
+            'weight_kg' => $item->weight_kg,
+        ], $price, $route);
+    }
+
+    public function calculateFromDimensions(array $item, TransportServicePrice $price, CityRoute $route): array
+    {
         $volumeCft = 0;
 
-        if ($item->length_cm && $item->width_cm && $item->height_cm) {
-            $volumeCft = round(((float) $item->length_cm * (float) $item->width_cm * (float) $item->height_cm) / 28316.8466, 2);
+        if (!empty($item['length_cm']) && !empty($item['width_cm']) && !empty($item['height_cm'])) {
+            $volumeCft = round(((float) $item['length_cm'] * (float) $item['width_cm'] * (float) $item['height_cm']) / 28316.8466, 2);
         }
 
-        return $this->calculate([
-            'quantity' => $quantity,
-            'weight_kg' => $item->weight_kg,
-            'volume_cft' => $volumeCft,
-        ], $price, $route);
+        $item['volume_cft'] = $volumeCft;
+
+        return $this->calculate($item, $price, $route);
     }
 
     public function calculate(array $item, TransportServicePrice $price, CityRoute $route): array
@@ -33,16 +41,23 @@ class ShipmentPricingService
         $basePrice = (float) $price->base_price;
         $weightCharge = round($totalWeight * (float) $price->weight_rate_per_kg, 2);
         $volumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
-        $distanceCharge = round((float) $route->distance_km * (float) $price->distance_rate_per_km, 2);
+        $distanceRate = (float) $route->base_rate_per_km > 0
+            ? (float) $route->base_rate_per_km
+            : (float) $price->distance_rate_per_km;
+        $distanceCharge = round((float) $route->distance_km * $distanceRate, 2);
         $subtotal = round(($basePrice + $weightCharge + $volumeCharge + $distanceCharge) * (float) $price->multiplier, 2);
+        $minimumCharge = max((float) $price->min_charge, (float) $route->min_charge);
 
-        if ($subtotal < (float) $price->min_charge) {
-            $subtotal = (float) $price->min_charge;
+        if ($subtotal < $minimumCharge) {
+            $subtotal = $minimumCharge;
         }
 
         if ($price->max_charge && $subtotal > (float) $price->max_charge) {
             $subtotal = (float) $price->max_charge;
         }
+
+        $taxAmount = (float) ($item['tax_amount'] ?? 0);
+        $discountAmount = (float) ($item['discount_amount'] ?? 0);
 
         return [
             'volume_cft' => $volumeCft,
@@ -53,9 +68,9 @@ class ShipmentPricingService
             'distance_charge' => $distanceCharge,
             'multiplier_applied' => $price->multiplier,
             'subtotal' => $subtotal,
-            'tax_amount' => 0,
-            'discount_amount' => 0,
-            'total_payment' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'total_payment' => max(0, round($subtotal + $taxAmount - $discountAmount, 2)),
         ];
     }
 }

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\ShipmentPayment;
+use App\Models\TransportLead;
+use App\Models\User;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +23,30 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer(['Admin.Layout', 'admin.Layout'], function ($view) {
+            $pendingLeads = TransportLead::where('admin_status', 'pending')->count();
+            $pendingPayments = ShipmentPayment::where('status', 'pending')->count();
+            $pendingUsers = User::where('role', 'user')->where('status', 'pending')->count();
+
+            $view->with('adminHeader', [
+                'pendingLeads' => $pendingLeads,
+                'pendingPayments' => $pendingPayments,
+                'pendingUsers' => $pendingUsers,
+                'notificationCount' => $pendingLeads + $pendingPayments + $pendingUsers,
+                'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+                'recentLeads' => TransportLead::with(['user:id,name,email,mobile', 'fromCity:id,name', 'toCity:id,name'])
+                    ->latest()
+                    ->limit(4)
+                    ->get(),
+                'recentPayments' => ShipmentPayment::with(['user:id,name,email,mobile', 'transportLead:id,tracking_number'])
+                    ->latest()
+                    ->limit(4)
+                    ->get(),
+                'recentUsers' => User::where('role', 'user')
+                    ->latest()
+                    ->limit(3)
+                    ->get(),
+            ]);
+        });
     }
 }

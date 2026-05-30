@@ -15,12 +15,20 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('web.login');
+        $settings = TransportAuthSetting::current();
+
+        return view('web.login', compact('settings'));
     }
 
     public function showRegisterForm()
     {
-        return view('web.register');
+        $settings = TransportAuthSetting::current();
+
+        if (!$settings->email_login_enabled) {
+            return redirect()->route('login')->with('success', 'Registration is currently disabled by admin.');
+        }
+
+        return view('web.register', compact('settings'));
     }
 
     public function login(Request $request)
@@ -30,7 +38,7 @@ class AuthController extends Controller
         if (!$settings->email_login_enabled) {
             return back()->withErrors([
                 'email' => 'Email login is disabled by admin.',
-            ])->withInput($request->only('email'));
+            ])->withInput($request->only('email') + ['login_mode' => 'email']);
         }
 
         $credentials = $request->validate([
@@ -45,7 +53,7 @@ class AuthController extends Controller
                 auth()->logout();
                 return back()->withErrors([
                     'email' => 'Your account is pending admin approval.',
-                ])->withInput($request->only('email'));
+                ])->withInput($request->only('email') + ['login_mode' => 'email']);
             }
 
             if (!$user->slug) {
@@ -64,7 +72,7 @@ class AuthController extends Controller
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ])->withInput($request->only('email'));
+        ])->withInput($request->only('email') + ['login_mode' => 'email']);
     }
 
     public function logout()
@@ -80,7 +88,7 @@ class AuthController extends Controller
         if (!$settings->mobile_login_enabled) {
             return back()->withErrors([
                 'mobile' => 'Mobile login is disabled by admin.',
-            ])->withInput();
+            ])->withInput(['login_mode' => 'mobile']);
         }
 
         $validated = $request->validate([
@@ -98,6 +106,7 @@ class AuthController extends Controller
         return back()
             ->with('success', 'OTP sent successfully.')
             ->with('dev_otp', $otp)
+            ->with('login_mode', 'mobile')
             ->withInput($request->only('mobile'));
     }
 
@@ -108,7 +117,7 @@ class AuthController extends Controller
         if (!$settings->mobile_login_enabled) {
             return back()->withErrors([
                 'mobile' => 'Mobile login is disabled by admin.',
-            ])->withInput();
+            ])->withInput(['login_mode' => 'mobile']);
         }
 
         $validated = $request->validate([
@@ -125,7 +134,7 @@ class AuthController extends Controller
         if (!$otp || !Hash::check($validated['otp'], $otp->otp_hash)) {
             return back()->withErrors([
                 'otp' => 'Invalid or expired OTP.',
-            ])->withInput($request->only('mobile'));
+            ])->withInput($request->only('mobile') + ['login_mode' => 'mobile']);
         }
 
         $otp->update(['verified_at' => now()]);
