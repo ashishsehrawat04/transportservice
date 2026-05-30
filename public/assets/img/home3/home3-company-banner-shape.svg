@@ -1,0 +1,11 @@
+<svg width="332" height="700" viewBox="0 0 332 700" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="mask0_1303_6378" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="-14" width="332" height="714">
+<path d="M1.34332 347.868L169.176 693.915C171.202 697.566 174.851 700 179.31 700H320.895C329.003 700 334.273 691.481 331.03 684.178L167.657 347.868C166.035 344.623 166.035 341.377 167.657 338.132L330.219 1.82159C333.868 -5.48068 328.598 -14 320.084 -14H178.5C174.446 -14 170.392 -11.5659 168.365 -7.91477L0.532562 338.132C-0.278229 341.377 -0.278259 344.623 1.34332 347.868Z" fill="white" fill-opacity="0.12"/>
+</mask>
+<g mask="url(#mask0_1303_6378)">
+<foreignObject x="-304" y="-300" width="940" height="1300"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(150px);clip-path:url(#bgblur_0_1303_6378_clip_path);height:100%;width:100%"></div></foreignObject><rect data-figma-bg-blur-radius="300" x="-4" width="340" height="700" fill="#D9D9D9"/>
+</g>
+<defs>
+<clipPath id="bgblur_0_1303_6378_clip_path" transform="translate(304 300)"><rect x="-4" width="340" height="700"/>
+</clipPath></defs>
+</svg>
