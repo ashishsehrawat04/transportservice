@@ -35,6 +35,7 @@
                                     <th>Route</th>
                                     <th>Distance</th>
                                     <th>Base Price</th>
+                                    <th>Discount</th>
                                     <th>Total</th>
                                     <th>Admin Status</th>
                                     <th>Payment</th>
@@ -101,8 +102,8 @@
                     {
                         data: null,
                         render: function(row) {
-                            let fromCity = row.from_city ? row.from_city.name : '-';
-                            let toCity = row.to_city ? row.to_city.name : '-';
+                            let fromCity = row.city_route ? row.city_route.from_city : '-';
+                            let toCity = row.city_route ? row.city_route.to_city : '-';
                             return `${fromCity} to ${toCity}`;
                         }
                     },
@@ -114,6 +115,12 @@
                     },
                     {
                         data: 'base_price',
+                        render: function(data) {
+                            return parseFloat(data || 0).toFixed(2);
+                        }
+                    },
+                    {
+                        data: 'discount_amount',
                         render: function(data) {
                             return parseFloat(data || 0).toFixed(2);
                         }
@@ -142,9 +149,17 @@
                         searchable: false,
                         render: function(data, type, row) {
                             let editUrl = "{{ url('admin/transport-leads/manage') }}/" + row.id;
+                            let quoteUrl = editUrl + "?quote=1";
+                            let invoiceUrl = "{{ url('admin/transport-leads') }}/" + row.id + "/invoice";
                             let deleteUrl = "{{ url('admin/transport-leads/delete') }}/" + row.id;
+                            let invoiceButton = row.admin_status === 'delivered'
+                                ? `<a href="${invoiceUrl}" class="btn btn-sm btn-success">Invoice PDF</a>`
+                                : '';
+
                             return `
                                 <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
+                                <a href="${quoteUrl}" class="btn btn-sm btn-warning">Create Quote</a>
+                                ${invoiceButton}
                                 <a href="${deleteUrl}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
                             `;
                         }

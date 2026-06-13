@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="64" viewBox="0 0 224 64" role="img" aria-labelledby="title desc">
+  <title id="title">Transport CRM</title>
+  <desc id="desc">Transport management logo for the admin panel</desc>
+  <defs>
+    <linearGradient id="markGradient" x1="8" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18A058"/>
+      <stop offset="1" stop-color="#FFB703"/>
+    </linearGradient>
+  </defs>
+  <rect width="224" height="64" fill="none"/>
+  <g transform="translate(6 8)">
+    <rect width="48" height="48" rx="12" fill="url(#markGradient)"/>
+    <path d="M12 29h24.5c3.6 0 6.5 2.9 6.5 6.5V38H38a5.5 5.5 0 0 0-10.6 0H20.6A5.5 5.5 0 0 0 10 38H7v-5.5A3.5 3.5 0 0 1 10.5 29H12Z" fill="#FFFFFF"/>
+    <path d="M14 18h18c1.7 0 3 1.3 3 3v8H11v-8c0-1.7 1.3-3 3-3Z" fill="#FFFFFF"/>
+    <path d="M35 23h4.8c.8 0 1.6.4 2.1 1.1l3.1 4.4V32H35v-9Z" fill="#FFFFFF"/>
+    <circle cx="15.3" cy="38" r="3.2" fill="#12221D"/>
+    <circle cx="32.7" cy="38" r="3.2" fill="#12221D"/>
+    <path d="M15 13h17" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+  </g>
+  <g fill="#FFFFFF">
+    <text x="66" y="29" font-family="Public Sans, Arial, sans-serif" font-size="21" font-weight="800" letter-spacing=".2">Transport</text>
+    <text x="66" y="47" font-family="Public Sans, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="1.8" opacity=".82">CRM ADMIN</text>
+  </g>
+</svg>

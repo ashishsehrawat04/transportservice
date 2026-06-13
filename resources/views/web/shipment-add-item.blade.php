@@ -30,21 +30,14 @@
                         @csrf
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">From City</label>
-                                <select name="from_city_id" class="form-control" required>
-                                    <option value="">Select from city</option>
-                                    @foreach($cities as $city)
-                                        <option value="{{ $city->id }}" {{ old('from_city_id') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">To City</label>
-                                <select name="to_city_id" class="form-control" required>
-                                    <option value="">Select to city</option>
-                                    @foreach($cities as $city)
-                                        <option value="{{ $city->id }}" {{ old('to_city_id') == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">City Route</label>
+                                <select name="city_route_id" class="form-control" required>
+                                    <option value="">Select city route</option>
+                                    @foreach($cityRoutes as $route)
+                                        <option value="{{ $route->id }}" {{ old('city_route_id') == $route->id ? 'selected' : '' }}>
+                                            {{ $route->from_city }} to {{ $route->to_city }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>

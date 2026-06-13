@@ -14,6 +14,7 @@
         'cancelled', 'rejected' => -1,
         default => 0,
     };
+    $hasDiscount = (float) optional($lead)->discount_amount > 0;
 @endphp
 
 <section style="padding: 110px 0 80px; background:#f7f7f7;">
@@ -23,6 +24,10 @@
                 <div style="background:#fff; border:1px solid #e7e7e7; border-radius:8px; padding:28px;">
                     <span style="color:#ff7a00; font-weight:600;">Track & Trace</span>
                     <h2 class="mb-4">Track Shipment</h2>
+
+                    @if(session('error'))
+                        <div class="alert alert-danger">{{ session('error') }}</div>
+                    @endif
 
                     <form method="GET" action="{{ route('shipment.track') }}" class="row g-3 mb-4">
                         <div class="col-md-9">
@@ -43,7 +48,18 @@
                                 <h4 class="mb-1">{{ $lead->item_name }}</h4>
                                 <p class="mb-0">{{ $lead->tracking_number }}</p>
                             </div>
-                            <span class="badge bg-success">{{ ucfirst($lead->admin_status) }}</span>
+                            <div class="text-end">
+                                <span class="badge bg-success">{{ ucfirst($lead->admin_status) }}</span>
+                                @if($lead->admin_status === 'delivered')
+                                    <div class="mt-2">
+                                        <a class="btn btn-sm btn-outline-success" href="{{ route('shipment.invoice.download', $lead->tracking_number) }}">
+                                            Download Invoice
+                                        </a>
+                                    </div>
+                                @else
+                                    <div class="small text-muted mt-2">Invoice available after delivery</div>
+                                @endif
+                            </div>
                         </div>
 
                         <div class="tracking-line mb-4">
@@ -57,12 +73,42 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">From: <strong>{{ optional($lead->fromCity)->name }}</strong></div>
-                            <div class="col-md-6 mb-3">To: <strong>{{ optional($lead->toCity)->name }}</strong></div>
+                            <div class="col-md-6 mb-3">From: <strong>{{ optional($lead->cityRoute)->from_city }}</strong></div>
+                            <div class="col-md-6 mb-3">To: <strong>{{ optional($lead->cityRoute)->to_city }}</strong></div>
                             <div class="col-md-6 mb-3">Pickup: <strong>{{ optional($lead->confirmed_pickup_date ?: $lead->requested_pickup_date)->format('d M Y') }}</strong></div>
                             <div class="col-md-6 mb-3">Expected Delivery: <strong>{{ optional($lead->expected_delivery_date)->format('d M Y') ?? '-' }}</strong></div>
                             <div class="col-md-6 mb-3">Actual Delivery: <strong>{{ optional($lead->actual_delivery_date)->format('d M Y') ?? '-' }}</strong></div>
                             <div class="col-md-6 mb-3">Payment: <strong>{{ ucfirst($lead->payment_status) }}</strong></div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-0">
+                                        <tbody>
+                                            @if($hasDiscount)
+                                                <tr>
+                                                    <th>Subtotal</th>
+                                                    <td>{{ number_format($lead->subtotal, 2) }}</td>
+                                                    <th>Tax Amount</th>
+                                                    <td>{{ number_format($lead->tax_amount, 2) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Discount Amount</th>
+                                                    <td>{{ number_format($lead->discount_amount, 2) }}</td>
+                                                    <th>Total Payable</th>
+                                                    <td><strong>{{ number_format($lead->total_payment, 2) }}</strong></td>
+                                                </tr>
+                                            @else
+                                                <tr>
+                                                    <th>Amount</th>
+                                                    <td><strong>{{ number_format($lead->total_payment, 2) }}</strong></td>
+                                                </tr>
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
 
                         @if($lead->admin_description)

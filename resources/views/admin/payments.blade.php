@@ -180,8 +180,8 @@
                             return '-';
                         }
 
-                        let fromCity = lead.from_city ? lead.from_city.name : '-';
-                        let toCity = lead.to_city ? lead.to_city.name : '-';
+                        let fromCity = lead.city_route ? lead.city_route.from_city : '-';
+                        let toCity = lead.city_route ? lead.city_route.to_city : '-';
 
                         return `${fromCity} to ${toCity}`;
                     }

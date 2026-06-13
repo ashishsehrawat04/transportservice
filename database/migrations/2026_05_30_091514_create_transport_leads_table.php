@@ -30,8 +30,7 @@ return new class extends Migration
             $table->decimal('volume_cft', 8, 2)->nullable(); // auto calculate hoga
 
             // ---------- ROUTE ----------
-            $table->foreignId('from_city_id')->constrained('cities')->onDelete('restrict');
-            $table->foreignId('to_city_id')->constrained('cities')->onDelete('restrict');
+            $table->foreignId('city_route_id')->constrained('city_routes')->onDelete('restrict');
             $table->decimal('distance_km', 10, 2);          // city route table se aayega
 
             // ---------- PRICE BREAKDOWN ----------

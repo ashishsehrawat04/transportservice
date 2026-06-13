@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transport_cart_items', function (Blueprint $table) {
-            $table->foreignId('from_city_id')->nullable()->after('user_id')->constrained('cities')->onDelete('restrict');
-            $table->foreignId('to_city_id')->nullable()->after('from_city_id')->constrained('cities')->onDelete('restrict');
+            $table->foreignId('city_route_id')->nullable()->after('user_id')->constrained('city_routes')->onDelete('restrict');
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transport_cart_items', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('from_city_id');
-            $table->dropConstrainedForeignId('to_city_id');
+            $table->dropConstrainedForeignId('city_route_id');
         });
     }
 };

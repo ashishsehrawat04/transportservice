@@ -164,7 +164,7 @@
                                 <tr>
                                     <td>{{ $lead->tracking_number }}</td>
                                     <td>{{ optional($lead->user)->name ?? '-' }}</td>
-                                    <td>{{ optional($lead->fromCity)->name ?? '-' }} to {{ optional($lead->toCity)->name ?? '-' }}</td>
+                                    <td>{{ optional($lead->cityRoute)->from_city ?? '-' }} to {{ optional($lead->cityRoute)->to_city ?? '-' }}</td>
                                     <td><span class="badge bg-secondary">{{ ucfirst($lead->admin_status) }}</span></td>
                                     <td class="text-end">{{ number_format($lead->total_payment, 2) }}</td>
                                 </tr>

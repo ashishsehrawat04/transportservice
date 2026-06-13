@@ -16,8 +16,7 @@ class TransportLead extends Model
         'height_cm',
         'weight_kg',
         'volume_cft',
-        'from_city_id',
-        'to_city_id',
+        'city_route_id',
         'distance_km',
         'base_price',
         'weight_charge',
@@ -55,14 +54,9 @@ class TransportLead extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function fromCity()
+    public function cityRoute()
     {
-        return $this->belongsTo(City::class, 'from_city_id');
-    }
-
-    public function toCity()
-    {
-        return $this->belongsTo(City::class, 'to_city_id');
+        return $this->belongsTo(CityRoute::class);
     }
 
     public function assignedUser()
@@ -73,6 +67,11 @@ class TransportLead extends Model
     public function payments()
     {
         return $this->hasMany(ShipmentPayment::class);
+    }
+
+    public function latestPayment()
+    {
+        return $this->hasOne(ShipmentPayment::class)->latestOfMany();
     }
 
     public function refunds()

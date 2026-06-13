@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Grameen Seva</title>
+    <title>Transport CRM Admin</title>
 
     <meta  content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport"/>
-    <link rel="icon" href="{{ asset('assets/admin/img/kaiadmin/favicon.ico') }}" type="image/x-icon" />
+    <link rel="icon" href="{{ asset('fav-icon.svg') }}" type="image/svg+xml" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Fonts and icons -->
@@ -39,20 +39,19 @@
   }
 
   .logo-header .logo{
-    width:198px;
+    width:206px;
     height:66px;
-    overflow:hidden;
     display:flex;
     align-items:center;
-    justify-content:center;
+    justify-content:flex-start;
   }
 
   .logo-header .gs-admin-logo{
-    width:222px;
-    height:146px;
+    width:206px;
+    height:58px;
     max-width:none;
-    object-fit:cover;
-    object-position:center;
+    object-fit:contain;
+    object-position:left center;
     display:block;
   }
 
@@ -61,12 +60,12 @@
   }
 
   .main-header .logo-header .logo{
-    width:190px;
+    width:206px;
   }
 
   @media (max-width:991px){
     .main-header .logo-header .logo{
-        width:184px;
+        width:198px;
     }
   }
 
@@ -302,7 +301,7 @@
           <!-- Logo Header -->
           <div class="logo-header" data-background-color="dark">
             <a href="{{ route('admin.dashboard') }}" class="logo">
-              <img src="{{ asset('assets/admin/img/kaiadmin/logo-transparent-cropped.png') }}" alt="Grameen Seva" class="navbar-brand gs-admin-logo"/>
+              <img src="{{ asset('assets/admin/img/transport-admin-logo.svg') }}" alt="Transport CRM Admin" class="navbar-brand gs-admin-logo"/>
             </a>
             <div class="nav-toggle">
               <button class="btn btn-toggle toggle-sidebar">
@@ -358,6 +357,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.transport_quotes') ? 'active' : '' }}">
+                    <a href="{{ route('admin.transport_quotes') }} ">
+                    <i class="fas fa-file-invoice"></i>
+                    <p>Transport Quotes</p>
+                    </a>
+                </li>
+
                 <li class="nav-item {{ request()->routeIs('admin.payments') ? 'active' : '' }}">
                     <a href="{{ route('admin.payments') }} ">
                     <i class="fas fa-credit-card"></i>
@@ -384,7 +390,7 @@
             <!-- Logo Header -->
             <div class="logo-header" data-background-color="dark">
               <a href="{{ route('admin.dashboard') }}" class="logo">
-                <img src="{{ asset('assets/admin/img/kaiadmin/logo-transparent-cropped.png') }}" alt="Grameen Seva" class="navbar-brand gs-admin-logo" />
+                <img src="{{ asset('assets/admin/img/transport-admin-logo.svg') }}" alt="Transport CRM Admin" class="navbar-brand gs-admin-logo" />
               </a>
               <div class="nav-toggle">
                 <button class="btn btn-toggle toggle-sidebar">
@@ -466,7 +472,7 @@
                                 <span class="subject">{{ $lead->tracking_number ?? 'New Lead' }}</span>
                                 <span class="block">
                                   {{ optional($lead->user)->name ?? 'Customer' }} -
-                                  {{ optional($lead->fromCity)->name ?? '-' }} to {{ optional($lead->toCity)->name ?? '-' }}
+                                  {{ optional($lead->cityRoute)->from_city ?? '-' }} to {{ optional($lead->cityRoute)->to_city ?? '-' }}
                                 </span>
                                 <span class="time">{{ $lead->created_at?->diffForHumans() }}</span>
                               </div>

@@ -292,26 +292,41 @@
 
                                 @if($emailEnabled)
                                     <div class="auth-method {{ $activeMode === 'email' ? 'active' : '' }}" data-auth-panel="email">
-                                        <form action="{{ route('login') }}" method="POST">
+                                        <form id="emailOtpSendForm">
                                             @csrf
                                             <input type="hidden" name="login_mode" value="email">
                                             <div class="form-inner mb-20">
                                                 <label>Email</label>
-                                                <input type="email" name="email" value="{{ old('email') }}" placeholder="admin@transport.test">
-                                                @error('email')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
+                                                <input id="emailInput" type="email" name="email" value="{{ old('email') }}" placeholder="admin@transport.test">
+                                                <span class="text-danger" id="emailError">
+                                                    @error('email'){{ $message }}@enderror
+                                                </span>
                                             </div>
                                             <div class="form-inner mb-20">
-                                                <label>Password</label>
-                                                <input id="password" name="password" type="password" placeholder="********">
-                                                <i class="bi bi-eye-slash bi-eye" id="togglePassword"></i>
-                                                @error('password')
+                                                <button id="sendEmailOtp" type="button" class="primary-btn2 btn-hover w-100">
+                                                    Send OTP
+                                                    <span></span>
+                                                </button>
+                                            </div>
+                                            <div id="emailSendStatus" class="mb-20"></div>
+                                        </form>
+
+                                        <form id="emailOtpVerifyForm" action="{{ route('login.email.verify') }}" method="POST" class="{{ session('email_otp_sent') ? '' : 'd-none' }}">
+                                            @csrf
+                                            <input type="hidden" name="login_mode" value="email">
+                                            <div class="form-inner mb-20">
+                                                <label>Email</label>
+                                                <input id="verifyEmailInput" type="email" name="email" value="{{ old('email') }}" placeholder="admin@transport.test" readonly>
+                                            </div>
+                                            <div class="form-inner mb-20">
+                                                <label>OTP</label>
+                                                <input id="otpInput" type="text" name="otp" placeholder="6 digit OTP">
+                                                @error('otp')
                                                     <span class="text-danger">{{ $message }}</span>
                                                 @enderror
                                             </div>
                                             <button type="submit" class="primary-btn2 btn-hover w-100">
-                                                Login Now
+                                                Verify & Login
                                                 <span></span>
                                             </button>
                                         </form>
@@ -392,6 +407,61 @@
                 password.type = password.type === 'password' ? 'text' : 'password';
                 togglePassword.classList.toggle('bi-eye');
                 togglePassword.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        const sendEmailOtpButton = document.getElementById('sendEmailOtp');
+        const emailInput = document.getElementById('emailInput');
+        const verifyEmailInput = document.getElementById('verifyEmailInput');
+        const otpInput = document.getElementById('otpInput');
+        const emailSendStatus = document.getElementById('emailSendStatus');
+        const emailError = document.getElementById('emailError');
+        const emailVerifyForm = document.getElementById('emailOtpVerifyForm');
+
+        if (sendEmailOtpButton) {
+            sendEmailOtpButton.addEventListener('click', async function (event) {
+                event.preventDefault();
+                emailSendStatus.textContent = '';
+                emailError.textContent = '';
+
+                const emailValue = emailInput.value.trim();
+                if (!emailValue) {
+                    emailError.textContent = 'Please enter your email.';
+                    return;
+                }
+
+                sendEmailOtpButton.disabled = true;
+                sendEmailOtpButton.textContent = 'Sending...';
+
+                try {
+                    const response = await fetch('{{ route('login.email.send_otp') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        },
+                        body: JSON.stringify({ email: emailValue }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        const errorText = data.errors?.email?.[0] || data.message || 'Unable to send OTP.';
+                        emailError.textContent = errorText;
+                        return;
+                    }
+
+                    emailSendStatus.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
+                    emailVerifyForm.classList.remove('d-none');
+                    verifyEmailInput.value = emailValue;
+                    otpInput.focus();
+                } catch (error) {
+                    emailSendStatus.innerHTML = '<div class="alert alert-danger">Unable to send OTP. Please try again.</div>';
+                } finally {
+                    sendEmailOtpButton.disabled = false;
+                    sendEmailOtpButton.textContent = 'Send OTP';
+                }
             });
         }
     </script>

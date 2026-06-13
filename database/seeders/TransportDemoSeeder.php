@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\City;
 use App\Models\CityRoute;
 use App\Models\ShipmentPayment;
 use App\Models\TransportAuthSetting;
@@ -66,13 +65,6 @@ class TransportDemoSeeder extends Seeder
                 'wallet_balance' => 0,
             ]
         );
-
-        foreach (['Delhi', 'Jaipur', 'Gurugram', 'Noida', 'Mumbai'] as $cityName) {
-            City::updateOrCreate(
-                ['name' => $cityName],
-                ['is_active' => true]
-            );
-        }
 
         $routes = [
             ['from_city' => 'Delhi', 'to_city' => 'Jaipur', 'distance_km' => 280, 'base_rate_per_km' => 18, 'min_charge' => 1200],
@@ -143,12 +135,10 @@ class TransportDemoSeeder extends Seeder
 
     private function seedCartItem(User $user): void
     {
-        $fromCity = City::where('name', 'Delhi')->first();
-        $toCity = City::where('name', 'Jaipur')->first();
         $price = TransportServicePrice::where('item_type', 'home_goods')->first();
         $route = CityRoute::where('from_city', 'Delhi')->where('to_city', 'Jaipur')->first();
 
-        if (!$fromCity || !$toCity || !$price || !$route) {
+        if (!$price || !$route) {
             return;
         }
 
@@ -159,8 +149,7 @@ class TransportDemoSeeder extends Seeder
             ],
             [
                 'guest_id' => null,
-                'from_city_id' => $fromCity->id,
-                'to_city_id' => $toCity->id,
+                'city_route_id' => $route->id,
                 'item_type' => 'home_goods',
                 'quantity' => 1,
                 'length_cm' => 180,
@@ -241,12 +230,10 @@ class TransportDemoSeeder extends Seeder
         ];
 
         foreach ($leadRows as $row) {
-            $fromCity = City::where('name', $row['from'])->first();
-            $toCity = City::where('name', $row['to'])->first();
             $route = CityRoute::where('from_city', $row['from'])->where('to_city', $row['to'])->first();
             $price = TransportServicePrice::where('item_type', $row['item_type'])->first();
 
-            if (!$fromCity || !$toCity || !$route || !$price) {
+            if (!$route || !$price) {
                 continue;
             }
 
@@ -263,8 +250,7 @@ class TransportDemoSeeder extends Seeder
                     'width_cm' => $row['width_cm'],
                     'height_cm' => $row['height_cm'],
                     'weight_kg' => $row['weight_kg'],
-                    'from_city_id' => $fromCity->id,
-                    'to_city_id' => $toCity->id,
+                    'city_route_id' => $route->id,
                     'requested_pickup_date' => now()->addDays(1)->toDateString(),
                     'confirmed_pickup_date' => in_array($row['admin_status'], ['approved', 'dispatched', 'delivered']) ? now()->addDays(2)->toDateString() : null,
                     'expected_delivery_date' => now()->addDays(6)->toDateString(),

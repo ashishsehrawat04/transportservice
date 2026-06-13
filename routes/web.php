@@ -18,6 +18,8 @@ Route::GET('/admin/city-routes', function () {
 Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login/email/send-otp', [AuthController::class, 'sendEmailOtp'])->name('login.email.send_otp');
+Route::post('/login/email/verify', [AuthController::class, 'verifyEmailOtp'])->name('login.email.verify');
 Route::post('/login/mobile/send-otp', [AuthController::class, 'requestMobileOtp'])->name('login.mobile.send_otp');
 Route::post('/login/mobile/verify', [AuthController::class, 'verifyMobileOtp'])->name('login.mobile.verify');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -30,6 +32,7 @@ Route::post('/shipment/cart/checkout', [WebController::class, 'checkoutShipmentC
 Route::get('/shipment/cart/delete/{id}', [WebController::class, 'deleteShipmentCartItem'])->name('shipment.cart.delete');
 Route::get('/shipment/leads', [WebController::class, 'shipmentLeads'])->middleware('auth')->name('shipment.leads');
 Route::get('/track-and-trace', [WebController::class, 'trackShipment'])->name('shipment.track');
+Route::get('/track-and-trace/{trackingNumber}/invoice', [WebController::class, 'downloadShipmentInvoice'])->name('shipment.invoice.download');
 
 
 // admin routes
@@ -56,8 +59,12 @@ Route::get('/admin/get-transport-prices', [ApiController::class, 'AdminGetTransp
 Route::get('/admin/transport-leads', [AdminController::class, 'AdminTransportLeads'])->middleware('auth')->name('admin.transport_leads');
 Route::get('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminManageTransportLead'])->middleware('auth')->name('admin.manage.transport_lead');
 Route::post('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminSaveTransportLead'])->middleware('auth')->name('admin.save.transport_lead');
+Route::get('/admin/transport-leads/{id}/invoice', [AdminController::class, 'AdminDownloadTransportLeadInvoice'])->middleware('auth')->name('admin.transport_lead.invoice');
 Route::get('/admin/transport-leads/delete/{id}', [AdminController::class, 'AdminDeleteTransportLead'])->middleware('auth')->name('admin.delete.transport_lead');
 Route::get('/admin/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');
+
+Route::get('/admin/transport-quotes', [AdminController::class, 'AdminTransportQuotes'])->middleware('auth')->name('admin.transport_quotes');
+Route::get('/admin/get-transport-quotes', [ApiController::class, 'AdminGetTransportQuotes'])->middleware('auth')->name('adminget.transport.quotes');
 
 Route::get('/admin/payments', [AdminController::class, 'AdminPayments'])->middleware('auth')->name('admin.payments');
 Route::get('/admin/get-payments', [ApiController::class, 'AdminGetPayments'])->middleware('auth')->name('adminget.payments');

@@ -49,7 +49,7 @@
                             <td>{{ $item->quantity }}</td>
                             <td>{{ number_format($item->height_cm, 2) }} CM</td>
                             <td>{{ number_format($item->weight_kg, 2) }} KG</td>
-                            <td>{{ optional($item->fromCity)->name ?? '-' }} to {{ optional($item->toCity)->name ?? '-' }}</td>
+                            <td>{{ optional($item->cityRoute)->from_city ?? '-' }} to {{ optional($item->cityRoute)->to_city ?? '-' }}</td>
                             <td>
                                 @if($item->price_error)
                                     <span class="text-danger">{{ $item->price_error }}</span>

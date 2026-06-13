@@ -9,6 +9,7 @@ use App\Models\UserLoginOtp;
 use App\Services\GuestCartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -79,6 +80,90 @@ class AuthController extends Controller
     {
         auth()->logout();
         return redirect('/');
+    }
+
+    public function sendEmailOtp(Request $request)
+    {
+        $settings = TransportAuthSetting::current();
+
+        if (!$settings->email_login_enabled) {
+            return response()->json([
+                'message' => 'Email login is disabled by admin.',
+                'errors' => ['email' => ['Email login is disabled by admin.']],
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'No account found for this email.',
+                'errors' => ['email' => ['No account found for this email.']],
+            ], 422);
+        }
+
+        $otp = (string) rand(100000, 999999);
+        $user->update([
+            'otp' => Hash::make($otp),
+            'otp_expires_at' => now()->addMinutes(10),
+        ]);
+
+        Mail::raw("Your login OTP is: {$otp}\n\nIf you did not request this, ignore this email.", function ($message) use ($user) {
+            $message->to($user->email)
+                ->subject(config('app.name') . ' Login OTP');
+        });
+
+        return response()->json(['message' => 'OTP sent successfully. Check your email for the code.']);
+    }
+
+    public function verifyEmailOtp(Request $request)
+    {
+        $settings = TransportAuthSetting::current();
+
+        if (!$settings->email_login_enabled) {
+            return back()->withErrors([
+                'email' => 'Email login is disabled by admin.',
+            ])->withInput(['login_mode' => 'email']);
+        }
+
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+            'otp' => ['required', 'digits:6'],
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+        if (!$user || !$user->otp || !$user->otp_expires_at || $user->otp_expires_at->lt(now()) || !Hash::check($validated['otp'], $user->otp)) {
+            return back()->withErrors([
+                'otp' => 'Invalid or expired OTP.',
+            ])->withInput($request->only('email') + ['login_mode' => 'email']);
+        }
+
+        $user->update([
+            'otp' => null,
+            'otp_expires_at' => null,
+        ]);
+
+        if ($settings->admin_approval_required && $user->role !== 'admin' && $user->status !== 'approved') {
+            return redirect()->route('login')->with('success', 'OTP verified. Your account is pending admin approval.');
+        }
+
+        if (!$user->slug) {
+            $user->update([
+                'slug' => $this->generateSlug($user->name),
+            ]);
+        }
+
+        auth()->login($user);
+        app(GuestCartService::class)->mergeToUser($user->id);
+
+        if ($user->role == 'admin') {
+            return redirect()->intended('/admin');
+        }
+
+        return redirect()->intended('/');
     }
 
     public function requestMobileOtp(Request $request)

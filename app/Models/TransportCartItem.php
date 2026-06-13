@@ -9,8 +9,7 @@ class TransportCartItem extends Model
     protected $fillable = [
         'user_id',
         'guest_id',
-        'from_city_id',
-        'to_city_id',
+        'city_route_id',
         'item_name',
         'item_type',
         'quantity',
@@ -33,13 +32,8 @@ class TransportCartItem extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function fromCity()
+    public function cityRoute()
     {
-        return $this->belongsTo(City::class, 'from_city_id');
-    }
-
-    public function toCity()
-    {
-        return $this->belongsTo(City::class, 'to_city_id');
+        return $this->belongsTo(CityRoute::class);
     }
 }

@@ -27,12 +27,28 @@
       <div class="col-md-12">
           <div class="card">
               <div class="card-header d-flex justify-content-between align-items-center">
-                  <h4 class="card-title">{{ $transportLead->exists ? 'Edit Transport Lead' : 'Add Transport Lead' }}</h4>
+                  <h4 class="card-title">
+                      @if($quoteMode)
+                          Create Quote
+                      @else
+                          {{ $transportLead->exists ? 'Edit Transport Lead' : 'Add Transport Lead' }}
+                      @endif
+                  </h4>
                   <a href="{{ route('admin.transport_leads') }}" class="btn btn-secondary btn-sm">Back to Transport Leads</a>
               </div>
               <div class="card-body">
                   @if(!$servicePrice)
                       <div class="alert alert-warning">Please add an active transport service price before creating a lead.</div>
+                  @endif
+
+                  @if($quoteMode && $transportLead->exists)
+                      <div class="alert alert-info">
+                          <strong>Quote for {{ $transportLead->tracking_number }}</strong><br>
+                          Subtotal: {{ number_format($transportLead->subtotal, 2) }} |
+                          Tax: {{ number_format($transportLead->tax_amount, 2) }} |
+                          Discount: {{ number_format($transportLead->discount_amount, 2) }} |
+                          Total Payable: {{ number_format($transportLead->total_payment, 2) }}
+                      </div>
                   @endif
 
                   <form action="{{ route('admin.save.transport_lead', $transportLead->id ?? '') }}" method="POST">
@@ -90,22 +106,14 @@
 
                       <h5 class="mb-3 mt-2">Route</h5>
                       <div class="row">
-                          <div class="col-md-6 mb-3">
-                              <label class="form-label">From City</label>
-                              <select name="from_city_id" class="form-control">
-                                  <option value="">Select from city</option>
-                                  @foreach($cities as $city)
-                                      <option value="{{ $city->id }}" {{ old('from_city_id', $transportLead->from_city_id) == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
-                                  @endforeach
-                              </select>
-                          </div>
-
-                          <div class="col-md-6 mb-3">
-                              <label class="form-label">To City</label>
-                              <select name="to_city_id" class="form-control">
-                                  <option value="">Select to city</option>
-                                  @foreach($cities as $city)
-                                      <option value="{{ $city->id }}" {{ old('to_city_id', $transportLead->to_city_id) == $city->id ? 'selected' : '' }}>{{ $city->name }}</option>
+                          <div class="col-md-12 mb-3">
+                              <label class="form-label">City Route</label>
+                              <select name="city_route_id" class="form-control">
+                                  <option value="">Select city route</option>
+                                  @foreach($cityRoutes as $route)
+                                      <option value="{{ $route->id }}" {{ old('city_route_id', $transportLead->city_route_id) == $route->id ? 'selected' : '' }}>
+                                          {{ $route->from_city }} to {{ $route->to_city }}
+                                      </option>
                                   @endforeach
                               </select>
                           </div>
@@ -173,7 +181,7 @@
                           </div>
                       </div>
 
-                      <h5 class="mb-3 mt-2">Payment & Notes</h5>
+                      <h5 class="mb-3 mt-2">{{ $quoteMode ? 'Quote, Payment & Notes' : 'Payment & Notes' }}</h5>
                       <div class="row">
                           <div class="col-md-3 mb-3">
                               <label class="form-label">Tax Amount</label>
@@ -209,6 +217,9 @@
                                       Weight Charge: {{ number_format($transportLead->weight_charge, 2) }} |
                                       Volume Charge: {{ number_format($transportLead->volume_charge, 2) }} |
                                       Distance Charge: {{ number_format($transportLead->distance_charge, 2) }} |
+                                      Subtotal: {{ number_format($transportLead->subtotal, 2) }} |
+                                      Tax: {{ number_format($transportLead->tax_amount, 2) }} |
+                                      Discount: {{ number_format($transportLead->discount_amount, 2) }} |
                                       Total: {{ number_format($transportLead->total_payment, 2) }}
                                   </div>
                               </div>
@@ -229,7 +240,13 @@
 
                       <div class="text-end d-flex justify-content-end gap-2">
                           <button type="reset" class="btn btn-secondary">Reset</button>
-                          <button type="submit" class="btn btn-primary" {{ !$servicePrice ? 'disabled' : '' }}>{{ $transportLead->exists ? 'Update Transport Lead' : 'Add Transport Lead' }}</button>
+                          <button type="submit" class="btn btn-primary" {{ !$servicePrice ? 'disabled' : '' }}>
+                              @if($quoteMode)
+                                  Save Quote
+                              @else
+                                  {{ $transportLead->exists ? 'Update Transport Lead' : 'Add Transport Lead' }}
+                              @endif
+                          </button>
                       </div>
                   </form>
               </div>

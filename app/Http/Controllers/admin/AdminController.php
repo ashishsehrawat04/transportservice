@@ -5,12 +5,13 @@ namespace App\Http\Controllers\admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\City;
 use App\Models\CityRoute;
 use App\Models\TransportAuthSetting;
 use App\Models\TransportLead;
+use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
 use App\Models\ShipmentPayment;
+use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
@@ -63,7 +64,7 @@ class AdminController extends Controller
             'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
         ];
 
-        $recentLeads = TransportLead::with(['user:id,name,email,mobile', 'fromCity:id,name', 'toCity:id,name'])
+        $recentLeads = TransportLead::with(['user:id,name,email,mobile', 'cityRoute'])
             ->latest()
             ->limit(8)
             ->get();
@@ -128,9 +129,6 @@ class AdminController extends Controller
         ]);
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-
-        City::firstOrCreate(['name' => $validated['from_city']], ['is_active' => true]);
-        City::firstOrCreate(['name' => $validated['to_city']], ['is_active' => true]);
 
         if ($cityRoute) {
             $cityRoute->update($validated);
@@ -297,6 +295,11 @@ class AdminController extends Controller
         return view('admin.payments', compact('paymentStats'));
     }
 
+    public function AdminTransportQuotes()
+    {
+        return view('admin.transport-quotes');
+    }
+
     public function AdminManageTransportLead($id = null)
     {
         $transportLead = $id ? TransportLead::find($id) : new TransportLead();
@@ -305,13 +308,15 @@ class AdminController extends Controller
             return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
         }
 
-        $this->syncCitiesFromRoutes();
-
         $users = User::orderBy('name')->get();
-        $cities = City::where('is_active', true)->orderBy('name')->get();
+        $cityRoutes = CityRoute::where('is_active', true)
+            ->orderBy('from_city')
+            ->orderBy('to_city')
+            ->get();
         $servicePrice = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
+        $quoteMode = request()->boolean('quote');
 
-        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cities', 'servicePrice'));
+        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cityRoutes', 'servicePrice', 'quoteMode'));
     }
 
     public function AdminSaveTransportLead(Request $request, $id = null)
@@ -331,8 +336,7 @@ class AdminController extends Controller
             'width_cm' => ['nullable', 'numeric', 'min:0'],
             'height_cm' => ['nullable', 'numeric', 'min:0'],
             'weight_kg' => ['required', 'numeric', 'min:0.01'],
-            'from_city_id' => ['required', 'exists:cities,id'],
-            'to_city_id' => ['required', 'different:from_city_id', 'exists:cities,id'],
+            'city_route_id' => ['required', 'exists:city_routes,id'],
             'tax_amount' => ['nullable', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'requested_pickup_date' => ['required', 'date'],
@@ -355,20 +359,10 @@ class AdminController extends Controller
             return back()->withInput()->with('error', 'Please add an active transport service price first');
         }
 
-        $fromCity = City::findOrFail($validated['from_city_id']);
-        $toCity = City::findOrFail($validated['to_city_id']);
-        $route = CityRoute::where('is_active', true)
-            ->where(function ($query) use ($fromCity, $toCity) {
-                $query->where(function ($inner) use ($fromCity, $toCity) {
-                    $inner->where('from_city', $fromCity->name)->where('to_city', $toCity->name);
-                })->orWhere(function ($inner) use ($fromCity, $toCity) {
-                    $inner->where('from_city', $toCity->name)->where('to_city', $fromCity->name);
-                });
-            })
-            ->first();
+        $route = CityRoute::where('is_active', true)->find($validated['city_route_id']);
 
         if (!$route) {
-            return back()->withInput()->with('error', 'Please add an active city route for selected cities first');
+            return back()->withInput()->with('error', 'Please select an active city route first');
         }
 
         $validated = array_merge($validated, $this->pricingService->calculateFromDimensions($validated, $price, $route));
@@ -390,6 +384,7 @@ class AdminController extends Controller
         }
 
         $this->recordLeadPaymentIfNeeded($transportLead->fresh(), $oldPaymentStatus, $oldTransactionId);
+        TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
 
         return redirect()->route('admin.transport_leads')->with('success', $message);
     }
@@ -404,6 +399,28 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+    }
+
+    public function AdminDownloadTransportLeadInvoice($id, ShipmentInvoicePdfService $invoicePdfService)
+    {
+        $transportLead = TransportLead::with(['user', 'cityRoute', 'latestPayment'])->find($id);
+
+        if (!$transportLead) {
+            return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+        }
+
+        if (!$this->invoiceCanBeDownloaded($transportLead)) {
+            return redirect()->route('admin.transport_leads')->with('error', 'Mark shipment as delivered before downloading invoice.');
+        }
+
+        $payment = $transportLead->latestPayment ?: $this->createInvoicePayment($transportLead);
+        TransportQuote::syncFromLead($transportLead, $payment->invoice_number);
+        $fileName = ($payment->invoice_number ?: $transportLead->tracking_number) . '.pdf';
+
+        return response($invoicePdfService->output($transportLead, $payment), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function AdminAuthSettings()
@@ -449,7 +466,12 @@ class AdminController extends Controller
             return;
         }
 
-        ShipmentPayment::create([
+        $this->createInvoicePayment($lead);
+    }
+
+    private function createInvoicePayment(TransportLead $lead): ShipmentPayment
+    {
+        $payment = ShipmentPayment::create([
             'invoice_number' => $this->generateInvoiceNumber(),
             'user_id' => $lead->user_id,
             'transport_lead_id' => $lead->id,
@@ -463,6 +485,15 @@ class AdminController extends Controller
             'transaction_id' => $lead->transaction_id,
             'notes' => 'Payment status updated from lead admin panel.',
         ]);
+
+        TransportQuote::syncFromLead($lead, $payment->invoice_number);
+
+        return $payment;
+    }
+
+    private function invoiceCanBeDownloaded(TransportLead $lead): bool
+    {
+        return $lead->admin_status === 'delivered';
     }
 
     private function generateInvoiceNumber(): string
@@ -492,14 +523,4 @@ class AdminController extends Controller
         return $query->orderBy('id')->first();
     }
 
-    private function syncCitiesFromRoutes(): void
-    {
-        CityRoute::query()
-            ->select('from_city', 'to_city')
-            ->get()
-            ->each(function (CityRoute $route) {
-                City::firstOrCreate(['name' => $route->from_city], ['is_active' => true]);
-                City::firstOrCreate(['name' => $route->to_city], ['is_active' => true]);
-            });
-    }
 }

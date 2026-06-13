@@ -40,7 +40,7 @@
                             </span>
                         </div>
 
-                        <p class="mb-2">{{ optional($lead->fromCity)->name }} to {{ optional($lead->toCity)->name }}</p>
+                        <p class="mb-2">{{ optional($lead->cityRoute)->from_city }} to {{ optional($lead->cityRoute)->to_city }}</p>
                         <p class="mb-2">Pickup: {{ optional($lead->confirmed_pickup_date ?: $lead->requested_pickup_date)->format('d M Y') }}</p>
                         <p class="mb-2">Expected Delivery: {{ optional($lead->expected_delivery_date)->format('d M Y') ?? '-' }}</p>
                         <p class="mb-3">Total: {{ number_format($lead->total_payment, 2) }}</p>

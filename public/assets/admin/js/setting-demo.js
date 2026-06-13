@@ -71,7 +71,7 @@ $(".changeBackgroundColor").on("click", function () {
 
 function customCheckColor() {
   $(".logo-header .navbar-brand")
-    .attr("src", "assets/img/kaiadmin/logo-transparent-cropped.png")
+    .attr("src", "/assets/admin/img/transport-admin-logo.svg")
     .addClass("gs-admin-logo");
 }
 

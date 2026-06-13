@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Helpers\Response;
 use App\Models\CityRoute;
 use App\Models\TransportLead;
+use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
 use App\Models\ShipmentPayment;
 
@@ -53,8 +54,7 @@ class ApiController extends Controller
     {
         try {
             $user = User::with([
-                'transportLeads.fromCity:id,name',
-                'transportLeads.toCity:id,name',
+                'transportLeads.cityRoute',
                 'payments',
                 'walletTransactions',
             ])->find($id);
@@ -138,7 +138,7 @@ class ApiController extends Controller
     public function AdminGetTransportLeads()
     {
         try {
-            $leads = TransportLead::with(['user:id,name,email', 'fromCity:id,name', 'toCity:id,name', 'assignedUser:id,name'])
+            $leads = TransportLead::with(['user:id,name,email', 'cityRoute', 'assignedUser:id,name'])
                 ->latest()
                 ->get();
 
@@ -168,9 +168,8 @@ class ApiController extends Controller
         try {
             $payments = ShipmentPayment::with([
                     'user:id,name,email,mobile',
-                    'transportLead:id,tracking_number,item_name,from_city_id,to_city_id',
-                    'transportLead.fromCity:id,name',
-                    'transportLead.toCity:id,name',
+                    'transportLead:id,tracking_number,item_name,city_route_id',
+                    'transportLead.cityRoute',
                 ])
                 ->latest()
                 ->get();
@@ -185,6 +184,34 @@ class ApiController extends Controller
             return Response::success(
                 $payments,
                 'Payments fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetTransportQuotes()
+    {
+        try {
+            $quotes = TransportQuote::with(['user:id,name,email,mobile', 'transportLead:id,tracking_number'])
+                ->latest()
+                ->get();
+
+            if ($quotes->isEmpty()) {
+                return Response::error(
+                    'No transport quotes found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $quotes,
+                'Transport quotes fetched successfully',
                 200
             );
 

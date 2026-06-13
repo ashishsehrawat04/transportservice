@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
                 'pendingUsers' => $pendingUsers,
                 'notificationCount' => $pendingLeads + $pendingPayments + $pendingUsers,
                 'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
-                'recentLeads' => TransportLead::with(['user:id,name,email,mobile', 'fromCity:id,name', 'toCity:id,name'])
+                'recentLeads' => TransportLead::with(['user:id,name,email,mobile', 'cityRoute'])
                     ->latest()
                     ->limit(4)
                     ->get(),

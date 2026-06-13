@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\web;
 
 use App\Http\Controllers\Controller;
-use App\Models\City;
 use App\Models\CityRoute;
+use App\Models\ShipmentPayment;
 use App\Models\TransportCartItem;
 use App\Models\TransportLead;
+use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
 use App\Services\GuestCartService;
+use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,17 +27,18 @@ class WebController extends Controller
     public function addShipmentItem()
     {
         $this->guestCartService->guestId();
-        $this->syncCitiesFromRoutes();
-        $cities = City::where('is_active', true)->orderBy('name')->get();
+        $cityRoutes = CityRoute::where('is_active', true)
+            ->orderBy('from_city')
+            ->orderBy('to_city')
+            ->get();
 
-        return view('web.shipment-add-item', compact('cities'));
+        return view('web.shipment-add-item', compact('cityRoutes'));
     }
 
     public function saveShipmentItems(Request $request)
     {
         $validated = $request->validate([
-            'from_city_id' => ['required', 'exists:cities,id'],
-            'to_city_id' => ['required', 'different:from_city_id', 'exists:cities,id'],
+            'city_route_id' => ['required', 'exists:city_routes,id'],
             'pickup_date' => ['required', 'date'],
             'delivery_date' => ['required', 'date', 'after_or_equal:pickup_date'],
             'items' => ['required', 'array', 'min:1'],
@@ -52,8 +55,7 @@ class WebController extends Controller
             $cartItem = TransportCartItem::create([
                 'user_id' => auth()->id(),
                 'guest_id' => auth()->check() ? null : $this->guestCartService->guestId(),
-                'from_city_id' => $validated['from_city_id'],
-                'to_city_id' => $validated['to_city_id'],
+                'city_route_id' => $validated['city_route_id'],
                 'item_name' => $item['item_name'],
                 'item_type' => $item['item_type'] ?? null,
                 'quantity' => $item['quantity'],
@@ -75,7 +77,7 @@ class WebController extends Controller
     {
         $price = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
         $cartItems = $this->cartQuery()
-            ->with(['fromCity', 'toCity'])
+            ->with('cityRoute')
             ->latest()
             ->get();
         $cartTotal = 0;
@@ -108,7 +110,7 @@ class WebController extends Controller
 
     public function shipmentLeads()
     {
-        $leads = TransportLead::with(['fromCity', 'toCity'])
+        $leads = TransportLead::with('cityRoute')
             ->where('user_id', auth()->id())
             ->latest()
             ->get();
@@ -123,7 +125,7 @@ class WebController extends Controller
         $userLeads = collect();
 
         if ($trackingNumber) {
-            $lead = TransportLead::with(['fromCity', 'toCity', 'user'])
+            $lead = TransportLead::with(['cityRoute', 'user', 'latestPayment'])
                 ->where('tracking_number', $trackingNumber)
                 ->when(auth()->check(), function ($query) {
                     $query->where('user_id', auth()->id());
@@ -132,7 +134,7 @@ class WebController extends Controller
         }
 
         if (auth()->check() && !$trackingNumber) {
-            $userLeads = TransportLead::with(['fromCity', 'toCity'])
+            $userLeads = TransportLead::with('cityRoute')
                 ->where('user_id', auth()->id())
                 ->latest()
                 ->limit(10)
@@ -140,6 +142,31 @@ class WebController extends Controller
         }
 
         return view('web.track-shipment', compact('lead', 'trackingNumber', 'userLeads'));
+    }
+
+    public function downloadShipmentInvoice(string $trackingNumber, ShipmentInvoicePdfService $invoicePdfService)
+    {
+        $lead = TransportLead::with(['cityRoute', 'user', 'latestPayment'])
+            ->where('tracking_number', $trackingNumber)
+            ->when(auth()->check(), function ($query) {
+                $query->where('user_id', auth()->id());
+            })
+            ->firstOrFail();
+
+        if ($lead->admin_status !== 'delivered') {
+            return redirect()
+                ->route('shipment.track', ['tracking_number' => $lead->tracking_number])
+                ->with('error', 'Invoice will be available after admin marks shipment as delivered.');
+        }
+
+        $payment = $lead->latestPayment ?: $this->createInvoicePayment($lead);
+        TransportQuote::syncFromLead($lead, $payment->invoice_number);
+        $fileName = ($payment->invoice_number ?: $lead->tracking_number) . '.pdf';
+
+        return response($invoicePdfService->output($lead, $payment), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function deleteShipmentCartItem($id)
@@ -158,7 +185,7 @@ class WebController extends Controller
             return back()->with('error', 'Please contact admin. Transport price is not set.');
         }
 
-        $cartItems = TransportCartItem::with(['fromCity', 'toCity'])
+        $cartItems = TransportCartItem::with('cityRoute')
             ->where('user_id', auth()->id())
             ->get();
 
@@ -191,8 +218,7 @@ class WebController extends Controller
                     'width_cm' => $item->width_cm,
                     'height_cm' => $item->height_cm,
                     'weight_kg' => $item->weight_kg,
-                    'from_city_id' => $item->from_city_id,
-                    'to_city_id' => $item->to_city_id,
+                    'city_route_id' => $item->city_route_id,
                     'requested_pickup_date' => $item->pickup_date,
                     'expected_delivery_date' => $item->delivery_date,
                     'admin_status' => 'pending',
@@ -220,7 +246,7 @@ class WebController extends Controller
     private function updateCartEstimate(TransportCartItem $item): void
     {
         $price = $this->priceForItemType($item->item_type);
-        $item->load(['fromCity', 'toCity']);
+        $item->load('cityRoute');
         $route = $this->findRoute($item);
 
         if (!$price || !$route) {
@@ -252,19 +278,11 @@ class WebController extends Controller
 
     private function findRoute(TransportCartItem $item): ?CityRoute
     {
-        if (!$item->fromCity || !$item->toCity) {
+        if (!$item->city_route_id) {
             return null;
         }
 
-        return CityRoute::where('is_active', true)
-            ->where(function ($query) use ($item) {
-                $query->where(function ($inner) use ($item) {
-                    $inner->where('from_city', $item->fromCity->name)->where('to_city', $item->toCity->name);
-                })->orWhere(function ($inner) use ($item) {
-                    $inner->where('from_city', $item->toCity->name)->where('to_city', $item->fromCity->name);
-                });
-            })
-            ->first();
+        return CityRoute::where('is_active', true)->find($item->city_route_id);
     }
 
     private function generateTrackingNumber(): string
@@ -276,14 +294,34 @@ class WebController extends Controller
         return $trackingNumber;
     }
 
-    private function syncCitiesFromRoutes(): void
+    private function createInvoicePayment(TransportLead $lead): ShipmentPayment
     {
-        CityRoute::query()
-            ->select('from_city', 'to_city')
-            ->get()
-            ->each(function (CityRoute $route) {
-                City::firstOrCreate(['name' => $route->from_city], ['is_active' => true]);
-                City::firstOrCreate(['name' => $route->to_city], ['is_active' => true]);
-            });
+        $payment = ShipmentPayment::create([
+            'invoice_number' => $this->generateInvoiceNumber(),
+            'user_id' => $lead->user_id,
+            'transport_lead_id' => $lead->id,
+            'amount' => $lead->total_payment,
+            'method' => $lead->payment_method ?: 'cash',
+            'status' => match ($lead->payment_status) {
+                'paid' => 'success',
+                default => 'pending',
+            },
+            'transaction_id' => $lead->transaction_id,
+            'notes' => 'Invoice generated from tracking page.',
+        ]);
+
+        TransportQuote::syncFromLead($lead, $payment->invoice_number);
+
+        return $payment;
     }
+
+    private function generateInvoiceNumber(): string
+    {
+        do {
+            $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (ShipmentPayment::where('invoice_number', $invoiceNumber)->exists());
+
+        return $invoiceNumber;
+    }
+
 }
