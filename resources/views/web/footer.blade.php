@@ -7,7 +7,7 @@
                             <div class="logo-area">
                                 <a href="#"><img src="{{ asset('assets/img/home1/Footer-logo-h1.svg') }}" alt=""></a>
                             </div>
-                            <p>123 Business St., Suite 456, City, State, ZIP Code-3456, New York-USA</p>
+                            <p>Fast route pricing, shipment requests, tracking, invoices, and delivery updates from one transport dashboard.</p>
                             <ul class="social-list">
                                 <li><a href="https://www.facebook.com/"><i class="bx bxl-facebook"></i></a></li>
                                 <li><a href="https://www.linkedin.com/"><i class="bx bxl-linkedin"></i></a></li>
@@ -18,7 +18,7 @@
                     </div>
                     <div class="col-lg-8">
                         <div class="contact-area">
-                            <h2>We are Global Courier Service Agency.</h2>
+                            <h2>Move goods with clear pricing and live shipment control.</h2>
                             <ul class="mail-and-call">
                                 <li>
                                     <div class="icon">
@@ -26,7 +26,7 @@
                                     </div>
                                     <div class="content">
                                         <p>Send Us Mail</p>
-                                        <a href="mailto:info@example.com">info@example.com</a>
+                                        <a href="mailto:support@onetrack.test">support@onetrack.test</a>
                                     </div>
                                 </li>
                                 <li>
@@ -35,7 +35,7 @@
                                     </div>
                                     <div class="content">
                                         <p>Collaborate!</p>
-                                        <a href="tel:+91456453345">(+91) 656 786 534</a>
+                                        <a href="tel:+919000000001">(+91) 90000 00001</a>
                                     </div>
                                 </li>
                             </ul>
@@ -65,11 +65,11 @@
                                 <h3>Company</h3>
                             </div>
                             <ul class="widget-list">
-                                <li><a href="history.html">Our History</a></li>
-                                <li><a href="team.html">Our Expert</a></li>
-                                <li><a href="news-and-insight.html">News & Media</a></li>
-                                <li><a href="career.html">Careers <span>Hiring</span></a></li>
-                                <li><a href="certification.html">Certifications</a></li>
+                                <li><a href="{{ url('/') }}">Home</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Create Shipment</a></li>
+                                <li><a href="{{ route('shipment.cart') }}">Cart</a></li>
+                                <li><a href="{{ route('shipment.track') }}">Track Shipment</a></li>
+                                <li><a href="{{ route('login') }}">Customer Login</a></li>
                             </ul>
                         </div>
                     </div>
@@ -79,11 +79,11 @@
                                 <h3>Solutions</h3>
                             </div>
                             <ul class="widget-list">
-                                <li><a href="solution-details.html">Business Solution</a></li>
-                                <li><a href="solution-details.html">Container Shipping</a></li>
-                                <li><a href="solution-details.html">International Courier</a></li>
-                                <li><a href="solution-details.html">Document & Secure Package</a></li>
-                                <li><a href="solution-details.html">Custom courier solutions</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Route Pricing</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Goods Transport</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Bike Transport</a></li>
+                                <li><a href="{{ route('shipment.track') }}">Status Tracking</a></li>
+                                <li><a href="{{ route('shipment.cart') }}">Lead Checkout</a></li>
                             </ul>
                         </div>
                     </div>
@@ -94,11 +94,15 @@
                                 <h3>Support</h3>
                             </div>
                             <ul class="widget-list">
-                                <li><a href="get-in-touch.html">Request a quote</a></li>
-                                <li><a href="terms-and-conditions.html">terms & conditions</a></li>
-                                <li><a href="terms-and-conditions.html">refund policy</a></li>
-                                <li><a href="#">Offer & Discount</a></li>
-                                <li><a href="https://www.google.com/maps">Visit Sitemap</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Request a quote</a></li>
+                                <li><a href="{{ route('shipment.track') }}">Track & Trace</a></li>
+                                @auth
+                                    <li><a href="{{ route('shipment.leads') }}">Shipment Requests</a></li>
+                                    <li><a href="{{ route('user.profile') }}">Profile</a></li>
+                                @else
+                                    <li><a href="{{ route('register') }}">Create Account</a></li>
+                                    <li><a href="{{ route('login') }}">Login</a></li>
+                                @endauth
                             </ul>
                         </div>
                     </div>
@@ -107,7 +111,7 @@
         </div>
         <div class="footer-bottom">
             <div class="container">
-                <p>Copyright 2025 <a href="https://www.egenslab.com/">Egens Lab</a> | All Right Reserved.</p>
+                <p>Copyright 2026 <a href="{{ url('/') }}">OneTrack</a> | All Rights Reserved.</p>
             </div>
         </div>
     </footer>

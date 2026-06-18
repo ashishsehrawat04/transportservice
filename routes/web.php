@@ -25,6 +25,11 @@ Route::post('/login/mobile/verify', [AuthController::class, 'verifyMobileOtp'])-
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/user-profile', [WebController::class, 'UserProfile'])->name('user.profile');
+    Route::get('/user-profile-edit', [WebController::class, 'UserProfileEdit'])->name('user.profile.edit');
+    Route::post('/user-profile-update', [WebController::class, 'UpdateUserProfile'])->name('user.profile.update');
+});
 Route::get('/shipment/add-item', [WebController::class, 'addShipmentItem'])->name('shipment.add_item');
 Route::post('/shipment/add-item', [WebController::class, 'saveShipmentItems'])->name('shipment.save_items');
 Route::get('/shipment/cart', [WebController::class, 'shipmentCart'])->name('shipment.cart');

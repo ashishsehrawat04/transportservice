@@ -5,6 +5,7 @@ namespace App\Http\Controllers\web;
 use App\Http\Controllers\Controller;
 use App\Models\CityRoute;
 use App\Models\ShipmentPayment;
+use App\Models\ShipmentAddress;
 use App\Models\TransportCartItem;
 use App\Models\TransportLead;
 use App\Models\TransportQuote;
@@ -15,6 +16,8 @@ use App\Services\ShipmentPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class WebController extends Controller
 {
@@ -324,4 +327,104 @@ class WebController extends Controller
         return $invoiceNumber;
     }
 
+    public function UserProfile()
+    {
+        $user = Auth::user();
+        $user->load('shipmentAddress');
+
+        $shipmentStats = [
+            'total' => TransportLead::where('user_id', $user->id)->count(),
+            'delivered' => TransportLead::where('user_id', $user->id)
+                ->where('admin_status', 'delivered')
+                ->count(),
+            'pending' => TransportLead::where('user_id', $user->id)
+                ->where('admin_status', '!=', 'delivered')
+                ->count(),
+        ];
+
+        $recentShipments = TransportLead::with('cityRoute')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return view('web.userporfile', compact('user', 'shipmentStats', 'recentShipments'));
+    }
+
+    public function UserProfileEdit()
+    {
+        $user = Auth::user();
+        $user->load('shipmentAddress');
+
+        $shipmentStats = [
+            'total' => TransportLead::where('user_id', $user->id)->count(),
+            'delivered' => TransportLead::where('user_id', $user->id)
+                ->where('admin_status', 'delivered')
+                ->count(),
+            'pending' => TransportLead::where('user_id', $user->id)
+                ->where('admin_status', '!=', 'delivered')
+                ->count(),
+        ];
+
+        $recentShipments = TransportLead::with('cityRoute')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(5)
+            ->get();
+        $isEdit = true;
+
+        return view('web.userporfile', compact('user', 'shipmentStats', 'recentShipments', 'isEdit'));
+    }
+
+    public function UpdateUserProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'mobile' => ['nullable', 'digits_between:10,15', Rule::unique('users', 'mobile')->ignore($user->id)],
+            'address_line_1' => ['nullable', 'string', 'max:1000'],
+            'address_line_2' => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'pincode' => ['nullable', 'digits_between:5,6'],
+        ]);
+
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'] ?? null,
+            'mobile' => $validated['mobile'] ?? null,
+            'pincode' => $validated['pincode'] ?? null,
+        ]);
+
+        $addressInput = collect($validated)
+            ->only(['address_line_1', 'address_line_2', 'city', 'state', 'country', 'pincode'])
+            ->map(fn ($value) => is_string($value) ? trim($value) : $value)
+            ->all();
+
+        $hasAddress = collect($addressInput)
+            ->except('country')
+            ->filter()
+            ->isNotEmpty();
+
+        if ($hasAddress) {
+            $address = $user->shipmentAddress ?: new ShipmentAddress();
+            $address->fill([
+                'address_line_1' => $addressInput['address_line_1'] ?: 'Not provided',
+                'address_line_2' => $addressInput['address_line_2'] ?: null,
+                'city' => $addressInput['city'] ?: 'Not provided',
+                'state' => $addressInput['state'] ?: 'Not provided',
+                'country' => $addressInput['country'] ?: 'India',
+                'pincode' => $addressInput['pincode'] ?: '000000',
+                'status' => 1,
+            ]);
+            $address->save();
+
+            $user->update(['shipment_address_id' => $address->id]);
+        }
+
+        return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
+    }
 }

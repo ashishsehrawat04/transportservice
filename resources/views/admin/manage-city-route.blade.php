@@ -1,4 +1,4 @@
-@extends('Admin.Layout')
+@extends('admin.Layout')
 
 @section('content')
   @if(session('success'))

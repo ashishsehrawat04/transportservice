@@ -8,7 +8,7 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                         <div>
                             <span style="color:#ff7a00; font-weight:600;">Shipment</span>
-                            <h2 class="mb-0">Add Items</h2>
+                            <h2 class="mb-0">Add Shipment</h2>
                         </div>
                         <a href="{{ route('shipment.cart') }}" class="primary-btn1 btn-hover">
                             My Cart
@@ -59,11 +59,11 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Item Name</label>
+                                        <label class="form-label"> Shipment Item Name</label>
                                         <input type="text" name="items[0][item_name]" class="form-control" placeholder="Box, chair, fridge..." required>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label">Item Type</label>
+                                        <label class="form-label"> Shipment Item Type</label>
                                         <input type="text" name="items[0][item_type]" class="form-control" placeholder="Furniture, electronics...">
                                     </div>
                                     <div class="col-md-4 mb-3">
@@ -91,7 +91,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
-                            <button type="button" class="btn btn-secondary" id="addMoreItem">Add More Item</button>
+                            <button type="button" class="btn btn-secondary" id="addMoreItem">Add More</button>
                             <button type="submit" class="primary-btn1 btn-hover">
                                 Save To Cart
                                 <span></span>

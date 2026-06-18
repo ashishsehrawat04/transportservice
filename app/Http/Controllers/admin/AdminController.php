@@ -25,6 +25,7 @@ class AdminController extends Controller
 
     public function AdminDashboard()
     {
+
         $leadStatusCounts = TransportLead::selectRaw('admin_status, COUNT(*) as total')
             ->groupBy('admin_status')
             ->pluck('total', 'admin_status');
@@ -64,6 +65,8 @@ class AdminController extends Controller
             'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
         ];
 
+
+
         $recentLeads = TransportLead::with(['user:id,name,email,mobile', 'cityRoute'])
             ->latest()
             ->limit(8)
@@ -75,6 +78,9 @@ class AdminController extends Controller
         $recentUsers = User::latest()
             ->limit(6)
             ->get();
+
+
+
 
         return view('admin.dashboard', compact('dashboard', 'recentLeads', 'recentPayments', 'recentUsers', 'monthlyLabels', 'monthlyLeadCounts', 'monthlyRevenue'));
     }

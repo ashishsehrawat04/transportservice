@@ -30,6 +30,8 @@ class User extends Authenticatable
         'wallet_balance',
         'otp',
         'otp_expires_at',
+        'pincode',
+        'shipment_address_id',
     ];
 
     /**
@@ -70,6 +72,11 @@ class User extends Authenticatable
     public function payments()
     {
         return $this->hasMany(ShipmentPayment::class);
+    }
+
+    public function shipmentAddress()
+    {
+        return $this->belongsTo(ShipmentAddress::class);
     }
 
     public function walletTransactions()

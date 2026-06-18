@@ -1,4 +1,4 @@
-@extends('Admin.Layout')
+@extends('admin.Layout')
 
 @section('content')
 
@@ -35,7 +35,7 @@
                                             <th>To City</th>
                                             <th>Distance (KM)</th>
                                             <th>Rate/KM</th>
-                                            <th>Min Charge</th>
+                                            <th>Fair Charges</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>

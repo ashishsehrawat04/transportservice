@@ -25,8 +25,9 @@
     <link href="{{ asset('assets/css/boxicons.min.css') }}" rel="stylesheet">
     <!--  Style CSS  -->
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/production-theme.css') }}">
     <!-- Title -->
-    <title>OneTrack - Logistics & Transportation</title>
+    <title>OneTrack - Smart Transport & Shipment Tracking</title>
     <link rel="icon" href="{{ asset('assets/fav-icon.svg') }}" type="image/gif" sizes="20x20">
     <style>
         .home1-banner-section .banner-wrapper,
@@ -726,10 +727,10 @@
                             </a>
                             <i class="bi bi-plus dropdown-icon"></i>
                             <ul class="sub-menu">
-                                <li><a href="{{ route('shipment.add_item') }}">Add Item</a></li>
-                                <li><a href="{{ route('shipment.cart') }}">My Cart</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Create Shipment</a></li>
+                                <li><a href="{{ route('shipment.cart') }}">My Shipments</a></li>
                                 @auth
-                                    <li><a href="{{ route('shipment.leads') }}">My Leads</a></li>
+                                    <li><a href="{{ route('shipment.leads') }}">Shipment Requests</a></li>
                                 @endauth
                             </ul>
                         </li>
@@ -773,10 +774,41 @@
                                 @endphp
 
                                 <div class="web-user-actions">
-                                    <a href="{{ route('shipment.leads') }}" class="web-user-chip" title="{{ Auth::user()->name }}">
+                                    <!-- <a href="{{ route('shipment.leads') }}" class="web-user-chip" title="{{ Auth::user()->name }}">
                                         <span class="web-user-avatar">{{ $userInitial }}</span>
                                         <span class="web-user-name">{{ Auth::user()->name }}</span>
-                                    </a>
+                                    </a> -->
+                                    <div class="dropdown">
+                                        <a href="#" class="web-user-chip dropdown-toggle text-decoration-none" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span class="web-user-avatar">{{ $userInitial }}</span>
+                                            <span class="web-user-name">{{ Auth::user()->name }}</span>
+                                        </a>
+
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3"
+                                            aria-labelledby="userDropdown">
+
+                                            <li>
+                                                <a class="dropdown-item py-2" href="{{ route('user.profile') }}">
+                                                    <i class="bi bi-person-circle me-2"></i>
+                                                    Profile
+                                                </a>
+                                            </li>
+
+                                            <li><hr class="dropdown-divider"></li>
+
+                                            <li>
+                                                <form action="{{ route('logout') }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="dropdown-item text-danger py-2">
+                                                        <i class="bi bi-box-arrow-right me-2"></i>
+                                                        Logout
+                                                    </button>
+                                                </form>
+                                            </li>
+
+                                        </ul>
+                                    </div>
+                                    
                                     <a href="{{ route('shipment.cart') }}" class="web-cart-chip" title="My Cart">
                                         <i class="bi bi-cart3"></i>
                                         <span class="web-cart-count">{{ $cartCount }}</span>
