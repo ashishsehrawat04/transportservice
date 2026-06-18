@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\CityRoute;
 use App\Models\TransportCartItem;
 use App\Models\TransportServicePrice;
+use App\Models\ShipmentPriceLog;
+use Illuminate\Support\Facades\Auth;
 
 class ShipmentPricingService
 {
@@ -58,6 +60,25 @@ class ShipmentPricingService
 
         $taxAmount = (float) ($item['tax_amount'] ?? 0);
         $discountAmount = (float) ($item['discount_amount'] ?? 0);
+
+        $user = Auth::user();
+
+        ShipmentPriceLog::create([
+            'user_id' => $user?->id,
+            'user_name' => $user?->name,
+            'user_email' => $user?->email,
+            'volume_cft' => $volumeCft,
+            'distance_km' => $route->distance_km,
+            'base_price' => $basePrice,
+            'weight_charge' => $weightCharge,
+            'volume_charge' => $volumeCharge,
+            'distance_charge' => $distanceCharge,
+            'multiplier_applied' => $price->multiplier,
+            'subtotal' => $subtotal,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'total_payment' => max(0, round($subtotal + $taxAmount - $discountAmount, 2)),
+        ]);
 
         return [
             'volume_cft' => $volumeCft,
