@@ -26,7 +26,14 @@ class ApiController extends Controller
                 'name',
                 'email',
                 'mobile',
-                'wallet_balance', 'slug'
+                'address_line_1',
+                'address_line_2',
+                'city',
+                'state',
+                'country',
+                'pincode',
+                'wallet_balance',
+                'slug'
             )->get();
 
             if ($users->isEmpty()) {

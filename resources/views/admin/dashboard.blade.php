@@ -148,7 +148,7 @@
                 <div class="card-title">Recent Leads</div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive admin-table-scroll">
                     <table class="table align-items-center mb-0">
                         <thead>
                             <tr>
@@ -186,7 +186,7 @@
                 <div class="card-title">Payment History</div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive admin-table-scroll">
                     <table class="table align-items-center mb-0">
                         <thead>
                             <tr>

@@ -47,42 +47,29 @@
 
                       <div class="row">
                           <div class="col-md-4 mb-3">
-                              <label class="form-label">Base Price</label>
-                              <input type="number" step="0.01" name="base_price" class="form-control" value="{{ old('base_price', $transportPrice->base_price) }}" placeholder="Enter base price">
+                              <label class="form-label">Calculate Price By</label>
+                              <select name="calculation_type" id="calculation_type" class="form-control">
+                                  @foreach(['distance' => 'Distance', 'volume' => 'Volume'] as $value => $label)
+                                      <option value="{{ $value }}" {{ old('calculation_type', $transportPrice->calculation_type ?? 'distance') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                  @endforeach
+                              </select>
                           </div>
 
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Weight Rate / KG</label>
-                              <input type="number" step="0.01" name="weight_rate_per_kg" class="form-control" value="{{ old('weight_rate_per_kg', $transportPrice->weight_rate_per_kg) }}" placeholder="Enter weight rate per KG">
+                          <div class="col-md-4 mb-3 price-rate-field" data-rate-type="distance">
+                              <label class="form-label">Distance Rate / KM</label>
+                              <input type="number" step="0.01" name="distance_rate_per_km" class="form-control" value="{{ old('distance_rate_per_km', $transportPrice->distance_rate_per_km ?? 0) }}" placeholder="Enter distance rate per KM">
                           </div>
 
-                          <div class="col-md-4 mb-3">
+                          <div class="col-md-4 mb-3 price-rate-field" data-rate-type="volume">
                               <label class="form-label">Volume Rate / CFT</label>
-                              <input type="number" step="0.01" name="volume_rate_per_cft" class="form-control" value="{{ old('volume_rate_per_cft', $transportPrice->volume_rate_per_cft) }}" placeholder="Enter volume rate per CFT">
+                              <input type="number" step="0.01" name="volume_rate_per_cft" class="form-control" value="{{ old('volume_rate_per_cft', $transportPrice->volume_rate_per_cft ?? 0) }}" placeholder="Enter volume rate per CFT">
                           </div>
                       </div>
 
                       <div class="row">
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Distance Rate / KM</label>
-                              <input type="number" step="0.01" name="distance_rate_per_km" class="form-control" value="{{ old('distance_rate_per_km', $transportPrice->distance_rate_per_km) }}" placeholder="Enter distance rate per KM">
-                          </div>
-
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Multiplier</label>
-                              <input type="number" step="0.01" name="multiplier" class="form-control" value="{{ old('multiplier', $transportPrice->multiplier ?? 1.00) }}" placeholder="Enter multiplier">
-                          </div>
-
                           <div class="col-md-4 mb-3">
                               <label class="form-label">Minimum Charge</label>
                               <input type="number" step="0.01" name="min_charge" class="form-control" value="{{ old('min_charge', $transportPrice->min_charge ?? 0.00) }}" placeholder="Enter minimum charge">
-                          </div>
-                      </div>
-
-                      <div class="row">
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Maximum Charge</label>
-                              <input type="number" step="0.01" name="max_charge" class="form-control" value="{{ old('max_charge', $transportPrice->max_charge) }}" placeholder="Enter maximum charge">
                           </div>
                           <div class="col-md-4 mb-3">
                               <div class="form-check mt-4 pt-2">
@@ -101,4 +88,24 @@
           </div>
       </div>
   </div>
+
+  <script>
+      document.addEventListener('DOMContentLoaded', function () {
+          const calculationType = document.getElementById('calculation_type');
+          const rateFields = document.querySelectorAll('.price-rate-field');
+
+          function syncRateFields() {
+              rateFields.forEach(function (field) {
+                  const input = field.querySelector('input');
+                  const isActive = field.dataset.rateType === calculationType.value;
+
+                  field.style.opacity = isActive ? '1' : '.45';
+                  input.required = isActive;
+              });
+          }
+
+          calculationType.addEventListener('change', syncRateFields);
+          syncRateFields();
+      });
+  </script>
 @endsection

@@ -10,9 +10,11 @@ use App\Models\TransportAuthSetting;
 use App\Models\TransportLead;
 use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
+use App\Models\TransportAddress;
 use App\Models\ShipmentPayment;
 use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
+use App\Services\TransportQuotePdfService;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -192,6 +194,13 @@ class AdminController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
 
+            'address_line_1' => ['nullable', 'string', 'max:1000'],
+            'address_line_2' => ['nullable', 'string', 'max:1000'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:255'],
+            'country' => ['nullable', 'string', 'max:255'],
+            'pincode' => ['nullable', 'digits_between:5,6'],
+
             'role' => [
                 'required',
                 Rule::in(['user', 'admin']),
@@ -242,16 +251,19 @@ class AdminController extends Controller
                 Rule::unique('transport_service_prices')->ignore($transportPrice?->id),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'weight_rate_per_kg' => ['required', 'numeric', 'min:0'],
-            'volume_rate_per_cft' => ['required', 'numeric', 'min:0'],
-            'distance_rate_per_km' => ['required', 'numeric', 'min:0'],
-            'multiplier' => ['required', 'numeric', 'min:0'],
+            'calculation_type' => ['required', Rule::in(['distance', 'volume'])],
+            'volume_rate_per_cft' => ['nullable', 'numeric', 'min:0'],
+            'distance_rate_per_km' => ['nullable', 'numeric', 'min:0'],
             'min_charge' => ['required', 'numeric', 'min:0'],
-            'max_charge' => ['nullable', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $validated['base_price'] = 0;
+        $validated['weight_rate_per_kg'] = 0;
+        $validated['volume_rate_per_cft'] = $validated['volume_rate_per_cft'] ?? 0;
+        $validated['distance_rate_per_km'] = $validated['distance_rate_per_km'] ?? 0;
+        $validated['multiplier'] = 1;
+        $validated['max_charge'] = null;
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
         if ($transportPrice) {
@@ -304,6 +316,35 @@ class AdminController extends Controller
     public function AdminTransportQuotes()
     {
         return view('admin.transport-quotes');
+    }
+
+    public function AdminViewTransportQuote($id)
+    {
+        $quote = TransportQuote::with(['user', 'transportLead.cityRoute'])->find($id);
+
+        if (!$quote) {
+            return redirect()->route('admin.transport_quotes')->with('error', 'Transport quote not found');
+        }
+
+        $transportAddress = $this->transportAddressForQuote($quote);
+
+        return view('admin.transport-quote-show', compact('quote', 'transportAddress'));
+    }
+
+    public function AdminDownloadTransportQuote($id, TransportQuotePdfService $quotePdfService)
+    {
+        $quote = TransportQuote::with(['user', 'transportLead.cityRoute'])->find($id);
+
+        if (!$quote) {
+            return redirect()->route('admin.transport_quotes')->with('error', 'Transport quote not found');
+        }
+
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id) . '.pdf';
+
+        return response($quotePdfService->output($quote, $this->transportAddressForQuote($quote)), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function AdminManageTransportLead($id = null)
@@ -527,6 +568,19 @@ class AdminController extends Controller
         }
 
         return $query->orderBy('id')->first();
+    }
+
+    private function transportAddressForQuote(TransportQuote $quote): ?object
+    {
+        $snapshot = $quote->quote_data['transport_address'] ?? null;
+
+        if (is_array($snapshot)) {
+            return (object) $snapshot;
+        }
+
+        return TransportAddress::where('user_id', $quote->user_id)
+            ->latest()
+            ->first();
     }
 
 }

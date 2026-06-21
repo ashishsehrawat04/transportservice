@@ -119,6 +119,7 @@
     <!--  Main jQuery  -->
     <script src="{{ asset('assets/js/jquery-3.7.1.min.js') }}"></script>
     <script src="{{ asset('assets/js/jquery-ui.js') }}"></script>
+    <script src="{{ asset('assets/js/plugin/select2/select2.full.min.js') }}"></script>
     <script src="{{ asset('assets/js/moment.min.js') }}"></script>
     <script src="{{ asset('assets/js/daterangepicker.min.js') }}"></script>
 

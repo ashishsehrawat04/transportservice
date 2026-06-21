@@ -24,7 +24,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive admin-table-scroll">
                         <table id="multi-filter-select" class="display table table-striped table-hover">
                             <thead>
                                 <tr>
@@ -78,6 +78,8 @@
                         }
                     }
                 },
+                scrollX: true,
+                autoWidth: false,
 
                 columns: [
                     {
@@ -157,10 +159,12 @@
                                 : '';
 
                             return `
+                                <div class="action-buttons">
                                 <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
                                 <a href="${quoteUrl}" class="btn btn-sm btn-warning">Create Quote</a>
                                 ${invoiceButton}
                                 <a href="${deleteUrl}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                                </div>
                             `;
                         }
                     }

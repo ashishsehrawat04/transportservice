@@ -17,7 +17,7 @@
                 <h4 class="card-title">Transport Quotes</h4>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="table-responsive admin-table-scroll">
                     <table id="transport-quotes-table" class="display table table-striped table-hover">
                         <thead>
                             <tr>
@@ -33,6 +33,7 @@
                                 <th>Total</th>
                                 <th>Status</th>
                                 <th>Date</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -62,6 +63,8 @@
                     alert(response && response.message ? response.message : 'Something went wrong');
                 }
             },
+            scrollX: true,
+            autoWidth: false,
             columns: [
                 {
                     data: null,
@@ -126,6 +129,22 @@
                     data: 'created_at',
                     render: function(data) {
                         return data ? new Date(data).toLocaleDateString() : '-';
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(row) {
+                        let viewUrl = "{{ url('admin/transport-quotes') }}" + "/" + row.id;
+                        let downloadUrl = viewUrl + "/download";
+
+                        return `
+                            <div class="action-buttons">
+                                <a href="${viewUrl}" class="btn btn-sm btn-info">View</a>
+                                <a href="${downloadUrl}" class="btn btn-sm btn-primary">Download</a>
+                            </div>
+                        `;
                     }
                 }
             ],

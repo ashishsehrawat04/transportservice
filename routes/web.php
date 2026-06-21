@@ -69,6 +69,8 @@ Route::get('/admin/transport-leads/delete/{id}', [AdminController::class, 'Admin
 Route::get('/admin/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');
 
 Route::get('/admin/transport-quotes', [AdminController::class, 'AdminTransportQuotes'])->middleware('auth')->name('admin.transport_quotes');
+Route::get('/admin/transport-quotes/{id}', [AdminController::class, 'AdminViewTransportQuote'])->middleware('auth')->name('admin.transport_quotes.view');
+Route::get('/admin/transport-quotes/{id}/download', [AdminController::class, 'AdminDownloadTransportQuote'])->middleware('auth')->name('admin.transport_quotes.download');
 Route::get('/admin/get-transport-quotes', [ApiController::class, 'AdminGetTransportQuotes'])->middleware('auth')->name('adminget.transport.quotes');
 
 Route::get('/admin/payments', [AdminController::class, 'AdminPayments'])->middleware('auth')->name('admin.payments');

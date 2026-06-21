@@ -209,6 +209,37 @@
               </div>
             </div>
 
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Pincode</label>
+              <input type="text" class="form-control" value="{{ old('pincode', $user->pincode) }}" name="pincode" placeholder="Enter pincode">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">City</label>
+              <input type="text" class="form-control" value="{{ old('city', $user->city) }}" name="city" placeholder="Enter city">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">State</label>
+              <input type="text" class="form-control" value="{{ old('state', $user->state) }}" name="state" placeholder="Enter state">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Country</label>
+              <input type="text" class="form-control" value="{{ old('country', $user->country ?? 'India') }}" name="country" placeholder="Enter country">
+            </div>
+
+            <div class="col-12 mb-3">
+              <label class="form-label">Address Line 1</label>
+              <textarea class="form-control" name="address_line_1" rows="3" placeholder="Enter address">{{ old('address_line_1', $user->address_line_1) }}</textarea>
+            </div>
+
+            <div class="col-12 mb-3">
+              <label class="form-label">Address Line 2</label>
+              <textarea class="form-control" name="address_line_2" rows="3" placeholder="Enter address">{{ old('address_line_2', $user->address_line_2) }}</textarea>
+            </div>
+          </div>
+
 
 
           <div class="section-divider">Account Settings</div>

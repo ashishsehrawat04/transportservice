@@ -5,8 +5,8 @@ namespace App\Http\Controllers\web;
 use App\Http\Controllers\Controller;
 use App\Models\CityRoute;
 use App\Models\ShipmentPayment;
-use App\Models\ShipmentAddress;
 use App\Models\TransportCartItem;
+use App\Models\TransportAddress;
 use App\Models\TransportLead;
 use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
@@ -34,19 +34,32 @@ class WebController extends Controller
             ->orderBy('from_city')
             ->orderBy('to_city')
             ->get();
+        $fromCities = $cityRoutes->pluck('from_city')->unique()->values();
+        $toCities = $cityRoutes->pluck('to_city')->unique()->values();
+        $itemTypes = TransportServicePrice::where('is_active', true)
+            ->orderBy('item_type')
+            ->pluck('item_type');
 
-        return view('web.shipment-add-item', compact('cityRoutes'));
+        return view('web.shipment-add-item', compact('cityRoutes', 'fromCities', 'toCities', 'itemTypes'));
     }
 
     public function saveShipmentItems(Request $request)
     {
         $validated = $request->validate([
-            'city_route_id' => ['required', 'exists:city_routes,id'],
+            'from_city' => ['required', 'string', 'max:255'],
+            'to_city' => ['required', 'string', 'max:255'],
+            'pickup_address' => ['nullable', 'string', 'max:2000'],
+            'delivery_address' => ['nullable', 'string', 'max:2000'],
             'pickup_date' => ['required', 'date'],
             'delivery_date' => ['required', 'date', 'after_or_equal:pickup_date'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_name' => ['required', 'string', 'max:255'],
-            'items.*.item_type' => ['nullable', 'string', 'max:255'],
+            'items.*.item_type' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::exists('transport_service_prices', 'item_type')->where('is_active', true),
+            ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.length_cm' => ['nullable', 'numeric', 'min:0'],
             'items.*.width_cm' => ['nullable', 'numeric', 'min:0'],
@@ -54,11 +67,22 @@ class WebController extends Controller
             'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
         ]);
 
+        $cityRoute = CityRoute::where('is_active', true)
+            ->where('from_city', $validated['from_city'])
+            ->where('to_city', $validated['to_city'])
+            ->first();
+
+        if (!$cityRoute) {
+            return back()
+                ->withErrors(['to_city' => 'Please select a valid active city route.'])
+                ->withInput();
+        }
+
         foreach ($validated['items'] as $item) {
             $cartItem = TransportCartItem::create([
                 'user_id' => auth()->id(),
                 'guest_id' => auth()->check() ? null : $this->guestCartService->guestId(),
-                'city_route_id' => $validated['city_route_id'],
+                'city_route_id' => $cityRoute->id,
                 'item_name' => $item['item_name'],
                 'item_type' => $item['item_type'] ?? null,
                 'quantity' => $item['quantity'],
@@ -71,6 +95,16 @@ class WebController extends Controller
             ]);
 
             $this->updateCartEstimate($cartItem);
+
+            if (auth()->check() && ($validated['pickup_address'] || $validated['delivery_address'])) {
+                TransportAddress::create([
+                    'user_id' => auth()->id(),
+                    'item_id' => $cartItem->id,
+                    'pickup_address' => $validated['pickup_address'] ?? null,
+                    'delivery_address' => $validated['delivery_address'] ?? null,
+                    'status' => 1,
+                ]);
+            }
         }
 
         return redirect()->route('shipment.cart')->with('success', 'Items added to cart successfully');
@@ -189,6 +223,7 @@ class WebController extends Controller
         }
 
         $cartItems = TransportCartItem::with('cityRoute')
+            ->with('transportAddress')
             ->where('user_id', auth()->id())
             ->get();
 
@@ -212,7 +247,7 @@ class WebController extends Controller
                 $route = $this->findRoute($item);
                 $breakdown = $this->pricingService->calculateCartItem($item, $price, $route);
 
-                TransportLead::create(array_merge([
+                $transportLead = TransportLead::create(array_merge([
                     'user_id' => auth()->id(),
                     'item_name' => $item->item_name,
                     'item_type' => $item->item_type ?: $price->item_type,
@@ -229,6 +264,18 @@ class WebController extends Controller
                     'payment_status' => 'unpaid',
                     'tracking_number' => $this->generateTrackingNumber(),
                 ], $breakdown));
+
+                $quote = TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
+
+                if ($item->transportAddress) {
+                    $quoteData = $quote->quote_data ?: [];
+                    $quoteData['transport_address'] = [
+                        'pickup_address' => $item->transportAddress->pickup_address,
+                        'delivery_address' => $item->transportAddress->delivery_address,
+                        'status' => $item->transportAddress->status,
+                    ];
+                    $quote->update(['quote_data' => $quoteData]);
+                }
             }
 
             TransportCartItem::where('user_id', auth()->id())->delete();
@@ -330,7 +377,6 @@ class WebController extends Controller
     public function UserProfile()
     {
         $user = Auth::user();
-        $user->load('shipmentAddress');
 
         $shipmentStats = [
             'total' => TransportLead::where('user_id', $user->id)->count(),
@@ -354,7 +400,6 @@ class WebController extends Controller
     public function UserProfileEdit()
     {
         $user = Auth::user();
-        $user->load('shipmentAddress');
 
         $shipmentStats = [
             'total' => TransportLead::where('user_id', $user->id)->count(),
@@ -396,34 +441,13 @@ class WebController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'] ?? null,
             'mobile' => $validated['mobile'] ?? null,
+            'address_line_1' => $validated['address_line_1'] ?? null,
+            'address_line_2' => $validated['address_line_2'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'state' => $validated['state'] ?? null,
+            'country' => $validated['country'] ?? 'India',
             'pincode' => $validated['pincode'] ?? null,
         ]);
-
-        $addressInput = collect($validated)
-            ->only(['address_line_1', 'address_line_2', 'city', 'state', 'country', 'pincode'])
-            ->map(fn ($value) => is_string($value) ? trim($value) : $value)
-            ->all();
-
-        $hasAddress = collect($addressInput)
-            ->except('country')
-            ->filter()
-            ->isNotEmpty();
-
-        if ($hasAddress) {
-            $address = $user->shipmentAddress ?: new ShipmentAddress();
-            $address->fill([
-                'address_line_1' => $addressInput['address_line_1'] ?: 'Not provided',
-                'address_line_2' => $addressInput['address_line_2'] ?: null,
-                'city' => $addressInput['city'] ?: 'Not provided',
-                'state' => $addressInput['state'] ?: 'Not provided',
-                'country' => $addressInput['country'] ?: 'India',
-                'pincode' => $addressInput['pincode'] ?: '000000',
-                'status' => 1,
-            ]);
-            $address->save();
-
-            $user->update(['shipment_address_id' => $address->id]);
-        }
 
         return redirect()->route('user.profile')->with('success', 'Profile updated successfully.');
     }

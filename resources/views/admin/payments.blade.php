@@ -103,7 +103,7 @@
                 <h4 class="card-title">Payment Section</h4>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="table-responsive admin-table-scroll">
                     <table id="payments-table" class="display table table-striped table-hover">
                         <thead>
                             <tr>
@@ -145,6 +145,8 @@
                     alert(response && response.message ? response.message : 'Something went wrong');
                 }
             },
+            scrollX: true,
+            autoWidth: false,
             columns: [
                 {
                     data: null,

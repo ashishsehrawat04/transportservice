@@ -36,4 +36,9 @@ class TransportCartItem extends Model
     {
         return $this->belongsTo(CityRoute::class);
     }
+
+    public function transportAddress()
+    {
+        return $this->hasOne(TransportAddress::class, 'item_id');
+    }
 }

@@ -24,7 +24,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive admin-table-scroll">
                         <table id="multi-filter-select"class="display table table-striped table-hover">
                             <thead>
                                 <tr>
@@ -81,6 +81,8 @@
                     }
                 }
             },
+            scrollX: true,
+            autoWidth: false,
 
             columns: [
 
@@ -137,6 +139,7 @@
                             "{{ url('admin/city-routes/delete') }}/" + row.id;
 
                         return `
+                            <div class="action-buttons">
                             <a href="${editUrl}"
                             class="btn btn-sm btn-primary">
                                 Edit
@@ -147,6 +150,7 @@
                             onclick="return confirm('Are you sure?')">
                                 Delete
                             </a>
+                            </div>
                         `;
                     }
                 }

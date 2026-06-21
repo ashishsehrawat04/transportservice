@@ -18,6 +18,7 @@ class TransportLead extends Model
         'volume_cft',
         'city_route_id',
         'distance_km',
+        'calculation_type',
         'base_price',
         'weight_charge',
         'volume_charge',

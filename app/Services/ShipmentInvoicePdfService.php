@@ -11,6 +11,15 @@ class ShipmentInvoicePdfService
     {
         $lead->loadMissing(['user', 'cityRoute']);
         $payment ??= $lead->payments()->latest()->first();
+        $calculationType = $this->calculationType($lead);
+        $chargeLines = $this->chargeLines(
+            $calculationType,
+            (float) $lead->base_price,
+            (float) $lead->volume_charge,
+            (float) $lead->distance_charge,
+            (float) $lead->subtotal,
+            (float) $lead->total_payment
+        );
 
         $lines = [
             'Transport Invoice',
@@ -26,14 +35,7 @@ class ShipmentInvoicePdfService
             'Quantity: ' . $lead->quantity,
             'Route: ' . (optional($lead->cityRoute)->from_city ?: '-') . ' to ' . (optional($lead->cityRoute)->to_city ?: '-'),
             '',
-            'Base Price: ' . number_format((float) $lead->base_price, 2),
-            'Weight Charge: ' . number_format((float) $lead->weight_charge, 2),
-            'Volume Charge: ' . number_format((float) $lead->volume_charge, 2),
-            'Distance Charge: ' . number_format((float) $lead->distance_charge, 2),
-            'Subtotal: ' . number_format((float) $lead->subtotal, 2),
-            'Tax Amount: ' . number_format((float) $lead->tax_amount, 2),
-            'Discount Amount: ' . number_format((float) $lead->discount_amount, 2),
-            'Total Payable: ' . number_format((float) $lead->total_payment, 2),
+            ...$chargeLines,
             '',
             'Payment Status: ' . ucfirst((string) $lead->payment_status),
             'Payment Method: ' . ucfirst(str_replace('_', ' ', (string) ($lead->payment_method ?: '-'))),
@@ -93,5 +95,33 @@ class ShipmentInvoicePdfService
     private function escapeText(string $text): string
     {
         return str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $text);
+    }
+
+    private function calculationType(TransportLead $lead): string
+    {
+        if (in_array($lead->calculation_type, ['distance', 'volume'], true)) {
+            return $lead->calculation_type;
+        }
+
+        return (float) $lead->volume_charge > 0 && (float) $lead->distance_charge <= 0 ? 'volume' : 'distance';
+    }
+
+    private function chargeLines(string $calculationType, float $minCharge, float $volumeCharge, float $distanceCharge, float $subtotal, float $total): array
+    {
+        $lines = [
+            'Calculation By: ' . ucfirst($calculationType),
+            'Minimum Charge: ' . number_format($minCharge, 2),
+        ];
+
+        if ($calculationType === 'volume') {
+            $lines[] = 'Volume Charge: ' . number_format($volumeCharge, 2);
+        } else {
+            $lines[] = 'Distance Charge: ' . number_format($distanceCharge, 2);
+        }
+
+        $lines[] = 'Subtotal: ' . number_format($subtotal, 2);
+        $lines[] = 'Total Payable: ' . number_format($total, 2);
+
+        return $lines;
     }
 }

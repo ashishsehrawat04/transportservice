@@ -60,6 +60,34 @@
     max-height:calc(100vh - 76px);
   }
 
+  .admin-table-scroll,
+  .admin-table-scroll .dataTables_wrapper,
+  .admin-table-scroll .dataTables_scroll{
+    width:100%;
+  }
+
+  .admin-table-scroll .dataTables_scrollBody{
+    overflow-x:auto !important;
+    overflow-y:hidden;
+  }
+
+  .admin-table-scroll table{
+    width:100% !important;
+    min-width:900px;
+  }
+
+  .admin-table-scroll th,
+  .admin-table-scroll td{
+    white-space:nowrap;
+  }
+
+  .admin-table-scroll .action-buttons{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:nowrap;
+  }
+
   .main-header .logo-header .logo{
     width:206px;
   }

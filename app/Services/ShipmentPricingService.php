@@ -7,6 +7,8 @@ use App\Models\TransportCartItem;
 use App\Models\TransportServicePrice;
 use App\Models\ShipmentPriceLog;
 use Illuminate\Support\Facades\Auth;
+use RuntimeException;
+use Throwable;
 
 class ShipmentPricingService
 {
@@ -38,60 +40,78 @@ class ShipmentPricingService
     {
         $quantity = (int) ($item['quantity'] ?? 1);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
-        $totalWeight = (float) ($item['weight_kg'] ?? 0) * $quantity;
         $totalVolume = $volumeCft * $quantity;
-        $basePrice = (float) $price->base_price;
-        $weightCharge = round($totalWeight * (float) $price->weight_rate_per_kg, 2);
-        $volumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
-        $distanceRate = (float) $route->base_rate_per_km > 0
-            ? (float) $route->base_rate_per_km
-            : (float) $price->distance_rate_per_km;
-        $distanceCharge = round((float) $route->distance_km * $distanceRate, 2);
-        $subtotal = round(($basePrice + $weightCharge + $volumeCharge + $distanceCharge) * (float) $price->multiplier, 2);
-        $minimumCharge = max((float) $price->min_charge, (float) $route->min_charge);
+        $calculationType = in_array($price->calculation_type, ['distance', 'volume'], true)
+            ? $price->calculation_type
+            : 'distance';
+        $basePrice = round((float) $price->min_charge, 2);
+        $weightCharge = 0.0;
+        $volumeCharge = 0.0;
+        $distanceCharge = 0.0;
 
-        if ($subtotal < $minimumCharge) {
-            $subtotal = $minimumCharge;
+        if ($calculationType === 'volume') {
+            $volumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
+        } else {
+            $distanceCharge = round((float) $route->distance_km * (float) $price->distance_rate_per_km, 2);
         }
 
-        if ($price->max_charge && $subtotal > (float) $price->max_charge) {
-            $subtotal = (float) $price->max_charge;
-        }
+        $subtotal = round($basePrice + $volumeCharge + $distanceCharge, 2);
+        $taxAmount = 0.0;
+        $discountAmount = 0.0;
+        $totalPayment = max(0, $subtotal);
 
-        $taxAmount = (float) ($item['tax_amount'] ?? 0);
-        $discountAmount = (float) ($item['discount_amount'] ?? 0);
-
-        $user = Auth::user();
-
-        ShipmentPriceLog::create([
-            'user_id' => $user?->id,
-            'user_name' => $user?->name,
-            'user_email' => $user?->email,
+        $this->logCalculation([
+            'calculation_type' => $calculationType,
             'volume_cft' => $volumeCft,
             'distance_km' => $route->distance_km,
             'base_price' => $basePrice,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => $distanceCharge,
-            'multiplier_applied' => $price->multiplier,
+            'multiplier_applied' => 1.00,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
-            'total_payment' => max(0, round($subtotal + $taxAmount - $discountAmount, 2)),
+            'total_payment' => $totalPayment,
         ]);
 
         return [
             'volume_cft' => $volumeCft,
             'distance_km' => $route->distance_km,
+            'calculation_type' => $calculationType,
             'base_price' => $basePrice,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => $distanceCharge,
-            'multiplier_applied' => $price->multiplier,
+            'multiplier_applied' => 1.00,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
-            'total_payment' => max(0, round($subtotal + $taxAmount - $discountAmount, 2)),
+            'total_payment' => $totalPayment,
         ];
+    }
+
+    private function logCalculation(array $data): void
+    {
+        $user = $this->authUser();
+
+        try {
+            ShipmentPriceLog::create(array_merge($data, [
+                'user_id' => $user?->id,
+                'user_name' => $user?->name,
+                'user_email' => $user?->email,
+            ]));
+        } catch (Throwable) {
+            // Pricing should stay usable in pure calculation contexts without an app/database.
+        }
+    }
+
+    private function authUser(): ?object
+    {
+        try {
+            return Auth::user();
+        } catch (RuntimeException) {
+            return null;
+        }
     }
 }

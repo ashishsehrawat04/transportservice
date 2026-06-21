@@ -22,6 +22,11 @@ class User extends Authenticatable
         'name',
         'email',
         'mobile',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state',
+        'country',
         'password',
         'slug',
         'role',
@@ -67,6 +72,11 @@ class User extends Authenticatable
     public function cartItems()
     {
         return $this->hasMany(TransportCartItem::class);
+    }
+
+    public function transportAddresses()
+    {
+        return $this->hasMany(TransportAddress::class);
     }
 
     public function payments()

@@ -213,13 +213,19 @@
                           <div class="row">
                               <div class="col-md-12 mb-3">
                                   <div class="alert alert-info mb-0">
-                                      Base Price: {{ number_format($transportLead->base_price, 2) }} |
-                                      Weight Charge: {{ number_format($transportLead->weight_charge, 2) }} |
-                                      Volume Charge: {{ number_format($transportLead->volume_charge, 2) }} |
-                                      Distance Charge: {{ number_format($transportLead->distance_charge, 2) }} |
+                                      @php
+                                          $calculationType = in_array($transportLead->calculation_type, ['distance', 'volume'], true)
+                                              ? $transportLead->calculation_type
+                                              : (((float) $transportLead->volume_charge > 0 && (float) $transportLead->distance_charge <= 0) ? 'volume' : 'distance');
+                                      @endphp
+                                      Calculation By: {{ ucfirst($calculationType) }} |
+                                      Minimum Charge: {{ number_format($transportLead->base_price, 2) }} |
+                                      @if($calculationType === 'volume')
+                                          Volume Charge: {{ number_format($transportLead->volume_charge, 2) }} |
+                                      @else
+                                          Distance Charge: {{ number_format($transportLead->distance_charge, 2) }} |
+                                      @endif
                                       Subtotal: {{ number_format($transportLead->subtotal, 2) }} |
-                                      Tax: {{ number_format($transportLead->tax_amount, 2) }} |
-                                      Discount: {{ number_format($transportLead->discount_amount, 2) }} |
                                       Total: {{ number_format($transportLead->total_payment, 2) }}
                                   </div>
                               </div>

@@ -2,7 +2,6 @@
 
 @php
     $isEdit = $isEdit ?? false;
-    $address = $user->shipmentAddress;
     $initial = strtoupper(substr($user->name ?: 'U', 0, 1));
 
     $statusClasses = [
@@ -137,37 +136,37 @@ body{background:#f4f7fc;}
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Pincode</label>
-                                    <input type="text" name="pincode" class="form-control @error('pincode') is-invalid @enderror" value="{{ old('pincode', $address->pincode ?? $user->pincode) }}">
+                                    <input type="text" name="pincode" class="form-control @error('pincode') is-invalid @enderror" value="{{ old('pincode', $user->pincode) }}">
                                     @error('pincode') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">City</label>
-                                    <input type="text" name="city" class="form-control @error('city') is-invalid @enderror" value="{{ old('city', $address->city ?? '') }}">
+                                    <input type="text" name="city" class="form-control @error('city') is-invalid @enderror" value="{{ old('city', $user->city) }}">
                                     @error('city') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">State</label>
-                                    <input type="text" name="state" class="form-control @error('state') is-invalid @enderror" value="{{ old('state', $address->state ?? '') }}">
+                                    <input type="text" name="state" class="form-control @error('state') is-invalid @enderror" value="{{ old('state', $user->state) }}">
                                     @error('state') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Country</label>
-                                    <input type="text" name="country" class="form-control @error('country') is-invalid @enderror" value="{{ old('country', $address->country ?? 'India') }}">
+                                    <input type="text" name="country" class="form-control @error('country') is-invalid @enderror" value="{{ old('country', $user->country ?? 'India') }}">
                                     @error('country') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Address Line 1</label>
-                                    <textarea name="address_line_1" class="form-control @error('address_line_1') is-invalid @enderror" rows="2">{{ old('address_line_1', $address->address_line_1 ?? '') }}</textarea>
+                                    <textarea name="address_line_1" class="form-control @error('address_line_1') is-invalid @enderror" rows="2">{{ old('address_line_1', $user->address_line_1) }}</textarea>
                                     @error('address_line_1') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-12 mb-4">
                                     <label class="form-label">Address Line 2</label>
-                                    <textarea name="address_line_2" class="form-control @error('address_line_2') is-invalid @enderror" rows="2">{{ old('address_line_2', $address->address_line_2 ?? '') }}</textarea>
+                                    <textarea name="address_line_2" class="form-control @error('address_line_2') is-invalid @enderror" rows="2">{{ old('address_line_2', $user->address_line_2) }}</textarea>
                                     @error('address_line_2') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
@@ -196,24 +195,24 @@ body{background:#f4f7fc;}
 
                             <div class="col-md-6 mb-4">
                                 <div class="info-label">City</div>
-                                <div class="info-value">{{ $address->city ?? '-' }}</div>
+                                <div class="info-value">{{ $user->city ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-6 mb-4">
                                 <div class="info-label">State</div>
-                                <div class="info-value">{{ $address->state ?? '-' }}</div>
+                                <div class="info-value">{{ $user->state ?? '-' }}</div>
                             </div>
 
                             <div class="col-md-6 mb-4">
                                 <div class="info-label">Pincode</div>
-                                <div class="info-value">{{ $address->pincode ?? $user->pincode ?? '-' }}</div>
+                                <div class="info-value">{{ $user->pincode ?? '-' }}</div>
                             </div>
 
                             <div class="col-12">
                                 <div class="info-label">Full Address</div>
                                 <div class="info-value">
-                                    @if ($address)
-                                        {{ collect([$address->address_line_1, $address->address_line_2, $address->city, $address->state, $address->country])->filter()->join(', ') }}
+                                    @if ($user->address_line_1 || $user->address_line_2 || $user->city || $user->state || $user->country)
+                                        {{ collect([$user->address_line_1, $user->address_line_2, $user->city, $user->state, $user->country])->filter()->join(', ') }}
                                     @else
                                         -
                                     @endif
