@@ -210,9 +210,9 @@
         <div class="quote-section">
             <div class="section-title">Charge Breakdown</div>
             @php
-                $calculationType = in_array($quote->calculation_type, ['distance', 'volume'], true)
+                $calculationType = in_array($quote->calculation_type, ['weight', 'volume', 'mixed'], true)
                     ? $quote->calculation_type
-                    : (((float) $quote->volume_charge > 0 && (float) $quote->distance_charge <= 0) ? 'volume' : 'distance');
+                    : (((float) $quote->volume_charge > (float) $quote->weight_charge) ? 'volume' : 'weight');
             @endphp
             <div class="row g-3">
                 <div class="col-md-3 col-sm-6">
@@ -227,18 +227,19 @@
                         <div class="info-value">{{ number_format((float) $quote->base_price, 2) }}</div>
                     </div>
                 </div>
-                @if($calculationType === 'volume')
+                @if(in_array($calculationType, ['weight', 'mixed'], true))
+                    <div class="col-md-3 col-sm-6">
+                        <div class="charge-card">
+                            <div class="info-label">Weight Charge</div>
+                            <div class="info-value">{{ number_format((float) $quote->weight_charge, 2) }}</div>
+                        </div>
+                    </div>
+                @endif
+                @if(in_array($calculationType, ['volume', 'mixed'], true))
                     <div class="col-md-3 col-sm-6">
                         <div class="charge-card">
                             <div class="info-label">Volume Charge</div>
                             <div class="info-value">{{ number_format((float) $quote->volume_charge, 2) }}</div>
-                        </div>
-                    </div>
-                @else
-                    <div class="col-md-3 col-sm-6">
-                        <div class="charge-card">
-                            <div class="info-label">Distance Charge</div>
-                            <div class="info-value">{{ number_format((float) $quote->distance_charge, 2) }}</div>
                         </div>
                     </div>
                 @endif

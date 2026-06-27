@@ -38,27 +38,23 @@ class ShipmentPricingService
 
     public function calculate(array $item, TransportServicePrice $price, CityRoute $route): array
     {
-        $quantity = (int) ($item['quantity'] ?? 1);
+        $quantity = max(1, (int) ($item['quantity'] ?? 1));
+        $weightKg = (float) ($item['weight_kg'] ?? 0);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
         $totalVolume = $volumeCft * $quantity;
-        $calculationType = in_array($price->calculation_type, ['distance', 'volume'], true)
-            ? $price->calculation_type
-            : 'distance';
         $basePrice = round((float) $price->min_charge, 2);
-        $weightCharge = 0.0;
-        $volumeCharge = 0.0;
+        $multiplier = (float) ($price->multiplier ?: 1);
+        $weightCharge = round($weightKg * $quantity * (float) $price->weight_rate_per_kg, 2);
+        $calculatedVolumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
+        $calculationType = $weightCharge >= $calculatedVolumeCharge ? 'weight' : 'volume';
+        $volumeCharge = $calculationType === 'volume' ? $calculatedVolumeCharge : 0.0;
+        $weightCharge = $calculationType === 'weight' ? $weightCharge : 0.0;
         $distanceCharge = 0.0;
 
-        if ($calculationType === 'volume') {
-            $volumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
-        } else {
-            $distanceCharge = round((float) $route->distance_km * (float) $price->distance_rate_per_km, 2);
-        }
-
-        $subtotal = round($basePrice + $volumeCharge + $distanceCharge, 2);
-        $taxAmount = 0.0;
-        $discountAmount = 0.0;
-        $totalPayment = max(0, $subtotal);
+        $subtotal = round(($basePrice + $weightCharge + $volumeCharge + $distanceCharge) * $multiplier, 2);
+        $taxAmount = round((float) ($item['tax_amount'] ?? 0), 2);
+        $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
+        $totalPayment = max(0, round($subtotal + $taxAmount - $discountAmount, 2));
 
         $this->logCalculation([
             'calculation_type' => $calculationType,
@@ -68,7 +64,7 @@ class ShipmentPricingService
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => $distanceCharge,
-            'multiplier_applied' => 1.00,
+            'multiplier_applied' => $multiplier,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
@@ -83,7 +79,7 @@ class ShipmentPricingService
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => $distanceCharge,
-            'multiplier_applied' => 1.00,
+            'multiplier_applied' => $multiplier,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,

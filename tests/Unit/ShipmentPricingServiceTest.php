@@ -36,9 +36,9 @@ class ShipmentPricingServiceTest extends TestCase
             'discount_amount' => 25,
         ], $price, $route);
 
-        $this->assertSame(600.0, $result['distance_charge']);
-        $this->assertSame(810.0, $result['subtotal']);
-        $this->assertSame(835.0, $result['total_payment']);
+        $this->assertSame(1200.0, $result['distance_charge']);
+        $this->assertSame(1000.0, $result['subtotal']);
+        $this->assertSame(1025.0, $result['total_payment']);
     }
 
     public function test_it_calculates_cart_item_volume_from_centimeters(): void

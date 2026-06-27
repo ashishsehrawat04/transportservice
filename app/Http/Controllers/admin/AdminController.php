@@ -252,6 +252,7 @@ class AdminController extends Controller
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'calculation_type' => ['required', Rule::in(['distance', 'volume'])],
+            'weight_rate_per_kg' => ['nullable', 'numeric', 'min:0'],
             'volume_rate_per_cft' => ['nullable', 'numeric', 'min:0'],
             'distance_rate_per_km' => ['nullable', 'numeric', 'min:0'],
             'min_charge' => ['required', 'numeric', 'min:0'],
@@ -259,7 +260,7 @@ class AdminController extends Controller
         ]);
 
         $validated['base_price'] = 0;
-        $validated['weight_rate_per_kg'] = 0;
+        $validated['weight_rate_per_kg'] = $validated['weight_rate_per_kg'] ?? 0;
         $validated['volume_rate_per_cft'] = $validated['volume_rate_per_cft'] ?? 0;
         $validated['distance_rate_per_km'] = $validated['distance_rate_per_km'] ?? 0;
         $validated['multiplier'] = 1;
@@ -446,6 +447,39 @@ class AdminController extends Controller
         }
 
         return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+    }
+
+    public function AdminViewTransportLeadQuote($id)
+    {
+        $transportLead = TransportLead::with(['user', 'cityRoute', 'latestPayment'])->find($id);
+
+        if (!$transportLead) {
+            return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+        }
+
+        $quote = TransportQuote::syncFromLead($transportLead);
+        $quote->load(['user', 'transportLead.cityRoute']);
+        $transportAddress = $this->transportAddressForQuote($quote);
+
+        return view('admin.transport-quote-show', compact('quote', 'transportAddress'));
+    }
+
+    public function AdminDownloadTransportLeadQuote($id, TransportQuotePdfService $quotePdfService)
+    {
+        $transportLead = TransportLead::with(['user', 'cityRoute', 'latestPayment'])->find($id);
+
+        if (!$transportLead) {
+            return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
+        }
+
+        $quote = TransportQuote::syncFromLead($transportLead);
+        $quote->load(['user', 'transportLead.cityRoute']);
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id) . '.pdf';
+
+        return response($quotePdfService->output($quote, $this->transportAddressForQuote($quote)), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
     }
 
     public function AdminDownloadTransportLeadInvoice($id, ShipmentInvoicePdfService $invoicePdfService)

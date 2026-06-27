@@ -727,8 +727,8 @@
                             </a>
                             <i class="bi bi-plus dropdown-icon"></i>
                             <ul class="sub-menu">
-                                <li><a href="{{ route('shipment.add_item') }}">Create Shipment</a></li>
-                                <li><a href="{{ route('shipment.cart') }}">My Shipments</a></li>
+                                <li><a href="{{ route('shipment.add_item') }}">Create Booking</a></li>
+                                <li><a href="{{ route('shipment.cart') }}">My Booking</a></li>
                                 @auth
                                     <li><a href="{{ route('shipment.leads') }}">Shipment Requests</a></li>
                                 @endauth
@@ -808,7 +808,7 @@
 
                                         </ul>
                                     </div>
-                                    
+
                                     <a href="{{ route('shipment.cart') }}" class="web-cart-chip" title="My Cart">
                                         <i class="bi bi-cart3"></i>
                                         <span class="web-cart-count">{{ $cartCount }}</span>

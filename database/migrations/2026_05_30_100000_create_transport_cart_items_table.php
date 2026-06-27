@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('height_cm', 8, 2);
             $table->decimal('weight_kg', 8, 2);
             $table->date('pickup_date');
-            $table->date('delivery_date');
+            $table->date('delivery_date')->nullable();
             $table->timestamps();
         });
     }

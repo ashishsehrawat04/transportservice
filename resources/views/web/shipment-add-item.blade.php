@@ -153,13 +153,8 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">From City</label>
-                                <select
-                                    name="from_city"
-                                    class="form-control shipment-city-select"
-                                    data-placeholder="Select from city"
-                                    required
-                                >
-                                    <option value=""></option>
+                                <select name="from_city" class="form-control shipment-city-select" data-placeholder="Select from city" required>
+                                    <option value="">select city</option>
                                     @foreach($fromCities as $city)
                                         <option value="{{ $city }}" {{ old('from_city') === $city ? 'selected' : '' }}>
                                             {{ $city }}
@@ -169,13 +164,9 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Deliver To</label>
-                                <select
-                                    name="to_city"
-                                    class="form-control shipment-city-select"
-                                    data-placeholder="Select delivery city"
-                                    required
-                                >
-                                    <option value=""></option>
+                                <select name="to_city"  class="form-control shipment-city-select"  data-placeholder="Select delivery city" required>
+                                    <option value="">select city</option>
+
                                     @foreach($toCities as $city)
                                         <option value="{{ $city }}" {{ old('to_city') === $city ? 'selected' : '' }}>
                                             {{ $city }}
@@ -200,10 +191,10 @@
                                 <label class="form-label">Pickup Date</label>
                                 <input type="date" name="pickup_date" class="form-control" value="{{ old('pickup_date') }}" required>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <!-- <div class="col-md-6 mb-3">
                                 <label class="form-label">Delivery Date</label>
                                 <input type="date" name="delivery_date" class="form-control" value="{{ old('delivery_date') }}" required>
-                            </div>
+                            </div> -->
                         </div>
 
                         <div id="shipmentItems">

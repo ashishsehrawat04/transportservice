@@ -50,16 +50,6 @@
                               <label class="form-label">Distance (KM)</label>
                               <input type="number" step="0.01" name="distance_km" class="form-control" value="{{ old('distance_km', $cityRoute->distance_km) }}" placeholder="Enter distance in kilometers">
                           </div>
-
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Rate per KM</label>
-                              <input type="number" step="0.01" name="base_rate_per_km" class="form-control" value="{{ old('base_rate_per_km', $cityRoute->base_rate_per_km) }}" placeholder="Enter rate per km">
-                          </div>
-
-                          <div class="col-md-4 mb-3">
-                              <label class="form-label">Minimum Charge</label>
-                              <input type="number" step="0.01" name="min_charge" class="form-control" value="{{ old('min_charge', $cityRoute->min_charge ?? 500.00) }}" placeholder="Enter minimum charge">
-                          </div>
                       </div>
 
                       <div class="row">

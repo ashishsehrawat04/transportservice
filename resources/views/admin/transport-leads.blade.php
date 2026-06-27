@@ -151,7 +151,8 @@
                         searchable: false,
                         render: function(data, type, row) {
                             let editUrl = "{{ url('admin/transport-leads/manage') }}/" + row.id;
-                            let quoteUrl = editUrl + "?quote=1";
+                            let quoteUrl = "{{ url('admin/transport-leads') }}/" + row.id + "/quote";
+                            let quoteDownloadUrl = quoteUrl + "/download";
                             let invoiceUrl = "{{ url('admin/transport-leads') }}/" + row.id + "/invoice";
                             let deleteUrl = "{{ url('admin/transport-leads/delete') }}/" + row.id;
                             let invoiceButton = row.admin_status === 'delivered'
@@ -161,7 +162,8 @@
                             return `
                                 <div class="action-buttons">
                                 <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
-                                <a href="${quoteUrl}" class="btn btn-sm btn-warning">Create Quote</a>
+                                <a href="${quoteUrl}" class="btn btn-sm btn-info">Quote View</a>
+                                <a href="${quoteDownloadUrl}" class="btn btn-sm btn-warning">Quote PDF</a>
                                 ${invoiceButton}
                                 <a href="${deleteUrl}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
                                 </div>

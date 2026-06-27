@@ -34,8 +34,6 @@
                                             <th>From City</th>
                                             <th>To City</th>
                                             <th>Distance (KM)</th>
-                                            <th>Rate/KM</th>
-                                            <th>Fair Charges</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -105,13 +103,6 @@
                     data: 'distance_km'
                 },
 
-                {
-                    data: 'base_rate_per_km'
-                },
-
-                {
-                    data: 'min_charge'
-                },
 
                 {
                     data: 'is_active',

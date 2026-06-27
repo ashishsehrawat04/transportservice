@@ -34,6 +34,8 @@ Route::get('/shipment/add-item', [WebController::class, 'addShipmentItem'])->nam
 Route::post('/shipment/add-item', [WebController::class, 'saveShipmentItems'])->name('shipment.save_items');
 Route::get('/shipment/cart', [WebController::class, 'shipmentCart'])->name('shipment.cart');
 Route::post('/shipment/cart/checkout', [WebController::class, 'checkoutShipmentCart'])->middleware('auth')->name('shipment.cart.checkout');
+Route::get('/shipment/cart/edit/{id}', [WebController::class, 'editShipmentCartItem'])->name('shipment.cart.edit');
+Route::post('/shipment/cart/update/{id}', [WebController::class, 'updateShipmentCartItem'])->name('shipment.cart.update');
 Route::get('/shipment/cart/delete/{id}', [WebController::class, 'deleteShipmentCartItem'])->name('shipment.cart.delete');
 Route::get('/shipment/leads', [WebController::class, 'shipmentLeads'])->middleware('auth')->name('shipment.leads');
 Route::get('/track-and-trace', [WebController::class, 'trackShipment'])->name('shipment.track');
@@ -64,6 +66,8 @@ Route::get('/admin/get-transport-prices', [ApiController::class, 'AdminGetTransp
 Route::get('/admin/transport-leads', [AdminController::class, 'AdminTransportLeads'])->middleware('auth')->name('admin.transport_leads');
 Route::get('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminManageTransportLead'])->middleware('auth')->name('admin.manage.transport_lead');
 Route::post('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminSaveTransportLead'])->middleware('auth')->name('admin.save.transport_lead');
+Route::get('/admin/transport-leads/{id}/quote', [AdminController::class, 'AdminViewTransportLeadQuote'])->middleware('auth')->name('admin.transport_lead.quote');
+Route::get('/admin/transport-leads/{id}/quote/download', [AdminController::class, 'AdminDownloadTransportLeadQuote'])->middleware('auth')->name('admin.transport_lead.quote.download');
 Route::get('/admin/transport-leads/{id}/invoice', [AdminController::class, 'AdminDownloadTransportLeadInvoice'])->middleware('auth')->name('admin.transport_lead.invoice');
 Route::get('/admin/transport-leads/delete/{id}', [AdminController::class, 'AdminDeleteTransportLead'])->middleware('auth')->name('admin.delete.transport_lead');
 Route::get('/admin/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');

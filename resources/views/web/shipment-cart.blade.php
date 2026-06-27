@@ -67,6 +67,32 @@
         gap: 14px;
     }
 
+    .cart-shipment-count {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 4px;
+    }
+
+    .cart-subitem-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .cart-subitem {
+        border: 1px solid #eef2f7;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .035);
+        padding: 14px;
+    }
+
+    .cart-subitem .cart-item-top {
+        background: #fbfdff;
+        border-bottom: 1px solid #eef2f7;
+        margin: -14px -14px 14px;
+        padding: 14px;
+    }
+
     .cart-item-card,
     .cart-summary-panel,
     .cart-empty-state {
@@ -228,6 +254,31 @@
         color: #b91c1c;
     }
 
+    .cart-edit-link {
+        align-items: center;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        color: #2563eb;
+        display: inline-flex;
+        font-size: 13px;
+        font-weight: 800;
+        gap: 6px;
+        padding: 8px 12px;
+        text-decoration: none;
+    }
+
+    .cart-edit-link:hover {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .cart-action-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
     .cart-summary-panel {
         padding: 20px;
         position: sticky;
@@ -386,6 +437,11 @@
     $itemCount = $cartItems->count();
     $totalQuantity = $cartItems->sum('quantity');
     $hasPriceIssue = $cartItems->contains(fn ($item) => !empty($item->price_error));
+    $cartShipments = $cartItems->groupBy(fn ($item) => implode('|', [
+        $item->city_route_id,
+        optional($item->pickup_date)->format('Y-m-d'),
+        optional($item->delivery_date)->format('Y-m-d'),
+    ]));
 @endphp
 
 <section class="shipment-cart-section">
@@ -422,12 +478,12 @@
         @else
             <div class="cart-stat-grid">
                 <div class="cart-stat">
-                    <span>Total Items</span>
-                    <strong>{{ $itemCount }}</strong>
+                    <span>Shipments</span>
+                    <strong>{{ $cartShipments->count() }}</strong>
                 </div>
                 <div class="cart-stat">
-                    <span>Total Quantity</span>
-                    <strong>{{ $totalQuantity }}</strong>
+                    <span>Total Items</span>
+                    <strong>{{ $itemCount }}</strong>
                 </div>
                 <div class="cart-stat">
                     <span>Estimated Total</span>
@@ -438,12 +494,14 @@
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="cart-list">
-                        @foreach($cartItems as $item)
+                        @foreach($cartShipments as $shipmentItems)
                             @php
-                                $route = $item->cityRoute;
-                                $pickupDate = optional($item->pickup_date)->format('d M Y') ?? '-';
-                                $deliveryDate = optional($item->delivery_date)->format('d M Y') ?? '-';
-                                $volume = $item->price_breakdown['volume_cft'] ?? null;
+                                $firstItem = $shipmentItems->first();
+                                $route = $firstItem->cityRoute;
+                                $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
+                                $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
+                                $shipmentTotal = $shipmentItems->sum('calculated_price');
+                                $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
                             @endphp
 
                             <div class="cart-item-card">
@@ -453,17 +511,18 @@
                                             <i class="bi bi-box2"></i>
                                         </span>
                                         <div>
-                                            <h5>{{ $item->item_name }}</h5>
-                                            <small>{{ $item->item_type ?: 'Shipment item' }}</small>
+                                            <h5>Shipment {{ $loop->iteration }}</h5>
+                                            <small>{{ optional($route)->from_city ?? '-' }} to {{ optional($route)->to_city ?? '-' }}</small>
+                                            <div class="cart-shipment-count">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
                                         </div>
                                     </div>
 
-                                    @if($item->price_error)
-                                        <div class="cart-error">{{ $item->price_error }}</div>
+                                    @if($shipmentHasError)
+                                        <div class="cart-error">Needs Review</div>
                                     @else
                                         <div class="cart-price">
-                                            <span>Estimated Price</span>
-                                            {{ number_format($item->calculated_price, 2) }}
+                                            <span>Shipment Total</span>
+                                            {{ number_format($shipmentTotal, 2) }}
                                         </div>
                                     @endif
                                 </div>
@@ -480,27 +539,7 @@
                                     </div>
                                 </div>
 
-                                <div class="cart-meta-grid">
-                                    <div class="cart-meta">
-                                        <span>Quantity</span>
-                                        <strong>{{ $item->quantity }}</strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Dimensions</span>
-                                        <strong>
-                                            {{ $item->length_cm ? number_format($item->length_cm, 1) : '-' }}
-                                            x {{ $item->width_cm ? number_format($item->width_cm, 1) : '-' }}
-                                            x {{ number_format($item->height_cm, 1) }} CM
-                                        </strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Weight</span>
-                                        <strong>{{ number_format($item->weight_kg, 2) }} KG</strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Volume</span>
-                                        <strong>{{ $volume !== null ? number_format($volume, 2) . ' CFT' : '-' }}</strong>
-                                    </div>
+                                <div class="cart-meta-grid mb-3">
                                     <div class="cart-meta">
                                         <span>Pickup Date</span>
                                         <strong>{{ $pickupDate }}</strong>
@@ -515,16 +554,73 @@
                                     </div>
                                     <div class="cart-meta">
                                         <span>Status</span>
-                                        <strong>{{ $item->price_error ? 'Needs Review' : 'Ready' }}</strong>
+                                        <strong>{{ $shipmentHasError ? 'Needs Review' : 'Ready' }}</strong>
                                     </div>
                                 </div>
 
-                                <div class="cart-item-actions">
-                                    <small>Item #{{ $loop->iteration }}</small>
-                                    <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-delete-link" onclick="return confirm('Remove this item?')">
-                                        <i class="bi bi-trash3"></i>
-                                        Delete
-                                    </a>
+                                <div class="cart-subitem-list">
+                                    @foreach($shipmentItems as $item)
+                                        @php $volume = $item->price_breakdown['volume_cft'] ?? null; @endphp
+                                        <div class="cart-subitem">
+                                            <div class="cart-item-top mb-3">
+                                                <div class="cart-item-title">
+                                                    <span class="cart-item-icon">
+                                                        <i class="bi bi-box2"></i>
+                                                    </span>
+                                                    <div>
+                                                        <h5>{{ $item->item_name }}</h5>
+                                                        <small>{{ $item->item_type ?: 'Shipment item' }}</small>
+                                                    </div>
+                                                </div>
+
+                                                @if($item->price_error)
+                                                    <div class="cart-error">{{ $item->price_error }}</div>
+                                                @else
+                                                    <div class="cart-price">
+                                                        <span>Item Price</span>
+                                                        {{ number_format($item->calculated_price, 2) }}
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <div class="cart-meta-grid">
+                                                <div class="cart-meta">
+                                                    <span>Quantity</span>
+                                                    <strong>{{ $item->quantity }}</strong>
+                                                </div>
+                                                <div class="cart-meta">
+                                                    <span>Dimensions</span>
+                                                    <strong>
+                                                        {{ $item->length_cm ? number_format($item->length_cm, 1) : '-' }}
+                                                        x {{ $item->width_cm ? number_format($item->width_cm, 1) : '-' }}
+                                                        x {{ number_format($item->height_cm, 1) }} CM
+                                                    </strong>
+                                                </div>
+                                                <div class="cart-meta">
+                                                    <span>Weight</span>
+                                                    <strong>{{ number_format($item->weight_kg, 2) }} KG</strong>
+                                                </div>
+                                                <div class="cart-meta">
+                                                    <span>Volume</span>
+                                                    <strong>{{ $volume !== null ? number_format($volume, 2) . ' CFT' : '-' }}</strong>
+                                                </div>
+                                            </div>
+
+                                            <div class="cart-item-actions">
+                                                <small>Item #{{ $loop->iteration }}</small>
+                                                <div class="cart-action-group">
+                                                    <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-edit-link">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                        Edit
+                                                    </a>
+                                                    <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-delete-link" onclick="return confirm('Remove this item?')">
+                                                        <i class="bi bi-trash3"></i>
+                                                        Delete
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         @endforeach
@@ -557,7 +653,7 @@
                             <form action="{{ route('shipment.cart.checkout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="primary-btn1 btn-hover w-100 justify-content-center" {{ $cartItems->isEmpty() || !$price || $hasPriceIssue ? 'disabled' : '' }} onclick="return confirm('Save cart items to transport leads?')">
-                                    Save To Leads
+                                    Proceed to booking
                                     <span></span>
                                 </button>
                             </form>

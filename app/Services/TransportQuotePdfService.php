@@ -17,8 +17,8 @@ class TransportQuotePdfService
         $chargeLines = $this->chargeLines(
             $calculationType,
             (float) $quote->base_price,
+            (float) $quote->weight_charge,
             (float) $quote->volume_charge,
-            (float) $quote->distance_charge,
             (float) $quote->subtotal,
             (float) $quote->total_payment
         );
@@ -92,24 +92,26 @@ class TransportQuotePdfService
 
     private function calculationType(TransportQuote $quote): string
     {
-        if (in_array($quote->calculation_type, ['distance', 'volume'], true)) {
+        if (in_array($quote->calculation_type, ['weight', 'volume', 'mixed'], true)) {
             return $quote->calculation_type;
         }
 
-        return (float) $quote->volume_charge > 0 && (float) $quote->distance_charge <= 0 ? 'volume' : 'distance';
+        return (float) $quote->volume_charge > (float) $quote->weight_charge ? 'volume' : 'weight';
     }
 
-    private function chargeLines(string $calculationType, float $minCharge, float $volumeCharge, float $distanceCharge, float $subtotal, float $total): array
+    private function chargeLines(string $calculationType, float $minCharge, float $weightCharge, float $volumeCharge, float $subtotal, float $total): array
     {
         $lines = [
             'Calculation By: ' . ucfirst($calculationType),
             'Minimum Charge: ' . $this->money($minCharge),
         ];
 
-        if ($calculationType === 'volume') {
+        if (in_array($calculationType, ['weight', 'mixed'], true)) {
+            $lines[] = 'Weight Charge: ' . $this->money($weightCharge);
+        }
+
+        if (in_array($calculationType, ['volume', 'mixed'], true)) {
             $lines[] = 'Volume Charge: ' . $this->money($volumeCharge);
-        } else {
-            $lines[] = 'Distance Charge: ' . $this->money($distanceCharge);
         }
 
         $lines[] = 'Subtotal: ' . $this->money($subtotal);
