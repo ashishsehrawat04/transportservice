@@ -43,14 +43,25 @@
                     @endif
 
                     @if($lead)
+                        @php
+                            $isRejected = in_array($lead->admin_status, ['rejected', 'cancelled']);
+                            $isDelivered = $lead->admin_status === 'delivered';
+
+                            $badgeClass = match(true) {
+                                $isRejected  => 'bg-danger',
+                                $isDelivered => 'bg-success',
+                                default      => 'bg-warning text-dark',
+                            };
+                        @endphp
+
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
                             <div>
                                 <h4 class="mb-1">{{ $lead->item_name }}</h4>
                                 <p class="mb-0">{{ $lead->tracking_number }}</p>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-success">{{ ucfirst($lead->admin_status) }}</span>
-                                @if($lead->admin_status === 'delivered')
+                                <span class="badge {{ $badgeClass }}">{{ ucfirst($lead->admin_status) }}</span>
+                                @if($isDelivered)
                                     <div class="mt-2">
                                         <a class="btn btn-sm btn-outline-success" href="{{ route('shipment.invoice.download', $lead->tracking_number) }}">
                                             Download Invoice
@@ -62,10 +73,17 @@
                             </div>
                         </div>
 
-                        <div class="tracking-line mb-4">
+                        @if($isRejected)
+                            <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+                                <i class="bi bi-x-circle-fill"></i>
+                                <span>This shipment has been {{ strtolower($lead->admin_status) }}.</span>
+                            </div>
+                        @endif
+
+                        <div class="tracking-line mb-4 {{ $isRejected ? 'rejected' : '' }}">
                             @foreach($steps as $key => $label)
                                 @php $index = $loop->index; @endphp
-                                <div class="tracking-step {{ $current >= $index ? 'active' : '' }}">
+                                <div class="tracking-step {{ !$isRejected && $current >= $index ? 'active' : '' }}">
                                     <span></span>
                                     <strong>{{ $label }}</strong>
                                 </div>
@@ -130,6 +148,94 @@
         </div>
     </div>
 </section>
+
+<style>
+    /* ===== Tracking stepper ===== */
+    .tracking-line {
+        display: flex;
+        align-items: flex-start;
+        list-style: none;
+        padding: 10px 0 0;
+    }
+
+    .tracking-step {
+        flex: 1;
+        position: relative;
+        text-align: center;
+        padding-top: 0;
+    }
+
+    /* connector line sitting behind each step (except the first) */
+    .tracking-step:not(:first-child)::before {
+        content: '';
+        position: absolute;
+        top: 9px;
+        left: -50%;
+        width: 100%;
+        height: 3px;
+        background: #e2e2e2;
+        z-index: 1;
+        transition: background-color .25s ease;
+    }
+
+    .tracking-step span {
+        display: block;
+        width: 20px;
+        height: 20px;
+        margin: 0 auto 10px;
+        border-radius: 50%;
+        background: #e2e2e2;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #e2e2e2;
+        position: relative;
+        z-index: 2;
+        transition: background-color .25s ease, box-shadow .25s ease;
+    }
+
+    .tracking-step strong {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: #9a9a9a;
+        transition: color .25s ease;
+    }
+
+    /* ----- progressed / active state (green) ----- */
+    .tracking-step.active span {
+        background: #28a745;
+        box-shadow: 0 0 0 2px #28a745;
+    }
+
+    .tracking-step.active:not(:first-child)::before {
+        background: #28a745;
+    }
+
+    .tracking-step.active strong {
+        color: #28a745;
+        font-weight: 700;
+    }
+
+    /* ----- rejected / cancelled state: whole line red ----- */
+    .tracking-line.rejected .tracking-step span {
+        background: #dc3545;
+        box-shadow: 0 0 0 2px #dc3545;
+    }
+
+    .tracking-line.rejected .tracking-step:not(:first-child)::before {
+        background: #dc3545;
+    }
+
+    .tracking-line.rejected .tracking-step strong {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    @media (max-width: 576px) {
+        .tracking-step strong {
+            font-size: 10.5px;
+        }
+    }
+</style>
 
 <style>
     .tracking-line {

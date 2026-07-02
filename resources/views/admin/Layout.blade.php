@@ -443,12 +443,13 @@
                 class="navbar navbar-header-left navbar-expand-lg navbar-form nav-search p-0 d-none d-lg-flex"
               >
                 <div class="input-group">
-                  <div class="input-group-prepend">
+                    <h2>Hi, {{ auth()->user()?->name ?? 'Admin' }}</h2>
+                  <!-- <div class="input-group-prepend">
                     <button type="submit" class="btn btn-search pe-1">
                       <i class="fa fa-search search-icon"></i>
                     </button>
-                  </div>
-                  <input type="text" placeholder="Search ..." class="form-control"/>
+                  </div> -->
+                  <!-- <input type="text" placeholder="Search ..." class="form-control"/> -->
                 </div>
               </nav>
 
@@ -1085,7 +1086,11 @@
             return;
         }
 
-        if (href.includes("/delete/") && !hasInlineConfirm && !window.confirm("Are you sure?")) {
+        if (hasInlineConfirm) {
+            return;
+        }
+
+        if (href.includes("/delete/") && !window.confirm("Are you sure?")) {
             event.preventDefault();
             return;
         }

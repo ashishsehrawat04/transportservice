@@ -13,6 +13,7 @@ class CityRoute extends Model
         'base_rate_per_km',
         'min_charge',
         'is_active',
+        'base_rate_per_volume',
     ];
 
     protected $casts = [

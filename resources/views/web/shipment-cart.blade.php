@@ -493,139 +493,456 @@
 
             <div class="row g-4">
                 <div class="col-lg-8">
-                    <div class="cart-list">
-                        @foreach($cartShipments as $shipmentItems)
-                            @php
-                                $firstItem = $shipmentItems->first();
-                                $route = $firstItem->cityRoute;
-                                $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
-                                $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
-                                $shipmentTotal = $shipmentItems->sum('calculated_price');
-                                $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
-                            @endphp
+    <div class="cart-list">
+        @foreach($cartShipments as $shipmentItems)
+            @php
+                $firstItem = $shipmentItems->first();
+                $route = $firstItem->cityRoute;
+                $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
+                $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
+                $shipmentTotal = $shipmentItems->sum('calculated_price');
+                $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
+            @endphp
 
-                            <div class="cart-item-card">
-                                <div class="cart-item-top">
-                                    <div class="cart-item-title">
-                                        <span class="cart-item-icon">
-                                            <i class="bi bi-box2"></i>
-                                        </span>
-                                        <div>
-                                            <h5>Shipment {{ $loop->iteration }}</h5>
-                                            <small>{{ optional($route)->from_city ?? '-' }} to {{ optional($route)->to_city ?? '-' }}</small>
-                                            <div class="cart-shipment-count">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
-                                        </div>
-                                    </div>
+            <div class="cart-item-card">
+                {{-- Shipment header --}}
+                <div class="cart-item-top">
+                    <div class="cart-item-title">
+                        <span class="cart-item-icon">
+                            <i class="bi bi-box2"></i>
+                        </span>
+                        <div>
+                            <h5>Shipment {{ $loop->iteration }}</h5>
+                            <small>{{ optional($route)->from_city ?? '-' }} to {{ optional($route)->to_city ?? '-' }}</small>
+                            <div class="cart-shipment-count">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
+                        </div>
+                    </div>
 
-                                    @if($shipmentHasError)
-                                        <div class="cart-error">Needs Review</div>
-                                    @else
-                                        <div class="cart-price">
-                                            <span>Shipment Total</span>
-                                            {{ number_format($shipmentTotal, 2) }}
-                                        </div>
-                                    @endif
-                                </div>
+                    @if($shipmentHasError)
+                        <div class="cart-error"><i class="bi bi-exclamation-triangle"></i> Needs Review</div>
+                    @else
+                        <div class="cart-price">
+                            <span>Shipment Total</span>
+                            ₹{{ number_format($shipmentTotal, 2) }}
+                        </div>
+                    @endif
+                </div>
 
-                                <div class="cart-route-row">
-                                    <div>
-                                        <small class="text-muted d-block">Pickup City</small>
-                                        <div class="cart-city">{{ optional($route)->from_city ?? '-' }}</div>
-                                    </div>
-                                    <span class="cart-route-arrow"><i class="bi bi-arrow-right"></i></span>
-                                    <div class="text-lg-end">
-                                        <small class="text-muted d-block">Deliver To</small>
-                                        <div class="cart-city">{{ optional($route)->to_city ?? '-' }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="cart-meta-grid mb-3">
-                                    <div class="cart-meta">
-                                        <span>Pickup Date</span>
-                                        <strong>{{ $pickupDate }}</strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Delivery Date</span>
-                                        <strong>{{ $deliveryDate }}</strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Distance</span>
-                                        <strong>{{ $route ? number_format($route->distance_km, 2) . ' KM' : '-' }}</strong>
-                                    </div>
-                                    <div class="cart-meta">
-                                        <span>Status</span>
-                                        <strong>{{ $shipmentHasError ? 'Needs Review' : 'Ready' }}</strong>
-                                    </div>
-                                </div>
-
-                                <div class="cart-subitem-list">
-                                    @foreach($shipmentItems as $item)
-                                        @php $volume = $item->price_breakdown['volume_cft'] ?? null; @endphp
-                                        <div class="cart-subitem">
-                                            <div class="cart-item-top mb-3">
-                                                <div class="cart-item-title">
-                                                    <span class="cart-item-icon">
-                                                        <i class="bi bi-box2"></i>
-                                                    </span>
-                                                    <div>
-                                                        <h5>{{ $item->item_name }}</h5>
-                                                        <small>{{ $item->item_type ?: 'Shipment item' }}</small>
-                                                    </div>
-                                                </div>
-
-                                                @if($item->price_error)
-                                                    <div class="cart-error">{{ $item->price_error }}</div>
-                                                @else
-                                                    <div class="cart-price">
-                                                        <span>Item Price</span>
-                                                        {{ number_format($item->calculated_price, 2) }}
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            <div class="cart-meta-grid">
-                                                <div class="cart-meta">
-                                                    <span>Quantity</span>
-                                                    <strong>{{ $item->quantity }}</strong>
-                                                </div>
-                                                <div class="cart-meta">
-                                                    <span>Dimensions</span>
-                                                    <strong>
-                                                        {{ $item->length_cm ? number_format($item->length_cm, 1) : '-' }}
-                                                        x {{ $item->width_cm ? number_format($item->width_cm, 1) : '-' }}
-                                                        x {{ number_format($item->height_cm, 1) }} CM
-                                                    </strong>
-                                                </div>
-                                                <div class="cart-meta">
-                                                    <span>Weight</span>
-                                                    <strong>{{ number_format($item->weight_kg, 2) }} KG</strong>
-                                                </div>
-                                                <div class="cart-meta">
-                                                    <span>Volume</span>
-                                                    <strong>{{ $volume !== null ? number_format($volume, 2) . ' CFT' : '-' }}</strong>
-                                                </div>
-                                            </div>
-
-                                            <div class="cart-item-actions">
-                                                <small>Item #{{ $loop->iteration }}</small>
-                                                <div class="cart-action-group">
-                                                    <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-edit-link">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                        Edit
-                                                    </a>
-                                                    <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-delete-link" onclick="return confirm('Remove this item?')">
-                                                        <i class="bi bi-trash3"></i>
-                                                        Delete
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
+                {{-- Route + meta strip --}}
+                <div class="cart-route-row">
+                    <div>
+                        <small class="text-muted d-block">Pickup City</small>
+                        <div class="cart-city">{{ optional($route)->from_city ?? '-' }}</div>
+                    </div>
+                    <span class="cart-route-arrow"><i class="bi bi-arrow-right"></i></span>
+                    <div class="text-lg-end">
+                        <small class="text-muted d-block">Deliver To</small>
+                        <div class="cart-city">{{ optional($route)->to_city ?? '-' }}</div>
                     </div>
                 </div>
+
+                <div class="cart-meta-grid mb-3">
+                    <div class="cart-meta">
+                        <span>Pickup Date</span>
+                        <strong>{{ $pickupDate }}</strong>
+                    </div>
+                    <div class="cart-meta">
+                        <span>Delivery Date</span>
+                        <strong>{{ $deliveryDate }}</strong>
+                    </div>
+                    <div class="cart-meta">
+                        <span>Distance</span>
+                        <strong>{{ $route ? number_format($route->distance_km, 2) . ' KM' : '-' }}</strong>
+                    </div>
+                    <div class="cart-meta">
+                        <span>Status</span>
+                        <strong class="{{ $shipmentHasError ? 'text-danger' : 'text-success' }}">
+                            {{ $shipmentHasError ? 'Needs Review' : 'Ready' }}
+                        </strong>
+                    </div>
+                </div>
+
+                {{-- Items — single row per item --}}
+                <div class="cart-item-list">
+                    <div class="cart-item-list-head">
+                        <span class="col-item">Item</span>
+                        <span class="col-dim">Dimensions</span>
+                        <span class="col-qty">Qty</span>
+                        <span class="col-weight">Weight</span>
+                        <span class="col-volume">Volume</span>
+                        <span class="col-price">Price</span>
+                        <span class="col-actions">Actions</span>
+                    </div>
+
+                    @foreach($shipmentItems as $item)
+                        @php $volume = $item->price_breakdown['volume_cft'] ?? null; @endphp
+                        <div class="cart-item-row">
+                            <span class="col-item" data-label="Item">
+                                <span class="cart-row-icon"><i class="bi bi-box2"></i></span>
+                                <span class="cart-row-text">
+                                    <strong>{{ $item->item_name }}</strong>
+                                    <small>{{ $item->item_type ?: 'Shipment item' }}</small>
+                                </span>
+                            </span>
+
+                            <span class="col-dim" data-label="Dimensions">
+                                {{ $item->length_cm ? number_format($item->length_cm, 1) : '-' }}
+                                × {{ $item->width_cm ? number_format($item->width_cm, 1) : '-' }}
+                                × {{ number_format($item->height_cm, 1) }} cm
+                            </span>
+
+                            <span class="col-qty" data-label="Qty">{{ $item->quantity }}</span>
+
+                            <span class="col-weight" data-label="Weight">{{ number_format($item->weight_kg, 2) }} kg</span>
+
+                            <span class="col-volume" data-label="Volume">
+                                {{ $volume !== null ? number_format($volume, 2) . ' cft' : '-' }}
+                            </span>
+
+                            <span class="col-price" data-label="Price">
+                                @if($item->price_error)
+                                    <span class="cart-row-error" title="{{ $item->price_error }}">
+                                        <i class="bi bi-exclamation-circle"></i> Error
+                                    </span>
+                                @else
+                                    ₹{{ number_format($item->calculated_price, 2) }}
+                                @endif
+                            </span>
+
+                            <span class="col-actions" data-label="Actions">
+                                <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-row-btn cart-row-btn-edit" title="Edit item">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-row-btn cart-row-btn-delete" title="Remove item" onclick="return confirm('Remove this item?')">
+                                    <i class="bi bi-trash3"></i>
+                                </a>
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </div>
+</div>
+
+<style>
+    /* ===== Shipment card ===== */
+    .cart-item-card {
+        background: #ffffff;
+        border: 1px solid #E4E8F0;
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(18, 33, 60, 0.04);
+    }
+
+    .cart-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .cart-item-title {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .cart-item-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 10px;
+        background: #12213C;
+        color: #F2994A;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .cart-item-title h5 {
+        margin: 0 0 2px;
+        font-weight: 700;
+        color: #12213C;
+        font-size: 16px;
+    }
+
+    .cart-item-title small {
+        color: #667085;
+        font-size: 13px;
+    }
+
+    .cart-shipment-count {
+        font-size: 12px;
+        color: #98A2B3;
+        margin-top: 4px;
+    }
+
+    .cart-price {
+        text-align: right;
+        font-weight: 700;
+        font-size: 18px;
+        color: #12213C;
+        white-space: nowrap;
+    }
+
+    .cart-price span {
+        display: block;
+        font-weight: 500;
+        font-size: 11px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #98A2B3;
+        margin-bottom: 2px;
+    }
+
+    .cart-error {
+        background: #FEF3F2;
+        color: #B42318;
+        border: 1px solid #FECDCA;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* ===== Route strip ===== */
+    .cart-route-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #F8F9FC;
+        border: 1px solid #EEF1F6;
+        border-radius: 10px;
+        padding: 12px 18px;
+        margin-bottom: 14px;
+    }
+
+    .cart-city {
+        font-weight: 700;
+        color: #12213C;
+        font-size: 15px;
+    }
+
+    .cart-route-arrow {
+        color: #F2994A;
+        font-size: 16px;
+    }
+
+    /* ===== Meta grid ===== */
+    .cart-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .cart-meta {
+        background: #FBFBFD;
+        border: 1px solid #EEF1F6;
+        border-radius: 8px;
+        padding: 8px 12px;
+    }
+
+    .cart-meta span {
+        display: block;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #98A2B3;
+        margin-bottom: 3px;
+    }
+
+    .cart-meta strong {
+        font-size: 13px;
+        color: #12213C;
+    }
+
+    .text-success { color: #067647 !important; }
+    .text-danger { color: #B42318 !important; }
+
+    /* ===== Item list ===== */
+    .cart-item-list {
+        margin-top: 18px;
+        border-top: 1px dashed #E4E8F0;
+        padding-top: 14px;
+    }
+
+    .cart-item-list-head {
+        display: grid;
+        grid-template-columns: 2.2fr 1.4fr .7fr 1fr 1fr 1fr .9fr;
+        gap: 10px;
+        padding: 0 14px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+        color: #98A2B3;
+    }
+
+    .cart-item-row {
+        display: grid;
+        grid-template-columns: 2.2fr 1.4fr .7fr 1fr 1fr 1fr .9fr;
+        gap: 10px;
+        align-items: center;
+        background: #FBFBFD;
+        border: 1px solid #EEF1F6;
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 8px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .cart-item-row:hover {
+        border-color: #D6DCE8;
+        box-shadow: 0 2px 8px rgba(18, 33, 60, 0.06);
+    }
+
+    .cart-item-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .col-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .cart-row-icon {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        border-radius: 8px;
+        background: #EEF1F6;
+        color: #12213C;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .cart-row-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .cart-row-text strong {
+        font-size: 13.5px;
+        color: #12213C;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .cart-row-text small {
+        font-size: 11.5px;
+        color: #98A2B3;
+    }
+
+    .col-dim,
+    .col-qty,
+    .col-weight,
+    .col-volume {
+        font-size: 13px;
+        color: #344054;
+    }
+
+    .col-price {
+        font-weight: 700;
+        color: #12213C;
+        font-size: 13.5px;
+    }
+
+    .cart-row-error {
+        color: #B42318;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: help;
+    }
+
+    .col-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+    }
+
+    .cart-row-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .cart-row-btn-edit {
+        background: #EAF2FF;
+        color: #175CD3;
+    }
+
+    .cart-row-btn-edit:hover {
+        background: #175CD3;
+        color: #fff;
+    }
+
+    .cart-row-btn-delete {
+        background: #FEF3F2;
+        color: #B42318;
+    }
+
+    .cart-row-btn-delete:hover {
+        background: #B42318;
+        color: #fff;
+    }
+
+    /* ===== Responsive: stack rows on small screens ===== */
+    @media (max-width: 767px) {
+        .cart-item-list-head {
+            display: none;
+        }
+
+        .cart-item-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .cart-item-row > span:not(.col-item) {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            border-top: 1px dashed #EEF1F6;
+            padding-top: 6px;
+        }
+
+        .cart-item-row > span[data-label]:not(.col-item)::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: #98A2B3;
+            text-transform: uppercase;
+            font-size: 10.5px;
+            letter-spacing: .03em;
+        }
+
+        .col-actions {
+            justify-content: flex-start;
+            border-top: 1px dashed #EEF1F6;
+            padding-top: 8px;
+        }
+
+        .cart-meta-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
 
                 <div class="col-lg-4">
                     <div class="cart-summary-panel">

@@ -114,6 +114,9 @@ class AdminController extends Controller
 
     public function AdminSaveCityRoute(Request $request, $id = null)
     {
+
+
+    // dd($request->all());
         $cityRoute = $id ? CityRoute::find($id) : null;
 
         if ($id && !$cityRoute) {
@@ -121,20 +124,19 @@ class AdminController extends Controller
         }
 
         $validated = $request->validate([
-            'from_city' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('city_routes')->where(function ($query) use ($request) {
-                    return $query->where('to_city', $request->to_city);
-                })->ignore($cityRoute?->id),
-            ],
+            'from_city' => ['required','string', 'max:255',
+                            Rule::unique('city_routes')->where(function ($query) use ($request) {
+                                return $query->where('to_city', $request->to_city);
+                            })->ignore($cityRoute?->id),],
             'to_city' => ['required', 'string', 'max:255'],
             'distance_km' => ['required', 'numeric', 'min:0'],
             'base_rate_per_km' => ['required', 'numeric', 'min:0'],
+            'base_rate_per_volume' => ['required', 'numeric', 'min:0'],
             'min_charge' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
+
+
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
@@ -340,11 +342,23 @@ class AdminController extends Controller
             return redirect()->route('admin.transport_quotes')->with('error', 'Transport quote not found');
         }
 
-        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id) . '.pdf';
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id);
 
-        return response($quotePdfService->output($quote, $this->transportAddressForQuote($quote)), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        $result = $quotePdfService->output($quote, $this->transportAddressForQuote($quote));
+
+        if (is_array($result) && isset($result['content'], $result['mimetype'])) {
+            $content = $result['content'];
+            $mimetype = $result['mimetype'];
+        } else {
+            $content = is_string($result) ? $result : '';
+            $mimetype = 'application/pdf';
+        }
+
+        $ext = $mimetype === 'text/html' ? 'html' : 'pdf';
+
+        return response($content, 200, [
+            'Content-Type' => $mimetype,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '.' . $ext . '"',
         ]);
     }
 
@@ -474,11 +488,23 @@ class AdminController extends Controller
 
         $quote = TransportQuote::syncFromLead($transportLead);
         $quote->load(['user', 'transportLead.cityRoute']);
-        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id) . '.pdf';
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'transport-quote-' . $quote->id);
 
-        return response($quotePdfService->output($quote, $this->transportAddressForQuote($quote)), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        $result = $quotePdfService->output($quote, $this->transportAddressForQuote($quote));
+
+        if (is_array($result) && isset($result['content'], $result['mimetype'])) {
+            $content = $result['content'];
+            $mimetype = $result['mimetype'];
+        } else {
+            $content = is_string($result) ? $result : '';
+            $mimetype = 'application/pdf';
+        }
+
+        $ext = $mimetype === 'text/html' ? 'html' : 'pdf';
+
+        return response($content, 200, [
+            'Content-Type' => $mimetype,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '.' . $ext . '"',
         ]);
     }
 

@@ -44,41 +44,45 @@ Route::get('/track-and-trace/{trackingNumber}/invoice', [WebController::class, '
 
 // admin routes
 
-Route::get('/admin', [AdminController::class, 'AdminDashboard'])->middleware('auth')->name('admin.dashboard');
-Route::get('/admin/users', [AdminController::class, 'AdminUsers'])->name('admin.users');
-Route::get('/admin/get-users', [ApiController::class, 'AdminGetUsers'])->name('adminget.users');
-Route::get('/admin/get-users/{id}', [ApiController::class, 'AdminGetUserDetails'])->name('adminget.user.details');
-Route::get('/admin/users/delete/{slug}', [AdminController::class, 'AdminDeleteUsers'])->name('admin.delete.users');
-Route::get('/admin/users/edit/{slug}', [AdminController::class, 'AdminEditUsers'])->name('admin.edit.users');
-Route::post('/admin/users/update/{slug}', [AdminController::class, 'AdminUpdateUsers'])->name('admin.update.users');
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
-Route::get('/admin/city-routes/manage/{id?}', [AdminController::class, 'AdminManageCityRoute'])->middleware('auth')->name('admin.manage.city_route');
-Route::post('/admin/city-routes/manage/{id?}', [AdminController::class, 'AdminSaveCityRoute'])->middleware('auth')->name('admin.save.city_route');
-Route::get('/admin/city-routes/delete/{id}', [AdminController::class, 'AdminDeleteCityRoute'])->middleware('auth')->name('admin.delete.city_route');
-Route::get('/admin/get-city-routes', [ApiController::class, 'AdminGetCityRoutes'])->name('adminget.city.routes');
+    Route::get('', [AdminController::class, 'AdminDashboard'])->name('admin.dashboard');
+    Route::get('/users', [AdminController::class, 'AdminUsers'])->name('admin.users');
+    Route::get('/get-users', [ApiController::class, 'AdminGetUsers'])->name('adminget.users');
+    Route::get('/get-users/{id}', [ApiController::class, 'AdminGetUserDetails'])->name('adminget.user.details');
+    Route::get('/users/delete/{slug}', [AdminController::class, 'AdminDeleteUsers'])->name('admin.delete.users');
+    Route::get('/users/edit/{slug}', [AdminController::class, 'AdminEditUsers'])->name('admin.edit.users');
+    Route::post('/users/update/{slug}', [AdminController::class, 'AdminUpdateUsers'])->name('admin.update.users');
 
-Route::get('/admin/transport-prices', [AdminController::class, 'AdminTransportPrices'])->middleware('auth')->name('admin.transport_prices');
-Route::get('/admin/transport-prices/manage/{id?}', [AdminController::class, 'AdminManageTransportPrice'])->middleware('auth')->name('admin.manage.transport_price');
-Route::post('/admin/transport-prices/manage/{id?}', [AdminController::class, 'AdminSaveTransportPrice'])->middleware('auth')->name('admin.save.transport_price');
-Route::get('/admin/transport-prices/delete/{id}', [AdminController::class, 'AdminDeleteTransportPrice'])->middleware('auth')->name('admin.delete.transport_price');
-Route::get('/admin/get-transport-prices', [ApiController::class, 'AdminGetTransportPrices'])->name('adminget.transport.prices');
+    Route::get('/city-routes/manage/{id?}', [AdminController::class, 'AdminManageCityRoute'])->name('admin.manage.city_route');
+    Route::post('/city-routes/manage/{id?}', [AdminController::class, 'AdminSaveCityRoute'])->name('admin.save.city_route');
+    Route::get('/city-routes/delete/{id}', [AdminController::class, 'AdminDeleteCityRoute'])->name('admin.delete.city_route');
+    Route::get('/get-city-routes', [ApiController::class, 'AdminGetCityRoutes'])->name('adminget.city.routes');
 
-Route::get('/admin/transport-leads', [AdminController::class, 'AdminTransportLeads'])->middleware('auth')->name('admin.transport_leads');
-Route::get('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminManageTransportLead'])->middleware('auth')->name('admin.manage.transport_lead');
-Route::post('/admin/transport-leads/manage/{id?}', [AdminController::class, 'AdminSaveTransportLead'])->middleware('auth')->name('admin.save.transport_lead');
-Route::get('/admin/transport-leads/{id}/quote', [AdminController::class, 'AdminViewTransportLeadQuote'])->middleware('auth')->name('admin.transport_lead.quote');
-Route::get('/admin/transport-leads/{id}/quote/download', [AdminController::class, 'AdminDownloadTransportLeadQuote'])->middleware('auth')->name('admin.transport_lead.quote.download');
-Route::get('/admin/transport-leads/{id}/invoice', [AdminController::class, 'AdminDownloadTransportLeadInvoice'])->middleware('auth')->name('admin.transport_lead.invoice');
-Route::get('/admin/transport-leads/delete/{id}', [AdminController::class, 'AdminDeleteTransportLead'])->middleware('auth')->name('admin.delete.transport_lead');
-Route::get('/admin/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');
+    Route::get('/transport-prices', [AdminController::class, 'AdminTransportPrices'])->name('admin.transport_prices');
+    Route::get('/transport-prices/manage/{id?}', [AdminController::class, 'AdminManageTransportPrice'])->name('admin.manage.transport_price');
+    Route::post('/transport-prices/manage/{id?}', [AdminController::class, 'AdminSaveTransportPrice'])->name('admin.save.transport_price');
+    Route::get('/transport-prices/delete/{id}', [AdminController::class, 'AdminDeleteTransportPrice'])->name('admin.delete.transport_price');
+    Route::get('/get-transport-prices', [ApiController::class, 'AdminGetTransportPrices'])->name('adminget.transport.prices');
 
-Route::get('/admin/transport-quotes', [AdminController::class, 'AdminTransportQuotes'])->middleware('auth')->name('admin.transport_quotes');
-Route::get('/admin/transport-quotes/{id}', [AdminController::class, 'AdminViewTransportQuote'])->middleware('auth')->name('admin.transport_quotes.view');
-Route::get('/admin/transport-quotes/{id}/download', [AdminController::class, 'AdminDownloadTransportQuote'])->middleware('auth')->name('admin.transport_quotes.download');
-Route::get('/admin/get-transport-quotes', [ApiController::class, 'AdminGetTransportQuotes'])->middleware('auth')->name('adminget.transport.quotes');
+    Route::get('/transport-leads', [AdminController::class, 'AdminTransportLeads'])->name('admin.transport_leads');
+    Route::get('/transport-leads/manage/{id?}', [AdminController::class, 'AdminManageTransportLead'])->name('admin.manage.transport_lead');
+    Route::post('/transport-leads/manage/{id?}', [AdminController::class, 'AdminSaveTransportLead'])->name('admin.save.transport_lead');
+    Route::get('/transport-leads/{id}/quote', [AdminController::class, 'AdminViewTransportLeadQuote'])->name('admin.transport_lead.quote');
+    Route::get('/transport-leads/{id}/quote/download', [AdminController::class, 'AdminDownloadTransportLeadQuote'])->name('admin.transport_lead.quote.download');
+    Route::get('/transport-leads/{id}/invoice', [AdminController::class, 'AdminDownloadTransportLeadInvoice'])->name('admin.transport_lead.invoice');
+    Route::get('/transport-leads/delete/{id}', [AdminController::class, 'AdminDeleteTransportLead'])->name('admin.delete.transport_lead');
+    Route::get('/get-transport-leads', [ApiController::class, 'AdminGetTransportLeads'])->name('adminget.transport.leads');
 
-Route::get('/admin/payments', [AdminController::class, 'AdminPayments'])->middleware('auth')->name('admin.payments');
-Route::get('/admin/get-payments', [ApiController::class, 'AdminGetPayments'])->middleware('auth')->name('adminget.payments');
+    Route::get('/transport-quotes', [AdminController::class, 'AdminTransportQuotes'])->name('admin.transport_quotes');
+    Route::get('/transport-quotes/{id}', [AdminController::class, 'AdminViewTransportQuote'])->name('admin.transport_quotes.view');
+    Route::get('/transport-quotes/{id}/download', [AdminController::class, 'AdminDownloadTransportQuote'])->name('admin.transport_quotes.download');
+    Route::get('/get-transport-quotes', [ApiController::class, 'AdminGetTransportQuotes'])->name('adminget.transport.quotes');
 
-Route::get('/admin/auth-settings', [AdminController::class, 'AdminAuthSettings'])->middleware('auth')->name('admin.auth_settings');
-Route::post('/admin/auth-settings', [AdminController::class, 'AdminSaveAuthSettings'])->middleware('auth')->name('admin.save.auth_settings');
+    Route::get('/payments', [AdminController::class, 'AdminPayments'])->name('admin.payments');
+    Route::get('/get-payments', [ApiController::class, 'AdminGetPayments'])->name('adminget.payments');
+
+    Route::get('/auth-settings', [AdminController::class, 'AdminAuthSettings'])->name('admin.auth_settings');
+    Route::post('/auth-settings', [AdminController::class, 'AdminSaveAuthSettings'])->name('admin.save.auth_settings');
+
+});

@@ -16,10 +16,12 @@ return new class extends Migration
             $table->string('from_city');
             $table->string('to_city');
             $table->decimal('distance_km', 8, 2);
+            $table->integer('base_rate_per_km');
+            $table->integer('base_rate_per_volume');
+            $table->integer('min_charge');
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->unique(['from_city', 'to_city']);
-
         });
     }
 

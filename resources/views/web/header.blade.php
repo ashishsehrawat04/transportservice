@@ -730,7 +730,7 @@
                                 <li><a href="{{ route('shipment.add_item') }}">Create Booking</a></li>
                                 <li><a href="{{ route('shipment.cart') }}">My Booking</a></li>
                                 @auth
-                                    <li><a href="{{ route('shipment.leads') }}">Shipment Requests</a></li>
+                                    <li><a href="{{ route('shipment.leads') }}">Booking Requests</a></li>
                                 @endauth
                             </ul>
                         </li>

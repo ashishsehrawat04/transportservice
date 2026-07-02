@@ -10,21 +10,17 @@ use PHPUnit\Framework\TestCase;
 
 class ShipmentPricingServiceTest extends TestCase
 {
-    public function test_it_uses_route_rate_minimum_maximum_tax_and_discount(): void
+    public function test_it_uses_route_min_charge_and_prefers_higher_weight_or_volume_charge(): void
     {
         $service = new ShipmentPricingService();
         $price = new TransportServicePrice([
-            'base_price' => 100,
-            'weight_rate_per_kg' => 10,
-            'volume_rate_per_cft' => 5,
-            'distance_rate_per_km' => 2,
             'multiplier' => 1,
             'min_charge' => 200,
-            'max_charge' => 1000,
         ]);
         $route = new CityRoute([
             'distance_km' => 20,
             'base_rate_per_km' => 30,
+            'base_rate_per_volume' => 10,
             'min_charge' => 300,
         ]);
 
@@ -36,9 +32,11 @@ class ShipmentPricingServiceTest extends TestCase
             'discount_amount' => 25,
         ], $price, $route);
 
-        $this->assertSame(1200.0, $result['distance_charge']);
-        $this->assertSame(1000.0, $result['subtotal']);
-        $this->assertSame(1025.0, $result['total_payment']);
+        $this->assertSame('weight', $result['calculation_type']);
+        $this->assertSame(240.0, $result['weight_charge']);
+        $this->assertSame(0.0, $result['volume_charge']);
+        $this->assertSame(300.0, $result['subtotal']);
+        $this->assertSame(325.0, $result['total_payment']);
     }
 
     public function test_it_calculates_cart_item_volume_from_centimeters(): void
@@ -52,16 +50,13 @@ class ShipmentPricingServiceTest extends TestCase
             'weight_kg' => 10,
         ]);
         $price = new TransportServicePrice([
-            'base_price' => 0,
-            'weight_rate_per_kg' => 0,
-            'volume_rate_per_cft' => 1,
-            'distance_rate_per_km' => 0,
             'multiplier' => 1,
             'min_charge' => 0,
         ]);
         $route = new CityRoute([
             'distance_km' => 0,
             'base_rate_per_km' => 0,
+            'base_rate_per_volume' => 1,
             'min_charge' => 0,
         ]);
 

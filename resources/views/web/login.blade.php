@@ -336,7 +336,7 @@
 
                                 @if($mobileEnabled)
                                     <div class="auth-method {{ $activeMode === 'mobile' ? 'active' : '' }}" data-auth-panel="mobile">
-                                        <form action="{{ route('login.mobile.send_otp') }}" method="POST" class="mb-3">
+                                        <form action="{{ route('login.mobile.send_otp') }}" method="POST" class="{{ session('mobile_otp_sent') ? 'd-none mb-3' : 'mb-3' }}">
                                             @csrf
                                             <input type="hidden" name="login_mode" value="mobile">
                                             <div class="form-inner mb-20">
@@ -351,13 +351,12 @@
                                                 <span></span>
                                             </button>
                                         </form>
-
-                                        <form action="{{ route('login.mobile.verify') }}" method="POST">
+                                        <form action="{{ route('login.mobile.verify') }}" method="POST" class="{{ session('mobile_otp_sent') ? '' : 'd-none' }}">
                                             @csrf
                                             <input type="hidden" name="login_mode" value="mobile">
                                             <div class="form-inner mb-20">
                                                 <label>Mobile Number</label>
-                                                <input type="text" name="mobile" value="{{ old('mobile') }}" placeholder="9876543210">
+                                                <input type="text" name="mobile" value="{{ old('mobile') }}" placeholder="9876543210" readonly>
                                             </div>
                                             <div class="form-inner mb-20">
                                                 <label>OTP</label>

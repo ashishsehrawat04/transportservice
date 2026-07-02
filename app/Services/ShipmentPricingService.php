@@ -42,16 +42,22 @@ class ShipmentPricingService
         $weightKg = (float) ($item['weight_kg'] ?? 0);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
         $totalVolume = $volumeCft * $quantity;
-        $basePrice = round((float) $price->min_charge, 2);
+        $routeMinCharge = round((float) $route->min_charge, 2);
+        $basePrice = $routeMinCharge > 0 ? $routeMinCharge : round((float) $price->min_charge, 2);
         $multiplier = (float) ($price->multiplier ?: 1);
-        $weightCharge = round($weightKg * $quantity * (float) $price->weight_rate_per_kg, 2);
-        $calculatedVolumeCharge = round($totalVolume * (float) $price->volume_rate_per_cft, 2);
+        $routeWeightRate = (float) $route->base_rate_per_km;
+        $routeVolumeRate = (float) $route->base_rate_per_volume;
+        $routeWeightRate = $routeWeightRate > 0 ? $routeWeightRate : (float) $price->weight_rate_per_kg;
+        $routeVolumeRate = $routeVolumeRate > 0 ? $routeVolumeRate : (float) $price->volume_rate_per_cft;
+
+        $weightCharge = round($weightKg * $quantity * $routeWeightRate, 2);
+        $calculatedVolumeCharge = round($totalVolume * $routeVolumeRate, 2);
         $calculationType = $weightCharge >= $calculatedVolumeCharge ? 'weight' : 'volume';
         $volumeCharge = $calculationType === 'volume' ? $calculatedVolumeCharge : 0.0;
         $weightCharge = $calculationType === 'weight' ? $weightCharge : 0.0;
         $distanceCharge = 0.0;
-
-        $subtotal = round(($basePrice + $weightCharge + $volumeCharge + $distanceCharge) * $multiplier, 2);
+        $selectedCharge = max($weightCharge, $volumeCharge);
+        $subtotal = round(max($basePrice, $selectedCharge) * $multiplier, 2);
         $taxAmount = round((float) ($item['tax_amount'] ?? 0), 2);
         $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
         $totalPayment = max(0, round($subtotal + $taxAmount - $discountAmount, 2));
