@@ -372,12 +372,12 @@
                     </a>
                 </li>
 
-                <li class="nav-item {{ request()->routeIs('admin.transport_prices') ? 'active' : '' }}">
+                <!-- <li class="nav-item {{ request()->routeIs('admin.transport_prices') ? 'active' : '' }}">
                     <a href="{{ route('admin.transport_prices') }} ">
                     <i class="fas fa-dollar-sign"></i>
                     <p>Transport Prices</p>
                     </a>
-                </li>
+                </li> -->
 
                 <li class="nav-item {{ request()->routeIs('admin.transport_leads') || request()->routeIs('admin.manage.transport_lead') ? 'active' : '' }}">
                     <a href="{{ route('admin.transport_leads') }} ">
@@ -386,12 +386,12 @@
                     </a>
                 </li>
 
-                <li class="nav-item {{ request()->routeIs('admin.transport_quotes') ? 'active' : '' }}">
+                <!-- <li class="nav-item {{ request()->routeIs('admin.transport_quotes') ? 'active' : '' }}">
                     <a href="{{ route('admin.transport_quotes') }} ">
                     <i class="fas fa-file-invoice"></i>
                     <p>Transport Quotes</p>
                     </a>
-                </li>
+                </li> -->
 
                 <li class="nav-item {{ request()->routeIs('admin.payments') ? 'active' : '' }}">
                     <a href="{{ route('admin.payments') }} ">

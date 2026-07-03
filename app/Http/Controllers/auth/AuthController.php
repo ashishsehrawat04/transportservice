@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendOtpMail;
 use App\Models\TransportAuthSetting;
 use App\Models\User;
 use App\Models\UserLoginOtp;
@@ -111,10 +112,7 @@ class AuthController extends Controller
             'otp_expires_at' => now()->addMinutes(10),
         ]);
 
-        Mail::raw("Your login OTP is: {$otp}\n\nIf you did not request this, ignore this email.", function ($message) use ($user) {
-            $message->to($user->email)
-                ->subject(config('app.name') . ' Login OTP');
-        });
+        Mail::to($user->email)->send(new SendOtpMail($otp, $user->name));
 
         return response()->json(['message' => 'OTP sent successfully. Check your email for the code.']);
     }

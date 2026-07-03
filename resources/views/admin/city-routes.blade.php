@@ -25,19 +25,17 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive admin-table-scroll">
-                        <table id="multi-filter-select"class="display table table-striped table-hover">
+                        <table id="multi-filter-select" class="display table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>From City</th>
-                                            <th>To City</th>
-                                            <th>Distance (KM)</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
+                                    <th>#</th>
+                                    <th>From City</th>
+                                    <th>To City</th>
+                                    <th>Distance (KM)</th>
+                                    <th>Rate/KM</th>
+                                    <th>Rate/Volume</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -57,62 +55,76 @@
 
             ajax: {
                 url: "{{ route('adminget.city.routes') }}",
-
+                type: 'GET',
                 dataSrc: function (json) {
-
-                    if (json.status) {
+                    console.log('API Response:', json);
+                    if (json.status && json.data) {
+                        console.log('Data loaded:', json.data);
                         return json.data;
                     }
-
-                    alert(json.message);
+                    console.error('API Error:', json.message);
+                    alert('Error: ' + json.message);
                     return [];
                 },
 
-                error: function(xhr) {
-
-                    let response = xhr.responseJSON;
-
-                    if (response && response.message) {
-                        alert(response.message);
-                    } else {
-                        alert('Something went wrong');
-                    }
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error, xhr);
+                    let message = 'Error loading routes';
+                    try {
+                        let response = xhr.responseJSON;
+                        if (response && response.message) {
+                            message = response.message;
+                        }
+                    } catch(e) {}
+                    console.error('Error details:', message);
+                    alert('❌ ' + message);
                 }
             },
             scrollX: true,
             autoWidth: false,
 
             columns: [
-
                 {
                     data: null,
                     render: function(data, type, row, meta) {
                         return meta.row + 1;
                     }
                 },
-
                 {
-                    data: 'from_city'
+                    data: 'from_city',
+                    defaultContent: '-'
                 },
-
                 {
-                    data: 'to_city'
+                    data: 'to_city',
+                    defaultContent: '-'
                 },
-
                 {
-                    data: 'distance_km'
+                    data: 'distance_km',
+                    defaultContent: '-'
                 },
-
-
+                {
+                    data: 'base_rate_per_km',
+                    defaultContent: '-',
+                    render: function(data) {
+                        if (data) return '₹ ' + parseFloat(data).toFixed(2);
+                        return '-';
+                    }
+                },
+                {
+                    data: 'base_rate_per_volume',
+                    defaultContent: '-',
+                    render: function(data) {
+                        if (data) return '₹ ' + parseFloat(data).toFixed(2);
+                        return '-';
+                    }
+                },
                 {
                     data: 'is_active',
                     render: function(data) {
-
                         if(data == 1){
-                            return '<span class="badge bg-success">Active</span>';
+                            return '<span class="badge bg-success">✓ Active</span>';
                         }
-
-                        return '<span class="badge bg-danger">Inactive</span>';
+                        return '<span class="badge bg-danger">✗ Inactive</span>';
                     }
                 },
 
