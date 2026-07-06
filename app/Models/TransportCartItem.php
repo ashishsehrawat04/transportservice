@@ -20,11 +20,16 @@ class TransportCartItem extends Model
         'pickup_date',
         'delivery_date',
         'estimated_total',
+        'charge_basis',
+        'charge_weight_kg',
+        'volumetric_weight_kg',
     ];
 
     protected $casts = [
         'pickup_date' => 'date',
         'delivery_date' => 'date',
+        'charge_weight_kg' => 'decimal:2',
+        'volumetric_weight_kg' => 'decimal:2',
     ];
 
     public function user()

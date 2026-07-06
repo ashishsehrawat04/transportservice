@@ -163,7 +163,7 @@ class TransportDemoSeeder extends Seeder
 
         $cartItem->update([
             'estimated_total' => app(ShipmentPricingService::class)
-                ->calculateCartItem($cartItem, $price, $route)['total_payment'],
+                ->calculateCartItem($cartItem, $route)['total_payment'],
         ]);
     }
 

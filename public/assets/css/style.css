@@ -162,9 +162,9 @@ body.transport-home .progress-wrap .arrow {
 body.transport-home .progress-wrap:hover {
   background-color: var(--primary-color1);
 }
-body.transport-home .progress-wrap:hover .arrow {
+/* body.transport-home .progress-wrap:hover .arrow {
   fill: var(--white-color);
-}
+} */
 body.transport-home #ball {
   border-color: var(--primary-color1);
   background-color: var(--primary-color1);
@@ -5977,7 +5977,9 @@ header.style-4 .mobile-logo-area .menu-close-btn:hover i {
   }
 }
 .home1-banner-section .slider-btn-grp-area .slider-btn:hover img {
-  opacity: 1;
+  /* keep decorative image hidden on hover (prevents placeholder "65x65" showing) */
+  opacity: 0 !important;
+  visibility: hidden;
 }
 .home1-banner-section .slider-btn-grp-area .slider-btn img {
   min-width: 65px;

@@ -35,8 +35,8 @@ class ShipmentPricingServiceTest extends TestCase
         $this->assertSame('weight', $result['calculation_type']);
         $this->assertSame(240.0, $result['weight_charge']);
         $this->assertSame(0.0, $result['volume_charge']);
-        $this->assertSame(300.0, $result['subtotal']);
-        $this->assertSame(325.0, $result['total_payment']);
+        $this->assertSame(600.0, $result['subtotal']);
+        $this->assertSame(625.0, $result['total_payment']);
     }
 
     public function test_it_calculates_cart_item_volume_from_centimeters(): void

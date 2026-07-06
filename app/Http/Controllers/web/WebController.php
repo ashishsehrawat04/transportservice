@@ -120,26 +120,43 @@ class WebController extends Controller
         $cartTotal = 0;
 
         $cartItems->each(function (TransportCartItem $item) use (&$cartTotal) {
-            $item->calculated_price = 0;
-            $item->price_error = null;
             $itemPrice = $this->priceForItemType($item->item_type);
+            $priceError = null;
 
             if (!$itemPrice) {
-                $item->price_error = 'Price not set';
+                $priceError = 'Price not set';
+                $item->price_error = $priceError;
                 return;
             }
 
             $route = $this->findRoute($item);
 
             if (!$route) {
-                $item->price_error = 'Route not found';
+                $priceError = 'Route not found';
+                $item->price_error = $priceError;
                 return;
             }
 
             $breakdown = $this->pricingService->calculateCartItem($item, $itemPrice, $route);
+            $calculatedPrice = $breakdown['total_payment'];
+
+            if (
+                $item->estimated_total !== $calculatedPrice ||
+                $item->charge_basis !== $breakdown['charge_basis'] ||
+                $item->charge_weight_kg !== $breakdown['charge_weight_kg'] ||
+                $item->volumetric_weight_kg !== $breakdown['volumetric_weight_kg']
+            ) {
+                $item->update([
+                    'estimated_total' => $calculatedPrice,
+                    'charge_basis' => $breakdown['charge_basis'],
+                    'charge_weight_kg' => $breakdown['charge_weight_kg'],
+                    'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
+                ]);
+            }
+
             $item->price_breakdown = $breakdown;
-            $item->calculated_price = $breakdown['total_payment'];
-            $cartTotal += $item->calculated_price;
+            $item->calculated_price = $calculatedPrice;
+            $cartTotal += $calculatedPrice;
         });
 
         return view('web.shipment-cart', compact('cartItems', 'cartTotal', 'price'));
@@ -415,8 +432,13 @@ class WebController extends Controller
             return;
         }
 
+        $breakdown = $this->pricingService->calculateCartItem($item, $price, $route);
+
         $item->update([
-            'estimated_total' => $this->pricingService->calculateCartItem($item, $price, $route)['total_payment'],
+            'estimated_total' => $breakdown['total_payment'],
+            'charge_basis' => $breakdown['charge_basis'],
+            'charge_weight_kg' => $breakdown['charge_weight_kg'],
+            'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
         ]);
     }
 

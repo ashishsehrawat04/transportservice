@@ -606,6 +606,9 @@
                                     </span>
                                 @else
                                     ₹{{ number_format($item->calculated_price, 2) }}
+                                    <small class="d-block text-muted" style="font-size:12px;">
+                                        {{ ucfirst($item->charge_basis) }} charge: {{ number_format($item->charge_weight_kg, 2) }} kg
+                                    </small>
                                 @endif
                             </span>
 

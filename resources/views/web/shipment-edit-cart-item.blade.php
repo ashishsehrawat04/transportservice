@@ -192,7 +192,7 @@
                                     <label class="form-label">Shipment Item Name</label>
                                     <input type="text" name="item_name" class="form-control" value="{{ old('item_name', $cartItem->item_name) }}" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <!-- <div class="col-md-4 mb-3">
                                     <label class="form-label">Shipment Item Type</label>
                                     <select name="item_type" class="form-control" required>
                                         <option value="">Select item type</option>
@@ -202,7 +202,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                </div>
+                                </div> -->
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Quantity</label>
                                     <input type="number" name="quantity" class="form-control" value="{{ old('quantity', $cartItem->quantity) }}" min="1" required>

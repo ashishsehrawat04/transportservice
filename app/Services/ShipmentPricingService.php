@@ -43,21 +43,24 @@ class ShipmentPricingService
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
         $totalVolume = $volumeCft * $quantity;
         $routeMinCharge = round((float) $route->min_charge, 2);
-        $basePrice = $routeMinCharge > 0 ? $routeMinCharge : round((float) $price->min_charge, 2);
+        $basePricePerUnit = $routeMinCharge > 0 ? $routeMinCharge : round((float) $price->min_charge, 2);
+        $basePrice = $basePricePerUnit * $quantity;
         $multiplier = (float) ($price->multiplier ?: 1);
         $routeWeightRate = (float) $route->base_rate_per_km;
         $routeVolumeRate = (float) $route->base_rate_per_volume;
         $routeWeightRate = $routeWeightRate > 0 ? $routeWeightRate : (float) $price->weight_rate_per_kg;
         $routeVolumeRate = $routeVolumeRate > 0 ? $routeVolumeRate : (float) $price->volume_rate_per_cft;
 
-        $weightCharge = round($weightKg * $quantity * $routeWeightRate, 2);
+        $actualWeightKg = round($weightKg * $quantity, 2);
+        $volumetricWeightKg = round($volumeCft * 5.66336, 2);
+        $weightCharge = round($actualWeightKg * $routeWeightRate, 2);
         $calculatedVolumeCharge = round($totalVolume * $routeVolumeRate, 2);
-        $calculationType = $weightCharge >= $calculatedVolumeCharge ? 'weight' : 'volume';
-        $volumeCharge = $calculationType === 'volume' ? $calculatedVolumeCharge : 0.0;
+        $calculationType = $volumetricWeightKg > $actualWeightKg ? 'volumetric' : 'weight';
+        $volumeCharge = $calculationType === 'volumetric' ? $calculatedVolumeCharge : 0.0;
         $weightCharge = $calculationType === 'weight' ? $weightCharge : 0.0;
         $distanceCharge = 0.0;
-        $selectedCharge = max($weightCharge, $volumeCharge);
-        $subtotal = round(max($basePrice, $selectedCharge) * $multiplier, 2);
+        $selectedCharge = max($basePrice, max($weightCharge, $volumeCharge));
+        $subtotal = round($selectedCharge * $multiplier, 2);
         $taxAmount = round((float) ($item['tax_amount'] ?? 0), 2);
         $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
         $totalPayment = max(0, round($subtotal + $taxAmount - $discountAmount, 2));
@@ -90,6 +93,11 @@ class ShipmentPricingService
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
             'total_payment' => $totalPayment,
+            'charge_basis' => $calculationType,
+            'charge_weight_kg' => $calculationType === 'weight' ? $actualWeightKg : $volumetricWeightKg,
+            'actual_weight_kg' => $actualWeightKg,
+            'volumetric_weight_kg' => $volumetricWeightKg,
+            'billing_volume_cft' => $totalVolume,
         ];
     }
 
