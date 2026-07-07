@@ -10,7 +10,7 @@
     }
 
     .home-section-title span {
-        color: #18a058;
+        color: #0e8f7a;
         font-weight: 700;
         text-transform: uppercase;
         font-size: 13px;
@@ -49,7 +49,7 @@
         align-items: center;
         justify-content: center;
         color: #fff;
-        background: #18a058;
+        background: #0e8f7a;
         font-size: 22px;
         margin-bottom: 18px;
     }
@@ -134,7 +134,7 @@
     }
 
     .home-cta {
-        background: #18a058;
+        background: #0e8f7a;
         color: #fff;
         padding: 54px 0;
     }
@@ -204,7 +204,7 @@
             <div class="row align-items-center g-4">
                 <div class="col-lg-6">
                     <div class="route-panel">
-                        <span style="color:#ffb703; font-weight:700;">Live Route Pricing</span>
+                        <span style="color:#ff7a45; font-weight:700;">Live Route Pricing</span>
                         <h2>Route rate and item price work together.</h2>
                         <p>Admin can define city routes and transport price rules separately. The final charge is built from route distance, route rate, item weight, volume, and service caps.</p>
                         <div class="route-line">
@@ -212,7 +212,7 @@
                                 <small>Pickup</small>
                                 <strong>Delhi</strong>
                             </div>
-                            <i class="bi bi-arrow-right-circle" style="font-size:34px;color:#ffb703;"></i>
+                            <i class="bi bi-arrow-right-circle" style="font-size:34px;color:#ff7a45;"></i>
                             <div class="route-city">
                                 <small>Delivery</small>
                                 <strong>Jaipur</strong>

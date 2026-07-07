@@ -15,7 +15,7 @@
         body {
             min-height: 100vh;
             background:
-                radial-gradient(circle at 84% 16%, rgba(255, 183, 3, .28), transparent 16%),
+                radial-gradient(circle at 84% 16%, rgba(255, 122, 69, .28), transparent 16%),
                 linear-gradient(135deg, #10212b 0%, #24545e 48%, #143324 100%);
         }
 
@@ -37,7 +37,7 @@
             height: 100%;
             min-height: 520px;
             background:
-                radial-gradient(circle at 78% 16%, rgba(255, 183, 3, .42), transparent 13%),
+                radial-gradient(circle at 78% 16%, rgba(255, 122, 69, .42), transparent 13%),
                 linear-gradient(135deg, #111f29 0%, #1e5663 54%, #143421 100%);
             position: relative;
             overflow: hidden;
@@ -100,7 +100,7 @@
             width: 138px;
             height: 58px;
             border-radius: 9px;
-            background: linear-gradient(135deg, #18a058, #0b7b43);
+            background: linear-gradient(135deg, #0e8f7a, #0a6c5c);
         }
 
         .auth-truck .cab {
@@ -110,7 +110,7 @@
             width: 78px;
             height: 45px;
             border-radius: 9px 24px 7px 5px;
-            background: linear-gradient(135deg, #ffb703, #f47c20);
+            background: linear-gradient(135deg, #ff7a45, #e85c2b);
         }
 
         .auth-truck .cab:before {
@@ -143,7 +143,7 @@
         }
 
         .auth-title span {
-            color: #18a058;
+            color: #0e8f7a;
             font-weight: 700;
             font-size: 13px;
             text-transform: uppercase;
@@ -175,9 +175,9 @@
         }
 
         .auth-mode-btn.active {
-            background: #18a058;
+            background: #0e8f7a;
             color: #fff;
-            box-shadow: 0 10px 24px rgba(24, 160, 88, .24);
+            box-shadow: 0 10px 24px rgba(14, 143, 122, .24);
         }
 
         .auth-method {

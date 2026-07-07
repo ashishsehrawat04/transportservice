@@ -110,56 +110,116 @@ class WebController extends Controller
         return redirect()->route('shipment.cart')->with('success', 'Items added to cart successfully');
     }
 
+    public function estimateShipmentItems(Request $request)
+    {
+        $validated = $request->validate([
+            'from_city' => ['required', 'string', 'max:255'],
+            'to_city' => ['required', 'string', 'max:255'],
+            'items' => ['required', 'array', 'min:1', 'max:100'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.length_cm' => ['nullable', 'numeric', 'min:0'],
+            'items.*.width_cm' => ['nullable', 'numeric', 'min:0'],
+            'items.*.height_cm' => ['required', 'numeric', 'min:0.01'],
+            'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
+        ]);
+
+        $route = CityRoute::where('is_active', true)
+            ->where('from_city', $validated['from_city'])
+            ->where('to_city', $validated['to_city'])
+            ->first();
+
+        if (!$route) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please select a valid active city route to calculate an estimate.',
+            ]);
+        }
+
+        $minCharge = round((float) $route->min_charge, 2);
+        $itemBreakdowns = [];
+        $itemsTotal = 0.0;
+
+        foreach ($validated['items'] as $index => $item) {
+            $breakdown = $this->pricingService->calculateFromDimensions($item, $route);
+            $itemsTotal += $breakdown['total_payment'];
+
+            $itemBreakdowns[] = [
+                'index' => $index,
+                'charge_basis' => $breakdown['charge_basis'],
+                'charge_weight_kg' => $breakdown['charge_weight_kg'],
+                'volume_cft' => $breakdown['volume_cft'],
+                'item_charge' => $breakdown['total_payment'],
+            ];
+        }
+
+        $itemsTotal = round($itemsTotal, 2);
+
+        return response()->json([
+            'success' => true,
+            'route' => [
+                'from_city' => $route->from_city,
+                'to_city' => $route->to_city,
+                'distance_km' => $route->distance_km,
+            ],
+            'min_charge' => $minCharge,
+            'items' => $itemBreakdowns,
+            'items_total' => $itemsTotal,
+            'grand_total' => round($minCharge + $itemsTotal, 2),
+        ]);
+    }
+
     public function shipmentCart()
     {
-        $price = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
         $cartItems = $this->cartQuery()
             ->with('cityRoute')
             ->latest()
             ->get();
-        $cartTotal = 0;
 
-        $cartItems->each(function (TransportCartItem $item) use (&$cartTotal) {
-            $itemPrice = $this->priceForItemType($item->item_type);
-            $priceError = null;
-
-            if (!$itemPrice) {
-                $priceError = 'Price not set';
-                $item->price_error = $priceError;
+        $cartItems->each(function (TransportCartItem $item) {
+            if ($item->booking_status) {
+                // Already submitted to a transport lead and awaiting admin approval —
+                // show the frozen numbers as-is instead of recalculating live pricing.
+                $item->calculated_price = $item->estimated_total;
                 return;
             }
 
             $route = $this->findRoute($item);
 
             if (!$route) {
-                $priceError = 'Route not found';
-                $item->price_error = $priceError;
+                $item->price_error = 'Route not found';
                 return;
             }
 
-            $breakdown = $this->pricingService->calculateCartItem($item, $itemPrice, $route);
+            $breakdown = $this->pricingService->calculateCartItem($item, $route);
             $calculatedPrice = $breakdown['total_payment'];
 
             if (
                 $item->estimated_total !== $calculatedPrice ||
                 $item->charge_basis !== $breakdown['charge_basis'] ||
-                $item->charge_weight_kg !== $breakdown['charge_weight_kg'] ||
-                $item->volumetric_weight_kg !== $breakdown['volumetric_weight_kg']
+                $item->charge_weight_kg !== $breakdown['charge_weight_kg']
             ) {
                 $item->update([
                     'estimated_total' => $calculatedPrice,
                     'charge_basis' => $breakdown['charge_basis'],
                     'charge_weight_kg' => $breakdown['charge_weight_kg'],
-                    'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
+                    'volumetric_weight_kg' => 0,
                 ]);
             }
 
             $item->price_breakdown = $breakdown;
             $item->calculated_price = $calculatedPrice;
-            $cartTotal += $calculatedPrice;
         });
 
-        return view('web.shipment-cart', compact('cartItems', 'cartTotal', 'price'));
+        $cartTotal = $cartItems
+            ->filter(fn (TransportCartItem $item) => !$item->price_error && !$item->booking_status)
+            ->groupBy(fn (TransportCartItem $item) => $this->shipmentGroupKey($item))
+            ->sum(function ($shipmentItems) {
+                $route = $shipmentItems->first()->cityRoute;
+
+                return round((float) optional($route)->min_charge, 2) + $shipmentItems->sum('calculated_price');
+            });
+
+        return view('web.shipment-cart', compact('cartItems', 'cartTotal'));
     }
 
     public function shipmentLeads()
@@ -226,6 +286,11 @@ class WebController extends Controller
     public function deleteShipmentCartItem($id)
     {
         $cartItem = $this->cartQuery()->findOrFail($id);
+
+        if ($cartItem->booking_status) {
+            return redirect()->route('shipment.cart')->with('error', 'This item is already submitted and awaiting admin approval.');
+        }
+
         $cartItem->delete();
 
         return redirect()->route('shipment.cart')->with('success', 'Item removed from cart');
@@ -236,6 +301,11 @@ class WebController extends Controller
         $cartItem = $this->cartQuery()
             ->with(['cityRoute', 'transportAddress'])
             ->findOrFail($id);
+
+        if ($cartItem->booking_status) {
+            return redirect()->route('shipment.cart')->with('error', 'This item is already submitted and awaiting admin approval.');
+        }
+
         $cityRoutes = CityRoute::where('is_active', true)
             ->orderBy('from_city')
             ->orderBy('to_city')
@@ -254,6 +324,10 @@ class WebController extends Controller
         $cartItem = $this->cartQuery()
             ->with('transportAddress')
             ->findOrFail($id);
+
+        if ($cartItem->booking_status) {
+            return redirect()->route('shipment.cart')->with('error', 'This item is already submitted and awaiting admin approval.');
+        }
 
         $validated = $request->validate([
             'from_city' => ['required', 'string', 'max:255'],
@@ -323,15 +397,10 @@ class WebController extends Controller
 
     public function checkoutShipmentCart()
     {
-        $price = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
-
-        if (!$price) {
-            return back()->with('error', 'Please contact admin. Transport price is not set.');
-        }
-
         $cartItems = TransportCartItem::with('cityRoute')
             ->with('transportAddress')
             ->where('user_id', auth()->id())
+            ->whereNull('booking_status')
             ->get();
 
         if ($cartItems->isEmpty()) {
@@ -339,10 +408,6 @@ class WebController extends Controller
         }
 
         foreach ($cartItems as $item) {
-            if (!$this->priceForItemType($item->item_type)) {
-                return back()->with('error', 'Please add an active transport service price for all cart items before saving to leads.');
-            }
-
             if (!$this->findRoute($item)) {
                 return back()->with('error', 'Please add an active city route for all cart items before saving to leads.');
             }
@@ -352,13 +417,9 @@ class WebController extends Controller
             $cartItems->groupBy(fn (TransportCartItem $item) => $this->shipmentGroupKey($item))
                 ->each(function ($shipmentItems) {
                     $firstItem = $shipmentItems->first();
-                    $price = $this->priceForItemType($firstItem->item_type);
-                    $breakdowns = $shipmentItems->map(function (TransportCartItem $item) {
-                        return $this->pricingService->calculateCartItem(
-                            $item,
-                            $this->priceForItemType($item->item_type),
-                            $this->findRoute($item)
-                        );
+                    $route = $this->findRoute($firstItem);
+                    $breakdowns = $shipmentItems->map(function (TransportCartItem $item) use ($route) {
+                        return $this->pricingService->calculateCartItem($item, $route);
                     });
 
                     $transportLead = TransportLead::create(array_merge([
@@ -380,7 +441,7 @@ class WebController extends Controller
                         'user_status' => 'pending',
                         'payment_status' => 'unpaid',
                         'tracking_number' => $this->generateTrackingNumber(),
-                    ], $this->aggregateShipmentBreakdown($breakdowns, $price)));
+                    ], $this->aggregateShipmentBreakdown($breakdowns, $route)));
 
                     $quote = TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
                     $quoteData = $quote->quote_data ?: [];
@@ -405,9 +466,12 @@ class WebController extends Controller
                     }
 
                     $quote->update(['quote_data' => $quoteData]);
-                });
 
-            TransportCartItem::where('user_id', auth()->id())->delete();
+                    TransportCartItem::whereIn('id', $shipmentItems->pluck('id'))->update([
+                        'transport_lead_id' => $transportLead->id,
+                        'booking_status' => 'pending',
+                    ]);
+                });
         });
 
         return redirect()->route('shipment.cart')->with('success', 'Cart saved to transport leads successfully.');
@@ -424,40 +488,21 @@ class WebController extends Controller
 
     private function updateCartEstimate(TransportCartItem $item): void
     {
-        $price = $this->priceForItemType($item->item_type);
         $item->load('cityRoute');
         $route = $this->findRoute($item);
 
-        if (!$price || !$route) {
+        if (!$route) {
             return;
         }
 
-        $breakdown = $this->pricingService->calculateCartItem($item, $price, $route);
+        $breakdown = $this->pricingService->calculateCartItem($item, $route);
 
         $item->update([
             'estimated_total' => $breakdown['total_payment'],
             'charge_basis' => $breakdown['charge_basis'],
             'charge_weight_kg' => $breakdown['charge_weight_kg'],
-            'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
+            'volumetric_weight_kg' => 0,
         ]);
-    }
-
-    private function priceForItemType(?string $itemType): ?TransportServicePrice
-    {
-        $query = TransportServicePrice::where('is_active', true);
-
-        if ($itemType) {
-            $matchedPrice = (clone $query)
-                ->where('item_type', $itemType)
-                ->orderBy('id')
-                ->first();
-
-            if ($matchedPrice) {
-                return $matchedPrice;
-            }
-        }
-
-        return $query->orderBy('id')->first();
     }
 
     private function findRoute(TransportCartItem $item): ?CityRoute
@@ -489,22 +534,24 @@ class WebController extends Controller
         return Str::limit($names->join(', '), 250, '...');
     }
 
-    private function aggregateShipmentBreakdown($breakdowns, ?TransportServicePrice $price): array
+    private function aggregateShipmentBreakdown($breakdowns, CityRoute $route): array
     {
         $calculationTypes = $breakdowns->pluck('calculation_type')->filter()->unique();
+        $minCharge = round((float) $route->min_charge, 2);
+        $itemsTotal = $breakdowns->sum('total_payment');
 
         return [
             'distance_km' => $breakdowns->max('distance_km'),
             'calculation_type' => $calculationTypes->count() === 1 ? $calculationTypes->first() : 'mixed',
-            'base_price' => $breakdowns->sum('base_price'),
+            'base_price' => $minCharge,
             'weight_charge' => $breakdowns->sum('weight_charge'),
             'volume_charge' => $breakdowns->sum('volume_charge'),
             'distance_charge' => $breakdowns->sum('distance_charge'),
-            'multiplier_applied' => $breakdowns->max('multiplier_applied') ?: ($price?->multiplier ?: 1),
-            'subtotal' => $breakdowns->sum('subtotal'),
+            'multiplier_applied' => 1,
+            'subtotal' => $itemsTotal,
             'tax_amount' => $breakdowns->sum('tax_amount'),
             'discount_amount' => $breakdowns->sum('discount_amount'),
-            'total_payment' => $breakdowns->sum('total_payment'),
+            'total_payment' => round($minCharge + $itemsTotal, 2),
         ];
     }
 

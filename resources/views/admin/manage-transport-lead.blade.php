@@ -37,10 +37,6 @@
                   <a href="{{ route('admin.transport_leads') }}" class="btn btn-secondary btn-sm">Back to Transport Leads</a>
               </div>
               <div class="card-body">
-                  @if(!$servicePrice)
-                      <div class="alert alert-warning">Please add an active transport service price before creating a lead.</div>
-                  @endif
-
                   @if($quoteMode && $transportLead->exists)
                       <div class="alert alert-info">
                           <strong>Quote for {{ $transportLead->tracking_number }}</strong><br>
@@ -73,7 +69,7 @@
 
                           <div class="col-md-4 mb-3">
                               <label class="form-label">Item Type</label>
-                              <input type="text" name="item_type" class="form-control" value="{{ old('item_type', $transportLead->item_type ?: optional($servicePrice)->item_type) }}" placeholder="Default from active service price">
+                              <input type="text" name="item_type" class="form-control" value="{{ old('item_type', $transportLead->item_type) }}" placeholder="Enter item type">
                           </div>
                       </div>
 
@@ -247,7 +243,7 @@
 
                       <div class="text-end d-flex justify-content-end gap-2">
                           <button type="reset" class="btn btn-secondary">Reset</button>
-                          <button type="submit" class="btn btn-primary" {{ !$servicePrice ? 'disabled' : '' }}>
+                          <button type="submit" class="btn btn-primary">
                               @if($quoteMode)
                                   Save Quote
                               @else

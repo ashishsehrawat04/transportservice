@@ -57,7 +57,7 @@
 
                           <div class="col-md-4 mb-3">
                               <label class="form-label">Weight rate per KM</label>
-                              <input type="number" step="0.01" name="base_rate_per_km" class="form-control" value="{{ old('base_rate_per_km', $cityRoute->base_rate_per_km) }}" placeholder="Enter weight rate per KM">
+                              <input type="number" step="0.01" name="base_rate_per_weight" class="form-control" value="{{ old('base_rate_per_weight', $cityRoute->base_rate_per_weight) }}" placeholder="Enter weight rate per KM">
                           </div>
 
                           <div class="col-md-4 mb-3">

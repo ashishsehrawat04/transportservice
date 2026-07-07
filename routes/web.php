@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/shipment/add-item', [WebController::class, 'addShipmentItem'])->name('shipment.add_item');
 Route::post('/shipment/add-item', [WebController::class, 'saveShipmentItems'])->name('shipment.save_items');
+Route::post('/shipment/estimate-items', [WebController::class, 'estimateShipmentItems'])->name('shipment.estimate_items');
 Route::get('/shipment/cart', [WebController::class, 'shipmentCart'])->name('shipment.cart');
 Route::post('/shipment/cart/checkout', [WebController::class, 'checkoutShipmentCart'])->middleware('auth')->name('shipment.cart.checkout');
 Route::get('/shipment/cart/edit/{id}', [WebController::class, 'editShipmentCartItem'])->name('shipment.cart.edit');

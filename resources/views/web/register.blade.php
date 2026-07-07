@@ -15,7 +15,7 @@
         body {
             min-height: 100vh;
             background:
-                radial-gradient(circle at 16% 14%, rgba(255, 183, 3, .25), transparent 15%),
+                radial-gradient(circle at 16% 14%, rgba(255, 122, 69, .25), transparent 15%),
                 linear-gradient(135deg, #10212b 0%, #24545e 48%, #143324 100%);
         }
 
@@ -41,7 +41,7 @@
             padding: 42px;
             color: #fff;
             background:
-                radial-gradient(circle at 76% 16%, rgba(255, 183, 3, .38), transparent 13%),
+                radial-gradient(circle at 76% 16%, rgba(255, 122, 69, .38), transparent 13%),
                 linear-gradient(135deg, #111f29 0%, #1e5663 54%, #143421 100%);
             display: flex;
             flex-direction: column;
@@ -100,7 +100,7 @@
             width: 144px;
             height: 60px;
             border-radius: 9px;
-            background: linear-gradient(135deg, #18a058, #0b7b43);
+            background: linear-gradient(135deg, #0e8f7a, #0a6c5c);
         }
 
         .register-truck .cab {
@@ -110,7 +110,7 @@
             width: 82px;
             height: 46px;
             border-radius: 9px 24px 7px 5px;
-            background: linear-gradient(135deg, #ffb703, #f47c20);
+            background: linear-gradient(135deg, #ff7a45, #e85c2b);
         }
 
         .register-truck .cab:before {
@@ -154,7 +154,7 @@
         }
 
         .register-feature-list i {
-            color: #ffb703;
+            color: #ff7a45;
         }
 
         .register-form-area {
@@ -162,7 +162,7 @@
         }
 
         .register-title span {
-            color: #18a058;
+            color: #0e8f7a;
             font-weight: 700;
             font-size: 13px;
             text-transform: uppercase;

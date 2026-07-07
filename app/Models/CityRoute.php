@@ -10,7 +10,7 @@ class CityRoute extends Model
         'from_city',
         'to_city',
         'distance_km',
-        'base_rate_per_km',
+        'base_rate_per_weight',
         'min_charge',
         'is_active',
         'base_rate_per_volume',

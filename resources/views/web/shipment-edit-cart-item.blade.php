@@ -23,7 +23,7 @@
     }
 
     .edit-head span {
-        color: #ff7a00;
+        color: #ff7a45;
         font-size: 13px;
         font-weight: 800;
         letter-spacing: .08em;
@@ -31,7 +31,7 @@
     }
 
     .edit-head h2 {
-        color: #111827;
+        color: #101820;
         font-size: 30px;
         font-weight: 800;
         margin: 4px 0 0;
@@ -44,7 +44,7 @@
     }
 
     .edit-card-title {
-        color: #111827;
+        color: #101820;
         font-size: 17px;
         font-weight: 800;
         margin-bottom: 16px;
@@ -79,7 +79,7 @@
         align-items: center;
         border: 1px solid #d1d5db;
         border-radius: 6px;
-        color: #111827;
+        color: #101820;
         display: inline-flex;
         font-weight: 800;
         gap: 8px;
@@ -90,7 +90,7 @@
 
     .edit-back-btn:hover {
         background: #f9fafb;
-        color: #111827;
+        color: #101820;
     }
 
     @media (max-width: 575px) {

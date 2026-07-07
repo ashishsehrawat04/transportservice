@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\CityRoute;
 use App\Models\TransportCartItem;
-use App\Models\TransportServicePrice;
 use App\Models\ShipmentPriceLog;
 use Illuminate\Support\Facades\Auth;
 use RuntimeException;
@@ -12,7 +11,7 @@ use Throwable;
 
 class ShipmentPricingService
 {
-    public function calculateCartItem(TransportCartItem $item, TransportServicePrice $price, CityRoute $route): array
+    public function calculateCartItem(TransportCartItem $item, CityRoute $route): array
     {
         return $this->calculateFromDimensions([
             'quantity' => $item->quantity,
@@ -20,10 +19,10 @@ class ShipmentPricingService
             'width_cm' => $item->width_cm,
             'height_cm' => $item->height_cm,
             'weight_kg' => $item->weight_kg,
-        ], $price, $route);
+        ], $route);
     }
 
-    public function calculateFromDimensions(array $item, TransportServicePrice $price, CityRoute $route): array
+    public function calculateFromDimensions(array $item, CityRoute $route): array
     {
         $volumeCft = 0;
 
@@ -33,47 +32,46 @@ class ShipmentPricingService
 
         $item['volume_cft'] = $volumeCft;
 
-        return $this->calculate($item, $price, $route);
+        return $this->calculate($item, $route);
     }
 
-    public function calculate(array $item, TransportServicePrice $price, CityRoute $route): array
+    /**
+     * Pricing is driven entirely by the city route: whichever of weight or
+     * volume is larger for the item decides the charge basis, at the
+     * route's per-kg / per-cft rate. The route's min_charge is a
+     * once-per-shipment base fee and is intentionally NOT added here —
+     * callers add it once when aggregating a shipment's items.
+     */
+    public function calculate(array $item, CityRoute $route): array
     {
         $quantity = max(1, (int) ($item['quantity'] ?? 1));
         $weightKg = (float) ($item['weight_kg'] ?? 0);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
-        $totalVolume = $volumeCft * $quantity;
-        $routeMinCharge = round((float) $route->min_charge, 2);
-        $basePricePerUnit = $routeMinCharge > 0 ? $routeMinCharge : round((float) $price->min_charge, 2);
-        $basePrice = $basePricePerUnit * $quantity;
-        $multiplier = (float) ($price->multiplier ?: 1);
-        $routeWeightRate = (float) $route->base_rate_per_km;
-        $routeVolumeRate = (float) $route->base_rate_per_volume;
-        $routeWeightRate = $routeWeightRate > 0 ? $routeWeightRate : (float) $price->weight_rate_per_kg;
-        $routeVolumeRate = $routeVolumeRate > 0 ? $routeVolumeRate : (float) $price->volume_rate_per_cft;
 
         $actualWeightKg = round($weightKg * $quantity, 2);
-        $volumetricWeightKg = round($volumeCft * 5.66336, 2);
-        $weightCharge = round($actualWeightKg * $routeWeightRate, 2);
-        $calculatedVolumeCharge = round($totalVolume * $routeVolumeRate, 2);
-        $calculationType = $volumetricWeightKg > $actualWeightKg ? 'volumetric' : 'weight';
-        $volumeCharge = $calculationType === 'volumetric' ? $calculatedVolumeCharge : 0.0;
-        $weightCharge = $calculationType === 'weight' ? $weightCharge : 0.0;
-        $distanceCharge = 0.0;
-        $selectedCharge = max($basePrice, max($weightCharge, $volumeCharge));
-        $subtotal = round($selectedCharge * $multiplier, 2);
+        $totalVolumeCft = round($volumeCft * $quantity, 2);
+
+        $weightRate = (float) $route->base_rate_per_weight;
+        $volumeRate = (float) $route->base_rate_per_volume;
+
+        $calculationType = $actualWeightKg > $totalVolumeCft ? 'weight' : 'volume';
+        $weightCharge = $calculationType === 'weight' ? round($actualWeightKg * $weightRate, 2) : 0.0;
+        $volumeCharge = $calculationType === 'volume' ? round($totalVolumeCft * $volumeRate, 2) : 0.0;
+
+        $subtotal = round($weightCharge + $volumeCharge, 2);
         $taxAmount = round((float) ($item['tax_amount'] ?? 0), 2);
         $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
         $totalPayment = max(0, round($subtotal + $taxAmount - $discountAmount, 2));
 
         $this->logCalculation([
             'calculation_type' => $calculationType,
-            'volume_cft' => $volumeCft,
+            'volume_cft' => $totalVolumeCft,
             'distance_km' => $route->distance_km,
-            'base_price' => $basePrice,
+            'base_price' => 0,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
-            'distance_charge' => $distanceCharge,
-            'multiplier_applied' => $multiplier,
+            'distance_charge' => 0,
+            'multiplier_applied' => 1,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
@@ -81,23 +79,23 @@ class ShipmentPricingService
         ]);
 
         return [
-            'volume_cft' => $volumeCft,
+            'volume_cft' => $totalVolumeCft,
             'distance_km' => $route->distance_km,
             'calculation_type' => $calculationType,
-            'base_price' => $basePrice,
+            'base_price' => 0,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
-            'distance_charge' => $distanceCharge,
-            'multiplier_applied' => $multiplier,
+            'distance_charge' => 0,
+            'multiplier_applied' => 1,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
             'total_payment' => $totalPayment,
             'charge_basis' => $calculationType,
-            'charge_weight_kg' => $calculationType === 'weight' ? $actualWeightKg : $volumetricWeightKg,
+            'charge_weight_kg' => $calculationType === 'weight' ? $actualWeightKg : $totalVolumeCft,
             'actual_weight_kg' => $actualWeightKg,
-            'volumetric_weight_kg' => $volumetricWeightKg,
-            'billing_volume_cft' => $totalVolume,
+            'volumetric_weight_kg' => 0,
+            'billing_volume_cft' => $totalVolumeCft,
         ];
     }
 

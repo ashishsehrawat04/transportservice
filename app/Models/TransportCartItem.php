@@ -23,6 +23,8 @@ class TransportCartItem extends Model
         'charge_basis',
         'charge_weight_kg',
         'volumetric_weight_kg',
+        'transport_lead_id',
+        'booking_status',
     ];
 
     protected $casts = [
@@ -45,5 +47,10 @@ class TransportCartItem extends Model
     public function transportAddress()
     {
         return $this->hasOne(TransportAddress::class, 'item_id');
+    }
+
+    public function transportLead()
+    {
+        return $this->belongsTo(TransportLead::class);
     }
 }

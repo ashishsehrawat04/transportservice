@@ -50,7 +50,7 @@
             position: relative;
             overflow: hidden;
             background:
-                radial-gradient(circle at 78% 18%, rgba(255, 183, 3, .34), transparent 14%),
+                radial-gradient(circle at 78% 18%, rgba(255, 122, 69, .34), transparent 14%),
                 linear-gradient(135deg, #10212b 0%, #1e4f5f 48%, #183024 100%);
         }
 
@@ -62,7 +62,7 @@
 
         .shipment-gif-bg.green {
             background:
-                radial-gradient(circle at 80% 16%, rgba(24, 160, 88, .38), transparent 14%),
+                radial-gradient(circle at 80% 16%, rgba(14, 143, 122, .38), transparent 14%),
                 linear-gradient(135deg, #101820 0%, #264c45 52%, #14291f 100%);
         }
 
@@ -73,8 +73,8 @@
             width: 78px;
             height: 78px;
             border-radius: 50%;
-            background: #ffb703;
-            box-shadow: 0 0 60px rgba(255, 183, 3, .45);
+            background: #ff7a45;
+            box-shadow: 0 0 60px rgba(255, 122, 69, .45);
             animation: sunPulse 2.4s ease-in-out infinite;
         }
 
@@ -167,7 +167,7 @@
             width: 162px;
             height: 66px;
             border-radius: 10px;
-            background: linear-gradient(135deg, #18a058, #0b7b43);
+            background: linear-gradient(135deg, #0e8f7a, #0a6c5c);
             box-shadow: 0 18px 36px rgba(0,0,0,.28);
         }
 
@@ -178,7 +178,7 @@
             width: 92px;
             height: 50px;
             border-radius: 10px 28px 8px 6px;
-            background: linear-gradient(135deg, #ffb703, #f47c20);
+            background: linear-gradient(135deg, #ff7a45, #e85c2b);
             box-shadow: 0 18px 36px rgba(0,0,0,.28);
         }
 
@@ -255,7 +255,7 @@
 
         .shipment-gif-bg.air-scene {
             background:
-                radial-gradient(circle at 18% 18%, rgba(255, 183, 3, .3), transparent 13%),
+                radial-gradient(circle at 18% 18%, rgba(255, 122, 69, .3), transparent 13%),
                 linear-gradient(135deg, #12345f 0%, #21718b 48%, #163d55 100%);
         }
 
@@ -286,7 +286,7 @@
             width: 62px;
             height: 34px;
             clip-path: polygon(0 100%, 100% 100%, 32% 0);
-            background: #ffb703;
+            background: #ff7a45;
         }
 
         .gif-plane:after {
@@ -297,12 +297,12 @@
             width: 56px;
             height: 28px;
             clip-path: polygon(0 0, 100% 0, 36% 100%);
-            background: #18a058;
+            background: #0e8f7a;
         }
 
         .shipment-gif-bg.bike-scene {
             background:
-                radial-gradient(circle at 82% 18%, rgba(255, 183, 3, .28), transparent 13%),
+                radial-gradient(circle at 82% 18%, rgba(255, 122, 69, .28), transparent 13%),
                 linear-gradient(135deg, #1a2732 0%, #2d5d62 48%, #183924 100%);
         }
 
@@ -328,7 +328,7 @@
             width: 72px;
             height: 18px;
             border-radius: 18px 38px 8px 8px;
-            background: #ffb703;
+            background: #ff7a45;
             transform: skewX(-12deg);
         }
 
@@ -413,7 +413,7 @@
             width: 86px;
             height: 38px;
             border-radius: 10px 18px 6px 6px;
-            background: #ffb703;
+            background: #ff7a45;
         }
 
         .gif-forklift .mast {
@@ -450,7 +450,7 @@
 
         .shipment-gif-bg.payment-scene {
             background:
-                radial-gradient(circle at 78% 18%, rgba(24, 160, 88, .36), transparent 14%),
+                radial-gradient(circle at 78% 18%, rgba(14, 143, 122, .36), transparent 14%),
                 linear-gradient(135deg, #10212b 0%, #3b5260 48%, #172e25 100%);
         }
 
@@ -479,7 +479,7 @@
             top: 32px;
             height: 58px;
             background:
-                linear-gradient(#18a058 0 0) 0 0/76px 8px no-repeat,
+                linear-gradient(#0e8f7a 0 0) 0 0/76px 8px no-repeat,
                 linear-gradient(#d8e2e0 0 0) 0 24px/76px 7px no-repeat,
                 linear-gradient(#d8e2e0 0 0) 0 46px/58px 7px no-repeat;
         }
@@ -493,7 +493,7 @@
             width: 42px;
             height: 42px;
             border-radius: 50%;
-            background: #ffb703;
+            background: #ff7a45;
             color: #10212b;
             display: flex;
             align-items: center;
@@ -595,7 +595,7 @@
 
         .web-user-chip:hover,
         .web-cart-chip:hover {
-            color: #0b7b43;
+            color: #0a6c5c;
         }
 
         .web-user-avatar {
@@ -608,7 +608,7 @@
             color: #fff;
             font-size: 13px;
             font-weight: 700;
-            background: linear-gradient(135deg, #18a058, #ffb703);
+            background: linear-gradient(135deg, #0e8f7a, #ff7a45);
         }
 
         .web-user-name {
@@ -636,7 +636,7 @@
             height: 20px;
             padding: 0 6px;
             border-radius: 999px;
-            background: #18a058;
+            background: #0e8f7a;
             color: #fff;
             font-size: 11px;
             font-weight: 700;
@@ -676,8 +676,8 @@
         .home1-banner-section .banner-pagination .swiper-pagination-bullet-active {
             width: 32px;
             border-radius: 999px;
-            background: #ffb703;
-            border-color: #ffb703;
+            background: #ff7a45;
+            border-color: #ff7a45;
         }
     </style>
 </head>

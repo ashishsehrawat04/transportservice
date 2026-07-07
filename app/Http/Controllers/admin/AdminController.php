@@ -11,6 +11,7 @@ use App\Models\TransportLead;
 use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
 use App\Models\TransportAddress;
+use App\Models\TransportCartItem;
 use App\Models\ShipmentPayment;
 use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
@@ -130,7 +131,7 @@ class AdminController extends Controller
                             })->ignore($cityRoute?->id),],
             'to_city' => ['required', 'string', 'max:255'],
             'distance_km' => ['required', 'numeric', 'min:0'],
-            'base_rate_per_km' => ['required', 'numeric', 'min:0'],
+            'base_rate_per_weight' => ['required', 'numeric', 'min:0'],
             'base_rate_per_volume' => ['required', 'numeric', 'min:0'],
             'min_charge' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
@@ -375,10 +376,9 @@ class AdminController extends Controller
             ->orderBy('from_city')
             ->orderBy('to_city')
             ->get();
-        $servicePrice = TransportServicePrice::where('is_active', true)->orderBy('id')->first();
         $quoteMode = request()->boolean('quote');
 
-        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cityRoutes', 'servicePrice', 'quoteMode'));
+        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cityRoutes', 'quoteMode'));
     }
 
     public function AdminSaveTransportLead(Request $request, $id = null)
@@ -415,20 +415,23 @@ class AdminController extends Controller
             'special_instructions' => ['nullable', 'string'],
         ]);
 
-        $price = $this->priceForItemType($validated['item_type'] ?? null);
-
-        if (!$price) {
-            return back()->withInput()->with('error', 'Please add an active transport service price first');
-        }
-
         $route = CityRoute::where('is_active', true)->find($validated['city_route_id']);
 
         if (!$route) {
             return back()->withInput()->with('error', 'Please select an active city route first');
         }
 
-        $validated = array_merge($validated, $this->pricingService->calculateFromDimensions($validated, $price, $route));
-        $validated['item_type'] = $validated['item_type'] ?: $price->item_type;
+        $breakdown = $this->pricingService->calculateFromDimensions($validated, $route);
+        $minCharge = round((float) $route->min_charge, 2);
+        $breakdown['base_price'] = $minCharge;
+        $breakdown['total_payment'] = round($minCharge + $breakdown['total_payment'], 2);
+        $leadPricing = array_intersect_key($breakdown, array_flip([
+            'volume_cft', 'distance_km', 'calculation_type', 'base_price',
+            'weight_charge', 'volume_charge', 'distance_charge',
+            'multiplier_applied', 'subtotal', 'tax_amount', 'discount_amount',
+            'total_payment',
+        ]));
+        $validated = array_merge($validated, $leadPricing);
 
         if (!$transportLead) {
             $validated['tracking_number'] = $this->generateTrackingNumber();
@@ -447,6 +450,13 @@ class AdminController extends Controller
 
         $this->recordLeadPaymentIfNeeded($transportLead->fresh(), $oldPaymentStatus, $oldTransactionId);
         TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
+
+        // Once admin moves the lead past pending/reviewed (approved, rejected, dispatched,
+        // delivered, cancelled), the cart items that were awaiting this decision are done —
+        // drop them so they stop showing up in the customer's shipment cart.
+        if (!in_array($transportLead->admin_status, ['pending', 'reviewed'])) {
+            TransportCartItem::where('transport_lead_id', $transportLead->id)->delete();
+        }
 
         return redirect()->route('admin.transport_leads')->with('success', $message);
     }
@@ -610,24 +620,6 @@ class AdminController extends Controller
         } while (ShipmentPayment::where('invoice_number', $invoiceNumber)->exists());
 
         return $invoiceNumber;
-    }
-
-    private function priceForItemType(?string $itemType): ?TransportServicePrice
-    {
-        $query = TransportServicePrice::where('is_active', true);
-
-        if ($itemType) {
-            $matchedPrice = (clone $query)
-                ->where('item_type', $itemType)
-                ->orderBy('id')
-                ->first();
-
-            if ($matchedPrice) {
-                return $matchedPrice;
-            }
-        }
-
-        return $query->orderBy('id')->first();
     }
 
     private function transportAddressForQuote(TransportQuote $quote): ?object

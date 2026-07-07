@@ -8,7 +8,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
             <div>
-                <span style="color:#ff7a00; font-weight:600;">Shipment</span>
+                <span style="color:#ff7a45; font-weight:600;">Shipment</span>
                 <h2 class="mb-0">My Leads</h2>
             </div>
             <a href="{{ route('shipment.track') }}" class="primary-btn1 btn-hover">
@@ -104,8 +104,8 @@
         box-shadow: 0 0 0 1px #d8ead8;
     }
     .progress-step.active span {
-        background: #198754;
-        box-shadow: 0 0 0 1px #198754;
+        background: #0e8f7a;
+        box-shadow: 0 0 0 1px #0e8f7a;
     }
     .progress-step p {
         font-size: 12px;

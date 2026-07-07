@@ -103,7 +103,7 @@
                     defaultContent: '-'
                 },
                 {
-                    data: 'base_rate_per_km',
+                    data: 'base_rate_per_weight',
                     defaultContent: '-',
                     render: function(data) {
                         if (data) return '₹ ' + parseFloat(data).toFixed(2);

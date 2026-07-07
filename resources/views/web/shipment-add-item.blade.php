@@ -63,7 +63,7 @@
     }
 
     .select2-results__option--highlighted[aria-selected] {
-        background-color: #ff7a00;
+        background-color: #ff7a45;
         color: #fff;
     }
 
@@ -121,6 +121,96 @@
     }
 </style>
 
+<style>
+    .estimate-panel {
+        margin-top: 16px;
+        background: #F8FAFC;
+        border: 1px solid #E4E8F0;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .estimate-panel-header {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .estimate-item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #E4E8F0;
+        font-size: 13.5px;
+        color: #101820;
+    }
+
+    .estimate-item-row:last-child {
+        border-bottom: none;
+    }
+
+    .estimate-item-index {
+        font-weight: 600;
+        min-width: 60px;
+    }
+
+    .estimate-item-figure {
+        color: #667085;
+        font-size: 12.5px;
+    }
+
+    .estimate-item-charge {
+        font-weight: 700;
+    }
+
+    .estimate-summary {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #E4E8F0;
+    }
+
+    .estimate-summary-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13.5px;
+        color: #667085;
+        padding: 3px 0;
+    }
+
+    .estimate-summary-total {
+        color: #101820;
+        font-weight: 700;
+        font-size: 15px;
+    }
+
+    .basis-chip {
+        display: inline-flex;
+        align-items: center;
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        padding: 2px 7px;
+        border-radius: 20px;
+        border: 1px solid;
+        white-space: nowrap;
+    }
+
+    .basis-chip.weight {
+        color: #175CD3;
+        background: #EAF2FF;
+        border-color: #C8DDFF;
+    }
+
+    .basis-chip.volume {
+        color: #6941C6;
+        background: #F4EBFF;
+        border-color: #E2D2FB;
+    }
+</style>
+
 <section class="shipment-form-section" style="padding: 110px 0 80px; background:#f7f7f7;">
     <div class="container">
         <div class="row justify-content-center">
@@ -128,7 +218,7 @@
                 <div style="background:#fff; border:1px solid #e8e8e8; padding:30px; border-radius:8px;">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                         <div>
-                            <span style="color:#ff7a00; font-weight:600;">Shipment</span>
+                            <span style="color:#ff7a45; font-weight:600;">Shipment</span>
                             <h2 class="mb-0">Add Shipment</h2>
                         </div>
                         <a href="{{ route('shipment.cart') }}" class="primary-btn1 btn-hover">
@@ -243,6 +333,32 @@
                             </div>
                         </div>
 
+                        <div class="d-flex justify-content-start">
+                            <button type="button" class="btn btn-outline-secondary" id="calculateEstimateBtn">
+                                <i class="bi bi-calculator"></i> Calculate Estimate
+                            </button>
+                        </div>
+                        <div class="text-danger small mt-2 d-none" id="estimateError"></div>
+
+                        <div class="estimate-panel d-none" id="estimateResult">
+                            <div class="estimate-panel-header" style="color:#ff7a45; font-weight:600;">Estimated Price</div>
+                            <div id="estimateItemsList"></div>
+                            <div class="estimate-summary">
+                                <div class="estimate-summary-line">
+                                    <span>Route min charge</span>
+                                    <span id="estimateMinCharge">₹0.00</span>
+                                </div>
+                                <div class="estimate-summary-line">
+                                    <span>Items subtotal</span>
+                                    <span id="estimateItemsSubtotal">₹0.00</span>
+                                </div>
+                                <div class="estimate-summary-line estimate-summary-total">
+                                    <span>Estimated Total</span>
+                                    <span id="estimateGrandTotal">₹0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
                             <button type="button" class="btn btn-secondary" id="addMoreItem">Add More</button>
                             <button type="submit" class="primary-btn1 btn-hover">
@@ -340,6 +456,98 @@
                 } else {
                     toCitySelect.focus();
                 }
+            }
+        });
+
+        const calculateEstimateBtn = document.getElementById('calculateEstimateBtn');
+        const estimateError = document.getElementById('estimateError');
+        const estimateResult = document.getElementById('estimateResult');
+        const estimateItemsList = document.getElementById('estimateItemsList');
+        const estimateMinCharge = document.getElementById('estimateMinCharge');
+        const estimateItemsSubtotal = document.getElementById('estimateItemsSubtotal');
+        const estimateGrandTotal = document.getElementById('estimateGrandTotal');
+
+        calculateEstimateBtn.addEventListener('click', async function (event) {
+            event.preventDefault();
+            estimateError.classList.add('d-none');
+            estimateResult.classList.add('d-none');
+
+            if (!hasActiveRoute()) {
+                estimateError.textContent = 'Please select a valid active route first.';
+                estimateError.classList.remove('d-none');
+                return;
+            }
+
+            const items = [];
+            itemsWrapper.querySelectorAll('.shipment-item-row').forEach(function (row) {
+                items.push({
+                    quantity: parseInt(row.querySelector('input[name$="[quantity]"]').value, 10) || 1,
+                    length_cm: parseFloat(row.querySelector('input[name$="[length_cm]"]').value) || 0,
+                    width_cm: parseFloat(row.querySelector('input[name$="[width_cm]"]').value) || 0,
+                    height_cm: parseFloat(row.querySelector('input[name$="[height_cm]"]').value) || 0,
+                    weight_kg: parseFloat(row.querySelector('input[name$="[weight_kg]"]').value) || 0,
+                });
+            });
+
+            const payload = {
+                from_city: fromCitySelect.value,
+                to_city: toCitySelect.value,
+                items: items,
+            };
+
+            const originalLabel = calculateEstimateBtn.innerHTML;
+            calculateEstimateBtn.disabled = true;
+            calculateEstimateBtn.textContent = 'Calculating...';
+
+            try {
+                const response = await fetch("{{ route('shipment.estimate_items') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': shipmentForm.querySelector('input[name="_token"]').value,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (response.status === 422 || !data.success) {
+                    estimateError.textContent = data.message || 'Could not calculate estimate. Please try again.';
+                    estimateError.classList.remove('d-none');
+                    return;
+                }
+
+                estimateItemsList.innerHTML = '';
+                data.items.forEach(function (item, index) {
+                    const isVolume = item.charge_basis === 'volume';
+                    const chipClass = isVolume ? 'basis-chip volume' : 'basis-chip weight';
+                    const chipLabel = isVolume ? 'Volume' : 'Weight';
+                    const figure = isVolume
+                        ? Number(item.volume_cft).toFixed(2) + ' cft'
+                        : Number(item.charge_weight_kg).toFixed(2) + ' kg';
+
+                    const row = document.createElement('div');
+                    row.className = 'estimate-item-row';
+                    row.innerHTML =
+                        '<span class="estimate-item-index">Item ' + (index + 1) + '</span>' +
+                        '<span class="' + chipClass + '">' + chipLabel + '</span>' +
+                        '<span class="estimate-item-figure">' + figure + '</span>' +
+                        '<span class="estimate-item-charge">₹' + Number(item.item_charge).toFixed(2) + '</span>';
+                    estimateItemsList.appendChild(row);
+                });
+
+                estimateMinCharge.textContent = '₹' + Number(data.min_charge).toFixed(2);
+                estimateItemsSubtotal.textContent = '₹' + Number(data.items_total).toFixed(2);
+                estimateGrandTotal.textContent = '₹' + Number(data.grand_total).toFixed(2);
+
+                estimateResult.classList.remove('d-none');
+            } catch (error) {
+                estimateError.textContent = 'Could not calculate estimate. Please try again.';
+                estimateError.classList.remove('d-none');
+            } finally {
+                calculateEstimateBtn.disabled = false;
+                calculateEstimateBtn.innerHTML = originalLabel;
             }
         });
     });

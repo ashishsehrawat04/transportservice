@@ -15,7 +15,7 @@
     }
 
     .cart-eyebrow {
-        color: #ff7a00;
+        color: #ff7a45;
         font-size: 13px;
         font-weight: 700;
         letter-spacing: .08em;
@@ -24,7 +24,7 @@
 
     .cart-page-head h2 {
         margin: 4px 0 0;
-        color: #111827;
+        color: #101820;
         font-size: 34px;
         font-weight: 800;
     }
@@ -56,7 +56,7 @@
     }
 
     .cart-stat strong {
-        color: #111827;
+        color: #101820;
         display: block;
         font-size: 22px;
         line-height: 1.1;
@@ -125,7 +125,7 @@
         align-items: center;
         background: #fff4e8;
         border-radius: 8px;
-        color: #ff7a00;
+        color: #ff7a45;
         display: inline-flex;
         flex: 0 0 46px;
         font-size: 22px;
@@ -135,7 +135,7 @@
     }
 
     .cart-item-title h5 {
-        color: #111827;
+        color: #101820;
         font-size: 18px;
         font-weight: 800;
         margin: 0;
@@ -149,7 +149,7 @@
     }
 
     .cart-price {
-        color: #111827;
+        color: #101820;
         font-size: 20px;
         font-weight: 800;
         text-align: right;
@@ -184,14 +184,14 @@
     }
 
     .cart-city {
-        color: #111827;
+        color: #101820;
         font-weight: 800;
         min-width: 0;
         overflow-wrap: anywhere;
     }
 
     .cart-route-arrow {
-        color: #ff7a00;
+        color: #ff7a45;
         flex: 0 0 auto;
         font-size: 20px;
     }
@@ -215,7 +215,7 @@
     }
 
     .cart-meta strong {
-        color: #111827;
+        color: #101820;
         display: block;
         font-size: 14px;
         font-weight: 800;
@@ -286,7 +286,7 @@
     }
 
     .cart-summary-panel h4 {
-        color: #111827;
+        color: #101820;
         font-size: 20px;
         font-weight: 800;
         margin-bottom: 18px;
@@ -302,7 +302,7 @@
     }
 
     .cart-summary-line strong {
-        color: #111827;
+        color: #101820;
     }
 
     .cart-summary-total {
@@ -312,7 +312,7 @@
     }
 
     .cart-summary-total strong {
-        color: #111827;
+        color: #101820;
         display: block;
         font-size: 28px;
         line-height: 1.1;
@@ -335,7 +335,7 @@
         align-items: center;
         border: 1px solid #d1d5db;
         border-radius: 6px;
-        color: #111827;
+        color: #101820;
         display: inline-flex;
         font-weight: 800;
         gap: 8px;
@@ -346,7 +346,7 @@
 
     .cart-secondary-btn:hover {
         background: #f9fafb;
-        color: #111827;
+        color: #101820;
     }
 
     .cart-checkout-note {
@@ -368,7 +368,7 @@
         align-items: center;
         background: #fff4e8;
         border-radius: 50%;
-        color: #ff7a00;
+        color: #ff7a45;
         display: inline-flex;
         font-size: 36px;
         height: 76px;
@@ -378,7 +378,7 @@
     }
 
     .cart-empty-state h4 {
-        color: #111827;
+        color: #101820;
         font-weight: 800;
         margin-bottom: 8px;
     }
@@ -437,6 +437,7 @@
     $itemCount = $cartItems->count();
     $totalQuantity = $cartItems->sum('quantity');
     $hasPriceIssue = $cartItems->contains(fn ($item) => !empty($item->price_error));
+    $hasCheckoutableItems = $cartItems->contains(fn ($item) => empty($item->booking_status));
     $cartShipments = $cartItems->groupBy(fn ($item) => implode('|', [
         $item->city_route_id,
         optional($item->pickup_date)->format('Y-m-d'),
@@ -500,7 +501,8 @@
                 $route = $firstItem->cityRoute;
                 $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
                 $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
-                $shipmentTotal = $shipmentItems->sum('calculated_price');
+                $shipmentMinCharge = round((float) optional($route)->min_charge, 2);
+                $shipmentTotal = $shipmentMinCharge + $shipmentItems->sum('calculated_price');
                 $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
             @endphp
 
@@ -524,6 +526,9 @@
                         <div class="cart-price">
                             <span>Shipment Total</span>
                             ₹{{ number_format($shipmentTotal, 2) }}
+                            @if($shipmentMinCharge > 0)
+                                <small class="d-block text-muted" style="font-size:11px; font-weight:600;">incl. ₹{{ number_format($shipmentMinCharge, 2) }} min charge</small>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -606,19 +611,26 @@
                                     </span>
                                 @else
                                     ₹{{ number_format($item->calculated_price, 2) }}
-                                    <small class="d-block text-muted" style="font-size:12px;">
-                                        {{ ucfirst($item->charge_basis) }} charge: {{ number_format($item->charge_weight_kg, 2) }} kg
-                                    </small>
+                                    <div class="charge-line">
+                                        <span class="basis-chip {{ $item->charge_basis }}">{{ $item->charge_basis === 'volume' ? 'Volume' : 'Weight' }}</span>
+                                        <span class="charge-kg">{{ number_format($item->charge_weight_kg, 2) }} kg</span>
+                                    </div>
                                 @endif
                             </span>
 
                             <span class="col-actions" data-label="Actions">
-                                <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-row-btn cart-row-btn-edit" title="Edit item">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-row-btn cart-row-btn-delete" title="Remove item" onclick="return confirm('Remove this item?')">
-                                    <i class="bi bi-trash3"></i>
-                                </a>
+                                @if($item->booking_status)
+                                    <span class="cart-pending-badge" title="Submitted — awaiting admin approval">
+                                        <i class="bi bi-hourglass-split"></i> Pending Approval
+                                    </span>
+                                @else
+                                    <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-row-btn cart-row-btn-edit" title="Edit item">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-row-btn cart-row-btn-delete" title="Remove item" onclick="return confirm('Remove this item?')">
+                                        <i class="bi bi-trash3"></i>
+                                    </a>
+                                @endif
                             </span>
                         </div>
                     @endforeach
@@ -658,8 +670,8 @@
         height: 40px;
         min-width: 40px;
         border-radius: 10px;
-        background: #12213C;
-        color: #F2994A;
+        background: #101820;
+        color: #ff7a45;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -669,7 +681,7 @@
     .cart-item-title h5 {
         margin: 0 0 2px;
         font-weight: 700;
-        color: #12213C;
+        color: #101820;
         font-size: 16px;
     }
 
@@ -688,7 +700,7 @@
         text-align: right;
         font-weight: 700;
         font-size: 18px;
-        color: #12213C;
+        color: #101820;
         white-space: nowrap;
     }
 
@@ -727,12 +739,12 @@
 
     .cart-city {
         font-weight: 700;
-        color: #12213C;
+        color: #101820;
         font-size: 15px;
     }
 
     .cart-route-arrow {
-        color: #F2994A;
+        color: #ff7a45;
         font-size: 16px;
     }
 
@@ -761,7 +773,7 @@
 
     .cart-meta strong {
         font-size: 13px;
-        color: #12213C;
+        color: #101820;
     }
 
     .text-success { color: #067647 !important; }
@@ -821,7 +833,7 @@
         min-width: 30px;
         border-radius: 8px;
         background: #EEF1F6;
-        color: #12213C;
+        color: #101820;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -836,7 +848,7 @@
 
     .cart-row-text strong {
         font-size: 13.5px;
-        color: #12213C;
+        color: #101820;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -857,8 +869,59 @@
 
     .col-price {
         font-weight: 700;
-        color: #12213C;
+        color: #101820;
         font-size: 13.5px;
+    }
+
+    .charge-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 5px;
+    }
+
+    .basis-chip {
+        display: inline-flex;
+        align-items: center;
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .02em;
+        padding: 2px 7px;
+        border-radius: 20px;
+        border: 1px solid;
+        white-space: nowrap;
+    }
+
+    .basis-chip.weight {
+        color: #175CD3;
+        background: #EAF2FF;
+        border-color: #C8DDFF;
+    }
+
+    .basis-chip.volume {
+        color: #6941C6;
+        background: #F4EBFF;
+        border-color: #E2D2FB;
+    }
+
+    .charge-kg {
+        font-size: 11.5px;
+        color: #667085;
+    }
+
+    .cart-pending-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #b5750c;
+        background: #fff6e8;
+        border: 1px solid #ffe1ab;
+        padding: 5px 10px;
+        border-radius: 20px;
+        white-space: nowrap;
     }
 
     .cart-row-error {
@@ -972,7 +1035,7 @@
                         <div class="cart-summary-actions">
                             <form action="{{ route('shipment.cart.checkout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="primary-btn1 btn-hover w-100 justify-content-center" {{ $cartItems->isEmpty() || !$price || $hasPriceIssue ? 'disabled' : '' }} onclick="return confirm('Save cart items to transport leads?')">
+                                <button type="submit" class="primary-btn1 btn-hover w-100 justify-content-center" {{ !$hasCheckoutableItems || $hasPriceIssue ? 'disabled' : '' }} onclick="return confirm('Save cart items to transport leads?')">
                                     Proceed to booking
                                     <span></span>
                                 </button>

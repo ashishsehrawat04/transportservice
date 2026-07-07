@@ -22,7 +22,7 @@
         <div class="row justify-content-center">
             <div class="col-xl-9">
                 <div style="background:#fff; border:1px solid #e7e7e7; border-radius:8px; padding:28px;">
-                    <span style="color:#ff7a00; font-weight:600;">Track & Trace</span>
+                    <span style="color:#ff7a45; font-weight:600;">Track & Trace</span>
                     <h2 class="mb-4">Track Shipment</h2>
 
                     @if(session('error'))
@@ -268,8 +268,8 @@
         margin-bottom: 8px;
     }
     .tracking-step.active span {
-        background: #198754;
-        box-shadow: 0 0 0 1px #198754;
+        background: #0e8f7a;
+        box-shadow: 0 0 0 1px #0e8f7a;
     }
     .tracking-step strong {
         display: block;
