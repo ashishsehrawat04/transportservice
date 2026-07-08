@@ -15,6 +15,11 @@
         default => 0,
     };
     $hasDiscount = (float) optional($lead)->discount_amount > 0;
+    $stepCount = count($steps);
+    $stepperPercent = $current > 0 ? round(($current / ($stepCount - 1)) * 100, 2) : 0;
+    // The connector line spans the middle 76% of the stepper (12% inset on each side).
+    $trackFillWidth = round(($stepperPercent / 100) * 76, 2);
+    $trackPkgLeft = round(12 + $trackFillWidth, 2);
 @endphp
 
 <style>
@@ -124,9 +129,31 @@
     }
 
     .status-badge.progress {
+        align-items: center;
         background: #fff6e8;
         color: #b5750c;
         border: 1px solid #ffe1ab;
+        display: inline-flex;
+        gap: 6px;
+    }
+
+    .status-badge .live-dot {
+        background: currentColor;
+        border-radius: 50%;
+        display: inline-block;
+        height: 6px;
+        width: 6px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .status-badge.progress .live-dot {
+            animation: trackPulse 1.6s ease-in-out infinite;
+        }
+    }
+
+    @keyframes trackPulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(181, 117, 12, .35); }
+        50% { opacity: .55; box-shadow: 0 0 0 5px rgba(181, 117, 12, 0); }
     }
 
     .status-badge.done {
@@ -183,6 +210,41 @@
         top: 19px;
         height: 3px;
         background: #e4e8f0;
+    }
+
+    .tracking-fill {
+        background: linear-gradient(90deg, #0a6c5c, #0e8f7a);
+        border-radius: 2px;
+        height: 3px;
+        left: 12%;
+        position: absolute;
+        top: 19px;
+        transition: width 1.1s cubic-bezier(.22, .9, .3, 1);
+        width: 0%;
+    }
+
+    .tracking-pkg {
+        align-items: center;
+        background: #fff;
+        border: 2px solid #0e8f7a;
+        border-radius: 50%;
+        box-shadow: 0 6px 14px rgba(14, 143, 122, .28);
+        display: flex;
+        font-size: 11px;
+        height: 22px;
+        justify-content: center;
+        left: 12%;
+        position: absolute;
+        top: 8px;
+        transform: translateX(-50%);
+        transition: left 1.1s cubic-bezier(.22, .9, .3, 1);
+        width: 22px;
+        z-index: 2;
+    }
+
+    .tracking-line.rejected .tracking-fill,
+    .tracking-line.rejected .tracking-pkg {
+        display: none;
     }
 
     .tracking-step {
@@ -399,7 +461,10 @@
                                 <p>{{ $lead->tracking_number }}</p>
                             </div>
                             <div class="track-status-actions">
-                                <span class="status-badge {{ $badgeClass }}">{{ ucfirst($lead->admin_status) }}</span>
+                                <span class="status-badge {{ $badgeClass }}">
+                                    @if($badgeClass === 'progress')<span class="live-dot"></span>@endif
+                                    {{ ucfirst($lead->admin_status) }}
+                                </span>
                                 @if($isDelivered)
                                     <div>
                                         <a class="track-invoice-btn" href="{{ route('shipment.invoice.download', $lead->tracking_number) }}">
@@ -419,7 +484,11 @@
                             </div>
                         @endif
 
-                        <div class="tracking-line {{ $isRejected ? 'rejected' : '' }}">
+                        <div class="tracking-line {{ $isRejected ? 'rejected' : '' }}" id="trackingLine">
+                            @unless($isRejected)
+                                <div class="tracking-fill" id="trackingFill" data-target-width="{{ $trackFillWidth }}"></div>
+                                <div class="tracking-pkg" id="trackingPkg" data-target-left="{{ $trackPkgLeft }}">📦</div>
+                            @endunless
                             @foreach($steps as $key => $label)
                                 @php $index = $loop->index; @endphp
                                 <div class="tracking-step {{ !$isRejected && $current >= $index ? 'active' : '' }}">
@@ -511,5 +580,24 @@
         </div>
     </div>
 </section>
+
+<script>
+    (function () {
+        var fill = document.getElementById('trackingFill');
+        var pkg = document.getElementById('trackingPkg');
+
+        if (fill && pkg) {
+            var targetWidth = fill.getAttribute('data-target-width') + '%';
+            var targetLeft = pkg.getAttribute('data-target-left') + '%';
+
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    fill.style.width = targetWidth;
+                    pkg.style.left = targetLeft;
+                });
+            });
+        }
+    })();
+</script>
 
 @include('web.footer')

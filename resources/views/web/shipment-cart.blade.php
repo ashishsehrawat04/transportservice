@@ -527,7 +527,7 @@
                             <span>Shipment Total</span>
                             ₹{{ number_format($shipmentTotal, 2) }}
                             @if($shipmentMinCharge > 0)
-                                <small class="d-block text-muted" style="font-size:11px; font-weight:600;">incl. ₹{{ number_format($shipmentMinCharge, 2) }} min charge</small>
+                                <small class="d-block text-muted" style="font-size:11px; font-weight:600;">incl. ₹{{ number_format($shipmentMinCharge, 2) }} Fair charge</small>
                             @endif
                         </div>
                     @endif
@@ -649,6 +649,24 @@
         padding: 22px 24px;
         margin-bottom: 20px;
         box-shadow: 0 1px 3px rgba(18, 33, 60, 0.04);
+        transition: box-shadow .2s ease, transform .2s ease;
+    }
+
+    .cart-item-card:hover {
+        box-shadow: 0 14px 32px rgba(18, 33, 60, .1);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .cart-item-card {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity .5s ease, transform .5s cubic-bezier(.22, .9, .3, 1), box-shadow .2s ease;
+        }
+
+        .cart-item-card.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .cart-item-top {
@@ -1055,5 +1073,22 @@
         @endif
     </div>
 </section>
+
+<script>
+    (function () {
+        var cards = document.querySelectorAll('.cart-item-card');
+
+        // Most carts are short enough that every card is already on-screen at
+        // load, so a scroll-triggered IntersectionObserver would fire before
+        // the browser ever paints the opacity:0 starting state — the reveal
+        // would be invisible. Trigger on load instead, staggered per card.
+        cards.forEach(function (card, index) {
+            var delay = 70 + Math.min(index * 90, 360);
+            setTimeout(function () {
+                card.classList.add('in-view');
+            }, delay);
+        });
+    })();
+</script>
 
 @include('web.footer')
