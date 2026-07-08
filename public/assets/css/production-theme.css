@@ -323,20 +323,6 @@ select.form-control:focus {
   color: #1d6687;
 }
 
-.tracking-line:before {
-  background: #dce9e5 !important;
-}
-
-.tracking-step span {
-  background: #dce9e5 !important;
-  box-shadow: 0 0 0 1px #cbdcd6 !important;
-}
-
-.tracking-step.active span {
-  background: var(--ot-green) !important;
-  box-shadow: 0 0 0 1px var(--ot-green), 0 8px 20px rgba(14, 143, 122, .24) !important;
-}
-
 .profile-card,
 .profile-cover {
   border-radius: 8px !important;

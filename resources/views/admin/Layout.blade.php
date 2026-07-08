@@ -316,13 +316,6 @@
 
   <body>
 
-  <script src="{{ asset('assets/admin/js/core/jquery-3.7.1.min.js') }}"></script>
-    <script src="{{ asset('assets/admin/js/core/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/admin/js/core/bootstrap.min.js') }}"></script>
-
-    <script src="{{ asset('assets/admin/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js') }}"></script>
-    <script src="{{ asset('assets/admin/js/plugin/datatables/datatables.min.js') }}"></script>
-    <script src="{{ asset('assets/admin/js/kaiadmin.min.js') }}"></script>
     <div class="wrapper">
       <!-- Sidebar -->
       <div class="sidebar" data-background-color="dark">

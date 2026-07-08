@@ -31,7 +31,7 @@
                                     <th>#</th>
                                     <th>From City</th>
                                     <th>To City</th>
-                                    <th>Distance (KM)</th>
+                                    <th>Fair Charges</th>
                                     <th>Rate/KM</th>
                                     <th>Rate/Volume</th>
                                     <th>Status</th>
@@ -99,7 +99,7 @@
                     defaultContent: '-'
                 },
                 {
-                    data: 'distance_km',
+                    data: 'min_charge',
                     defaultContent: '-'
                 },
                 {

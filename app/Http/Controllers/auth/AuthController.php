@@ -48,7 +48,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (auth()->attempt($credentials)) {
+        if (auth()->attempt($credentials, $request->boolean('remember'))) {
             $user = auth()->user();
 
             if ($settings->admin_approval_required && $user->role !== 'admin' && $user->status !== 'approved') {
@@ -154,7 +154,7 @@ class AuthController extends Controller
             ]);
         }
 
-        auth()->login($user);
+        auth()->login($user, $request->boolean('remember'));
         app(GuestCartService::class)->mergeToUser($user->id);
 
         if ($user->role == 'admin') {
@@ -236,7 +236,7 @@ class AuthController extends Controller
             return redirect()->route('login')->with('success', 'Mobile verified. Your account is pending admin approval.');
         }
 
-        auth()->login($user);
+        auth()->login($user, $request->boolean('remember'));
         app(GuestCartService::class)->mergeToUser($user->id);
 
         return redirect()->intended('/');
@@ -273,7 +273,7 @@ class AuthController extends Controller
             return redirect()->route('login')->with('success', 'Registration submitted. Your account is pending admin approval.');
         }
 
-        auth()->login($user);
+        auth()->login($user, $request->boolean('remember'));
         return redirect()->intended('/');
     }
 

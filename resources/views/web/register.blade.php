@@ -316,6 +316,11 @@
                                     </div>
 
                                     <label class="terms-box">
+                                        <input type="checkbox" name="remember" value="1">
+                                        <span>Remember me</span>
+                                    </label>
+
+                                    <label class="terms-box">
                                         <input type="checkbox" required>
                                         <span>I agree to create an account for shipment cart, leads, tracking and payment updates.</span>
                                     </label>

@@ -197,6 +197,22 @@
             font-size: 14px;
         }
 
+        .remember-box {
+            align-items: center;
+            color: #52636b;
+            cursor: pointer;
+            display: flex;
+            font-size: 14px;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .remember-box input {
+            accent-color: #0e8f7a;
+            height: 16px;
+            width: 16px;
+        }
+
         @keyframes authLane {
             to { background-position: -102px 0; }
         }
@@ -326,6 +342,10 @@
                                                     <span class="text-danger">{{ $message }}</span>
                                                 @enderror
                                             </div>
+                                            <label class="remember-box">
+                                                <input type="checkbox" name="remember" value="1">
+                                                Remember me
+                                            </label>
                                             <button type="submit" class="primary-btn2 btn-hover w-100">
                                                 Verify & Login
                                                 <span></span>
@@ -365,6 +385,10 @@
                                                     <span class="text-danger">{{ $message }}</span>
                                                 @enderror
                                             </div>
+                                            <label class="remember-box">
+                                                <input type="checkbox" name="remember" value="1">
+                                                Remember me
+                                            </label>
                                             <button type="submit" class="primary-btn2 btn-hover w-100">
                                                 Verify & Login
                                                 <span></span>
