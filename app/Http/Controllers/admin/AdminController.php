@@ -130,9 +130,8 @@ class AdminController extends Controller
                                 return $query->where('to_city', $request->to_city);
                             })->ignore($cityRoute?->id),],
             'to_city' => ['required', 'string', 'max:255'],
-            'distance_km' => ['required', 'numeric', 'min:0'],
-            'base_rate_per_weight' => ['required', 'numeric', 'min:0'],
-            'base_rate_per_volume' => ['required', 'numeric', 'min:0'],
+            'rate_per_weight' => ['required', 'numeric', 'min:0'],
+            'transit_days' => ['required', 'integer', 'in:1,2,3'],
             'min_charge' => ['required', 'numeric', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -422,11 +421,8 @@ class AdminController extends Controller
         }
 
         $breakdown = $this->pricingService->calculateFromDimensions($validated, $route);
-        $minCharge = round((float) $route->min_charge, 2);
-        $breakdown['base_price'] = $minCharge;
-        $breakdown['total_payment'] = round($minCharge + $breakdown['total_payment'], 2);
         $leadPricing = array_intersect_key($breakdown, array_flip([
-            'volume_cft', 'distance_km', 'calculation_type', 'base_price',
+            'volume_cft', 'calculation_type', 'base_price',
             'weight_charge', 'volume_charge', 'distance_charge',
             'multiplier_applied', 'subtotal', 'tax_amount', 'discount_amount',
             'total_payment',

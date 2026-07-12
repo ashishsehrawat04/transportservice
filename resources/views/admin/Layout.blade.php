@@ -1062,10 +1062,31 @@
         showLoader();
     });
 
+    // Shared popup helpers (SweetAlert) — used in place of the browser's
+    // native confirm()/alert() across every admin page.
+    window.sweetConfirm = function (url, opts) {
+        opts = opts || {};
+        swal({
+            title: opts.title || "Are you sure?",
+            text: opts.text || "This action can't be undone.",
+            icon: "warning",
+            buttons: ["Cancel", opts.confirmText || "Delete"],
+            dangerMode: true,
+        }).then(function (confirmed) {
+            if (confirmed) {
+                showLoader();
+                window.location.href = url;
+            }
+        });
+    };
+
+    window.sweetNotify = function (message, type) {
+        swal(type === "success" ? "Success" : "Error", message, type || "error");
+    };
+
     $(document).on("click", "a[href]", function (event) {
         const link = this;
         const href = link.getAttribute("href") || "";
-        const hasInlineConfirm = (link.getAttribute("onclick") || "").includes("confirm");
         const isModifiedClick = event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || link.target === "_blank";
         const shouldShowForAdminAction =
             href.includes("/admin/") &&
@@ -1079,12 +1100,12 @@
             return;
         }
 
-        if (hasInlineConfirm) {
-            return;
-        }
-
-        if (href.includes("/delete/") && !window.confirm("Are you sure?")) {
+        if (href.includes("/delete/")) {
             event.preventDefault();
+            const label = link.getAttribute("data-label");
+            window.sweetConfirm(href, {
+                title: label ? ("Delete " + label + "?") : "Are you sure?",
+            });
             return;
         }
 

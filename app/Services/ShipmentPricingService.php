@@ -11,6 +11,12 @@ use Throwable;
 
 class ShipmentPricingService
 {
+    /**
+     * cm³ per "volumetric kg" for surface/road cargo. Volumetric weight
+     * (kg) = (L * W * H in cm) / VOLUMETRIC_DIVISOR.
+     */
+    private const VOLUMETRIC_DIVISOR = 4500;
+
     public function calculateCartItem(TransportCartItem $item, CityRoute $route): array
     {
         return $this->calculateFromDimensions([
@@ -25,49 +31,60 @@ class ShipmentPricingService
     public function calculateFromDimensions(array $item, CityRoute $route): array
     {
         $volumeCft = 0;
+        $volumetricWeightKg = 0;
 
         if (!empty($item['length_cm']) && !empty($item['width_cm']) && !empty($item['height_cm'])) {
-            $volumeCft = round(((float) $item['length_cm'] * (float) $item['width_cm'] * (float) $item['height_cm']) / 28316.8466, 2);
+            $volumeCm3 = (float) $item['length_cm'] * (float) $item['width_cm'] * (float) $item['height_cm'];
+            $volumeCft = round($volumeCm3 / 28316.8466, 2);
+            $volumetricWeightKg = round($volumeCm3 / self::VOLUMETRIC_DIVISOR, 2);
         }
 
         $item['volume_cft'] = $volumeCft;
+        $item['volumetric_weight_kg'] = $volumetricWeightKg;
 
         return $this->calculate($item, $route);
     }
 
     /**
-     * Pricing is driven entirely by the city route: whichever of weight or
-     * volume is larger for the item decides the charge basis, at the
-     * route's per-kg / per-cft rate. The route's min_charge is a
-     * once-per-shipment base fee and is intentionally NOT added here —
-     * callers add it once when aggregating a shipment's items.
+     * Chargeable weight is the greater of actual weight and volumetric
+     * weight (both in kg) — standard courier "whichever is higher"
+     * billing. That chargeable weight is billed at the route's flat
+     * per-kg rate. If the resulting item price is below the route's
+     * min_charge, the min_charge is used instead (a per-item floor, not
+     * an additive fee).
      */
     public function calculate(array $item, CityRoute $route): array
     {
         $quantity = max(1, (int) ($item['quantity'] ?? 1));
         $weightKg = (float) ($item['weight_kg'] ?? 0);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
+        $volumetricWeightKgPerUnit = (float) ($item['volumetric_weight_kg'] ?? 0);
 
         $actualWeightKg = round($weightKg * $quantity, 2);
         $totalVolumeCft = round($volumeCft * $quantity, 2);
+        $volumetricWeightKg = round($volumetricWeightKgPerUnit * $quantity, 2);
 
-        $weightRate = (float) $route->base_rate_per_weight;
-        $volumeRate = (float) $route->base_rate_per_volume;
+        $chargeBasis = $volumetricWeightKg > $actualWeightKg ? 'volume' : 'weight';
+        $chargeableWeightKg = max($actualWeightKg, $volumetricWeightKg);
 
-        $calculationType = $actualWeightKg > $totalVolumeCft ? 'weight' : 'volume';
-        $weightCharge = $calculationType === 'weight' ? round($actualWeightKg * $weightRate, 2) : 0.0;
-        $volumeCharge = $calculationType === 'volume' ? round($totalVolumeCft * $volumeRate, 2) : 0.0;
+        $rate = (float) $route->rate_per_weight;
+        $rawCharge = round($chargeableWeightKg * $rate, 2);
 
-        $subtotal = round($weightCharge + $volumeCharge, 2);
+        $minCharge = round((float) $route->min_charge, 2);
+        $itemCharge = $rawCharge < $minCharge ? $minCharge : $rawCharge;
+
+        $weightCharge = $chargeBasis === 'weight' ? $itemCharge : 0.0;
+        $volumeCharge = $chargeBasis === 'volume' ? $itemCharge : 0.0;
+
+        $subtotal = $itemCharge;
         $taxAmount = round((float) ($item['tax_amount'] ?? 0), 2);
         $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
-        $totalPayment = max(0, round($subtotal + $taxAmount - $discountAmount, 2));
+        $totalPayment = max(0.0, round($subtotal + $taxAmount - $discountAmount, 2));
 
         $this->logCalculation([
-            'calculation_type' => $calculationType,
+            'calculation_type' => $chargeBasis,
             'volume_cft' => $totalVolumeCft,
-            'distance_km' => $route->distance_km,
-            'base_price' => 0,
+            'base_price' => $minCharge,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => 0,
@@ -80,9 +97,8 @@ class ShipmentPricingService
 
         return [
             'volume_cft' => $totalVolumeCft,
-            'distance_km' => $route->distance_km,
-            'calculation_type' => $calculationType,
-            'base_price' => 0,
+            'calculation_type' => $chargeBasis,
+            'base_price' => $minCharge,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
             'distance_charge' => 0,
@@ -91,10 +107,10 @@ class ShipmentPricingService
             'tax_amount' => $taxAmount,
             'discount_amount' => $discountAmount,
             'total_payment' => $totalPayment,
-            'charge_basis' => $calculationType,
-            'charge_weight_kg' => $calculationType === 'weight' ? $actualWeightKg : $totalVolumeCft,
+            'charge_basis' => $chargeBasis,
+            'charge_weight_kg' => $chargeableWeightKg,
             'actual_weight_kg' => $actualWeightKg,
-            'volumetric_weight_kg' => 0,
+            'volumetric_weight_kg' => $volumetricWeightKg,
             'billing_volume_cft' => $totalVolumeCft,
         ];
     }

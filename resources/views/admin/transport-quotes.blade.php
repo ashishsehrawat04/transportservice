@@ -60,7 +60,7 @@
                 },
                 error: function(xhr) {
                     let response = xhr.responseJSON;
-                    alert(response && response.message ? response.message : 'Something went wrong');
+                    sweetNotify(response && response.message ? response.message : 'Something went wrong');
                 }
             },
             scrollX: true,

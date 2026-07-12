@@ -67,9 +67,9 @@ class TransportDemoSeeder extends Seeder
         );
 
         $routes = [
-            ['from_city' => 'Delhi', 'to_city' => 'Jaipur', 'distance_km' => 280, 'base_rate_per_weight' => 18, 'base_rate_per_volume' => 12, 'min_charge' => 1200],
-            ['from_city' => 'Delhi', 'to_city' => 'Gurugram', 'distance_km' => 35, 'base_rate_per_weight' => 28, 'base_rate_per_volume' => 20, 'min_charge' => 650],
-            ['from_city' => 'Noida', 'to_city' => 'Mumbai', 'distance_km' => 1420, 'base_rate_per_weight' => 24, 'base_rate_per_volume' => 16, 'min_charge' => 8000],
+            ['from_city' => 'Delhi', 'to_city' => 'Jaipur', 'rate_per_weight' => 18, 'transit_days' => 1, 'min_charge' => 1200],
+            ['from_city' => 'Delhi', 'to_city' => 'Gurugram', 'rate_per_weight' => 28, 'transit_days' => 1, 'min_charge' => 650],
+            ['from_city' => 'Noida', 'to_city' => 'Mumbai', 'rate_per_weight' => 24, 'transit_days' => 3, 'min_charge' => 8000],
         ];
 
         foreach ($routes as $route) {
@@ -236,14 +236,11 @@ class TransportDemoSeeder extends Seeder
             }
 
             $breakdown = app(ShipmentPricingService::class)->calculateFromDimensions($row, $route);
-            $minCharge = round((float) $route->min_charge, 2);
-            $breakdown['base_price'] = $minCharge;
-            $breakdown['total_payment'] = round($minCharge + $breakdown['total_payment'], 2);
             // transport_leads only has the aggregate pricing columns — the cart-item-only
             // fields (charge_basis, charge_weight_kg, actual_weight_kg, volumetric_weight_kg)
             // don't exist on this table, so only merge in what it supports.
             $leadPricing = array_intersect_key($breakdown, array_flip([
-                'volume_cft', 'distance_km', 'calculation_type', 'base_price',
+                'volume_cft', 'calculation_type', 'base_price',
                 'weight_charge', 'volume_charge', 'distance_charge',
                 'multiplier_applied', 'subtotal', 'tax_amount', 'discount_amount',
                 'total_payment',

@@ -4,34 +4,42 @@
     $isEdit = $isEdit ?? false;
     $initial = strtoupper(substr($user->name ?: 'U', 0, 1));
 
-    $statusClasses = [
-        'delivered' => 'bg-success',
-        'pending' => 'bg-warning text-dark',
-        'in_transit' => 'bg-info text-dark',
-        'picked_up' => 'bg-primary',
-        'cancelled' => 'bg-danger',
-        'rejected' => 'bg-danger',
-        'approved' => 'bg-primary',
+    $statusBadgeMap = [
+        'delivered' => 'done',
+        'cancelled' => 'stopped',
+        'rejected' => 'stopped',
     ];
 @endphp
 
 <style>
-body{background:#f4f7fc;}
-.profile-cover{height:160px;background:linear-gradient(135deg,#0d6efd,#6610f2,#20c997);}
-.profile-avatar{width:120px;height:120px;border-radius:50%;background:#fff;border:5px solid #fff;box-shadow:0 8px 25px rgba(0,0,0,.15);color:#0d6efd;font-size:42px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:auto;margin-top:-60px;}
-.profile-card{overflow:hidden;border:none;border-radius:25px;}
-.info-card,.stat-card,.shipment-card{border:none;border-radius:20px;}
+body{background:var(--ot-bg);}
+.profile-cover{height:160px;background:linear-gradient(135deg,#0a6c5c,#2f8fe0 58%,#ff7a45);}
+.profile-avatar{width:120px;height:120px;border-radius:50%;background:#fff;border:5px solid #fff;box-shadow:0 8px 25px rgba(0,0,0,.15);color:#0a6c5c;font-size:42px;font-weight:700;font-family:var(--ot-display);display:flex;align-items:center;justify-content:center;margin:auto;margin-top:-60px;}
+.profile-card{overflow:hidden;border:none;border-radius:16px;}
+.info-card,.stat-card,.shipment-card{border:1px solid var(--ot-line);border-radius:16px;}
 .stat-card{transition:.3s;}
-.stat-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.08);}
+.stat-card:hover{transform:translateY(-5px);box-shadow:var(--ot-shadow);}
+.stat-card h3,.stat-card h4{font-family:var(--ot-mono);}
 .table tbody tr{transition:.3s;}
-.table tbody tr:hover{background:#f8f9ff;}
-.info-label{font-size:13px;color:#6c757d;margin-bottom:4px;}
-.info-value{font-weight:600;color:#212529;word-break:break-word;}
-.edit-btn{border-radius:30px;padding:8px 20px;}
-.card-header{background:#fff;border-bottom:1px solid #f1f1f1;}
+.table tbody tr:hover{background:var(--ot-panel-tint);}
+.table thead th{font-size:11px;letter-spacing:.05em;color:var(--ot-muted);border-bottom:1px solid var(--ot-line);}
+.table td strong{font-family:var(--ot-mono);}
+.info-label{font-size:12.5px;color:var(--ot-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em;}
+.info-value{font-weight:600;color:var(--ot-ink);word-break:break-word;}
+.edit-btn{border-radius:9px;padding:8px 20px;font-family:var(--ot-display);}
+.card-header{background:var(--ot-panel);border-bottom:1px solid var(--ot-line);}
 .badge{font-size:12px;}
-.shadow-custom{box-shadow:0 10px 35px rgba(0,0,0,.08);}
-.form-control{border-radius:12px;padding:11px 14px;}
+.shadow-custom{box-shadow:var(--ot-shadow-sm);}
+.form-control{border-radius:8px;padding:11px 14px;}
+.text-primary{color:#0a6c5c !important;}
+.btn-primary{background:#0e8f7a !important;border-color:#0e8f7a !important;}
+.btn-primary:hover{background:#0a6c5c !important;border-color:#0a6c5c !important;}
+.btn-outline-primary{color:#0a6c5c !important;border-color:#0e8f7a !important;}
+.btn-outline-primary:hover{background:#0e8f7a !important;color:#fff !important;}
+.status-badge{border-radius:999px;display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:5px 12px;text-transform:uppercase;white-space:nowrap;}
+.status-badge.ongoing{background:#fff6e8;color:#b5750c;border:1px solid #ffe1ab;}
+.status-badge.done{background:#ecfdf3;color:#067647;border:1px solid #abefc6;}
+.status-badge.stopped{background:#fef3f2;color:#b42318;border:1px solid #fecdca;}
 </style>
 
 <div class="container py-5">
@@ -246,7 +254,7 @@ body{background:#f4f7fc;}
                                 @forelse ($recentShipments as $shipment)
                                     @php
                                         $status = $shipment->admin_status ?: $shipment->user_status;
-                                        $statusClass = $statusClasses[$status] ?? 'bg-secondary';
+                                        $badgeClass = $statusBadgeMap[$status] ?? 'ongoing';
                                     @endphp
                                     <tr>
                                         <td>
@@ -255,7 +263,7 @@ body{background:#f4f7fc;}
                                         <td>{{ optional($shipment->cityRoute)->to_city ?? '-' }}</td>
                                         <td>{{ optional($shipment->requested_pickup_date)->format('d M Y') ?? $shipment->created_at->format('d M Y') }}</td>
                                         <td>
-                                            <span class="badge rounded-pill {{ $statusClass }} px-3 py-2">
+                                            <span class="status-badge {{ $badgeClass }}">
                                                 {{ \Illuminate\Support\Str::headline($status ?: 'pending') }}
                                             </span>
                                         </td>

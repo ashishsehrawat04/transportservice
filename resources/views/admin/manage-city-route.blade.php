@@ -47,22 +47,25 @@
 
                       <div class="row">
                           <div class="col-md-4 mb-3">
-                              <label class="form-label">Distance (KM)</label>
-                              <input type="number" step="0.01" name="distance_km" class="form-control" value="{{ old('distance_km', $cityRoute->distance_km) }}" placeholder="Enter distance in kilometers">
-                          </div>
-                          <div class="col-md-4 mb-3">
                               <label class="form-label">Fair charges</label>
                               <input type="number" step="0.01" name="min_charge" class="form-control" value="{{ old('min_charge', $cityRoute->min_charge) }}" placeholder="Enter Charge">
                           </div>
 
                           <div class="col-md-4 mb-3">
-                              <label class="form-label">Weight rate per KM</label>
-                              <input type="number" step="0.01" name="base_rate_per_weight" class="form-control" value="{{ old('base_rate_per_weight', $cityRoute->base_rate_per_weight) }}" placeholder="Enter weight rate per KM">
+                              <label class="form-label">Rate per Weight (per KG)</label>
+                              <input type="number" step="0.01" name="rate_per_weight" class="form-control" value="{{ old('rate_per_weight', $cityRoute->rate_per_weight) }}" placeholder="Enter rate per KG">
                           </div>
 
                           <div class="col-md-4 mb-3">
-                              <label class="form-label">Volume rate per unit</label>
-                              <input type="number" step="0.01" name="base_rate_per_volume" class="form-control" value="{{ old('base_rate_per_volume', $cityRoute->base_rate_per_volume) }}" placeholder="Enter volume rate per unit">
+                              <label class="form-label">Transit Time</label>
+                              <select name="transit_days" class="form-control">
+                                  <option value="">Select transit time</option>
+                                  @foreach([1, 2, 3] as $day)
+                                      <option value="{{ $day }}" {{ (string) old('transit_days', $cityRoute->transit_days) === (string) $day ? 'selected' : '' }}>
+                                          {{ $day }} Day{{ $day > 1 ? 's' : '' }}
+                                      </option>
+                                  @endforeach
+                              </select>
                           </div>
                       </div>
 

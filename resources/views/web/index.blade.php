@@ -185,7 +185,7 @@
                     <div class="step-tile">
                         <div class="tile-icon"><i class="bi bi-calculator"></i></div>
                         <h4>Auto Price Calculation</h4>
-                        <p>Pricing uses service rates, route distance, per-km charges, minimum charge, tax, discount, and max cap.</p>
+                        <p>Pricing uses the route's per-kg rate, a minimum fair charge, tax and discount — with transit time shown upfront.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -206,7 +206,7 @@
                     <div class="route-panel">
                         <span style="color:#ff7a45; font-weight:700;">Live Route Pricing</span>
                         <h2>Route rate and item price work together.</h2>
-                        <p>Admin can define city routes and transport price rules separately. The final charge is built from route distance, route rate, item weight, volume, and service caps.</p>
+                        <p>Admin defines each city route's per-kg rate, minimum fair charge, and transit time. The final charge is built from the route rate and item weight.</p>
                         <div class="route-line">
                             <div class="route-city">
                                 <small>Pickup</small>

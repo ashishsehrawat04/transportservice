@@ -142,6 +142,55 @@
     <!-- Custom JS -->
     <script src="{{ asset('assets/js/select-dropdown.js') }}"></script>
     <script src="{{ asset('assets/js/custom.js') }}"></script>
+
+    <!-- Sweet Alert -->
+    <script src="{{ asset('assets/js/plugin/sweetalert/sweetalert.min.js') }}"></script>
+    <script>
+        // Declarative confirm popups — add data-confirm="..." to a <form> or
+        // <a href> instead of onsubmit/onclick="return confirm(...)".
+        (function () {
+            function showConfirm(el, onConfirm) {
+                var isDanger = el.hasAttribute('data-confirm-danger');
+                swal({
+                    title: el.getAttribute('data-confirm-title') || 'Are you sure?',
+                    text: el.getAttribute('data-confirm'),
+                    icon: 'warning',
+                    buttons: ['Cancel', el.getAttribute('data-confirm-ok') || 'Yes, continue'],
+                    dangerMode: isDanger,
+                }).then(function (confirmed) {
+                    if (confirmed) {
+                        onConfirm();
+                    }
+                });
+            }
+
+            document.addEventListener('submit', function (event) {
+                var form = event.target;
+                if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm')) {
+                    return;
+                }
+                if (form.dataset.confirmed === 'true') {
+                    return;
+                }
+                event.preventDefault();
+                showConfirm(form, function () {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                var link = event.target.closest('a[data-confirm]');
+                if (!link) {
+                    return;
+                }
+                event.preventDefault();
+                showConfirm(link, function () {
+                    window.location.href = link.getAttribute('href');
+                });
+            });
+        })();
+    </script>
 </body>
 
 </html>

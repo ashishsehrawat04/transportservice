@@ -35,9 +35,12 @@ Route::post('/shipment/add-item', [WebController::class, 'saveShipmentItems'])->
 Route::post('/shipment/estimate-items', [WebController::class, 'estimateShipmentItems'])->name('shipment.estimate_items');
 Route::get('/shipment/cart', [WebController::class, 'shipmentCart'])->name('shipment.cart');
 Route::post('/shipment/cart/checkout', [WebController::class, 'checkoutShipmentCart'])->middleware('auth')->name('shipment.cart.checkout');
+Route::post('/shipment/cart/checkout-one', [WebController::class, 'checkoutOneShipment'])->middleware('auth')->name('shipment.cart.checkout_one');
 Route::get('/shipment/cart/edit/{id}', [WebController::class, 'editShipmentCartItem'])->name('shipment.cart.edit');
 Route::post('/shipment/cart/update/{id}', [WebController::class, 'updateShipmentCartItem'])->name('shipment.cart.update');
 Route::get('/shipment/cart/delete/{id}', [WebController::class, 'deleteShipmentCartItem'])->name('shipment.cart.delete');
+Route::post('/shipment/cart/cancel/{leadId}', [WebController::class, 'cancelShipment'])->middleware('auth')->name('shipment.cart.cancel');
+Route::post('/shipment/cart/cancel-fresh', [WebController::class, 'cancelFreshShipment'])->middleware('auth')->name('shipment.cart.cancel_fresh');
 Route::get('/shipment/leads', [WebController::class, 'shipmentLeads'])->middleware('auth')->name('shipment.leads');
 Route::get('/track-and-trace', [WebController::class, 'trackShipment'])->name('shipment.track');
 Route::get('/track-and-trace/{trackingNumber}/invoice', [WebController::class, 'downloadShipmentInvoice'])->name('shipment.invoice.download');

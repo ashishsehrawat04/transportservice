@@ -32,8 +32,8 @@
                                     <th>From City</th>
                                     <th>To City</th>
                                     <th>Fair Charges</th>
-                                    <th>Rate/KM</th>
-                                    <th>Rate/Volume</th>
+                                    <th>Rate/Weight</th>
+                                    <th>Transit Time</th>
                                     <th>Status</th>
                                     <th>Action</th>
                                 </tr>
@@ -63,7 +63,7 @@
                         return json.data;
                     }
                     console.error('API Error:', json.message);
-                    alert('Error: ' + json.message);
+                    sweetNotify(json.message);
                     return [];
                 },
 
@@ -77,7 +77,7 @@
                         }
                     } catch(e) {}
                     console.error('Error details:', message);
-                    alert('❌ ' + message);
+                    sweetNotify(message);
                 }
             },
             scrollX: true,
@@ -103,7 +103,7 @@
                     defaultContent: '-'
                 },
                 {
-                    data: 'base_rate_per_weight',
+                    data: 'rate_per_weight',
                     defaultContent: '-',
                     render: function(data) {
                         if (data) return '₹ ' + parseFloat(data).toFixed(2);
@@ -111,11 +111,11 @@
                     }
                 },
                 {
-                    data: 'base_rate_per_volume',
+                    data: 'transit_days',
                     defaultContent: '-',
                     render: function(data) {
-                        if (data) return '₹ ' + parseFloat(data).toFixed(2);
-                        return '-';
+                        if (!data) return '-';
+                        return data + (data > 1 ? ' Days' : ' Day');
                     }
                 },
                 {
@@ -150,7 +150,7 @@
 
                             <a href="${deleteUrl}"
                             class="btn btn-sm btn-danger"
-                            onclick="return confirm('Are you sure?')">
+                            data-label="${(row.from_city && row.to_city) ? (row.from_city + ' to ' + row.to_city) : 'this route'}">
                                 Delete
                             </a>
                             </div>

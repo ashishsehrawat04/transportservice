@@ -24,31 +24,32 @@
 
 <style>
     .track-section {
-        background: #f5f7fb;
         padding: 110px 0 80px;
+        background:
+            radial-gradient(ellipse 900px 400px at 88% 0%, rgba(47, 143, 224, .06), transparent 60%),
+            var(--ot-bg);
     }
 
     .track-panel {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
-        padding: 28px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 16px;
+        box-shadow: var(--ot-shadow);
+        padding: 30px;
     }
 
     .track-eyebrow {
-        color: #ff7a45;
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: .08em;
+        color: var(--ot-amber-dark);
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: .1em;
         text-transform: uppercase;
     }
 
     .track-panel h2 {
-        color: #101820;
-        font-size: 28px;
-        font-weight: 800;
-        margin: 4px 0 24px;
+        font-size: 27px;
+        font-weight: 700;
+        margin: 5px 0 26px;
     }
 
     .track-form {
@@ -61,24 +62,32 @@
     .track-form input[type="text"] {
         flex: 1 1 320px;
         min-height: 48px;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
+        border: 1px solid var(--ot-line);
+        border-radius: 8px;
         padding: 0 16px;
+        background: #fbfdfc;
+        font-family: var(--ot-mono);
     }
 
     .track-form input[type="text"]:focus {
-        border-color: #0e8f7a;
+        border-color: var(--ot-green);
         box-shadow: 0 0 0 3px rgba(14, 143, 122, .12);
         outline: none;
+        background: #fff;
     }
 
     .track-alert {
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 14px 16px;
         margin-bottom: 20px;
         font-size: 14px;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 9px;
     }
+
+    .track-alert svg { width: 16px; height: 16px; stroke: currentColor; flex: none; }
 
     .track-alert-danger {
         background: #fef3f2;
@@ -99,18 +108,20 @@
         gap: 16px;
         justify-content: space-between;
         margin-bottom: 24px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--ot-line);
     }
 
     .track-result-head h4 {
-        color: #101820;
-        font-size: 20px;
-        font-weight: 800;
-        margin: 0 0 4px;
+        font-size: 19px;
+        font-weight: 600;
+        margin: 0 0 5px;
     }
 
     .track-result-head p {
-        color: #667085;
-        font-size: 13.5px;
+        color: var(--ot-muted);
+        font-family: var(--ot-mono);
+        font-size: 13px;
         margin: 0;
     }
 
@@ -119,20 +130,20 @@
     }
 
     .status-badge {
-        border-radius: 20px;
+        border-radius: 999px;
         display: inline-block;
-        font-size: 11.5px;
+        font-size: 11px;
         font-weight: 800;
-        letter-spacing: .02em;
+        letter-spacing: .04em;
         padding: 6px 14px;
         text-transform: uppercase;
     }
 
-    .status-badge.progress {
+    .status-badge.ongoing {
         align-items: center;
-        background: #fff6e8;
-        color: #b5750c;
-        border: 1px solid #ffe1ab;
+        background: var(--ot-gold-bg);
+        color: var(--ot-gold);
+        border: 1px solid var(--ot-gold-line);
         display: inline-flex;
         gap: 6px;
     }
@@ -146,7 +157,7 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
-        .status-badge.progress .live-dot {
+        .status-badge.ongoing .live-dot {
             animation: trackPulse 1.6s ease-in-out infinite;
         }
     }
@@ -171,16 +182,19 @@
     .track-invoice-btn {
         align-items: center;
         border: 1px solid #abefc6;
-        border-radius: 6px;
+        border-radius: 8px;
         color: #067647;
         display: inline-flex;
+        font-family: var(--ot-display);
         font-size: 12.5px;
-        font-weight: 800;
+        font-weight: 600;
         gap: 6px;
         margin-top: 10px;
         padding: 7px 12px;
         text-decoration: none;
     }
+
+    .track-invoice-btn svg { width: 13px; height: 13px; stroke: currentColor; }
 
     .track-invoice-btn:hover {
         background: #ecfdf3;
@@ -188,7 +202,7 @@
     }
 
     .track-invoice-note {
-        color: #98a2b3;
+        color: var(--ot-muted);
         font-size: 12px;
         margin-top: 10px;
     }
@@ -198,7 +212,7 @@
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         position: relative;
-        margin-bottom: 28px;
+        margin-bottom: 30px;
         padding-top: 6px;
     }
 
@@ -209,11 +223,11 @@
         right: 12%;
         top: 19px;
         height: 3px;
-        background: #e4e8f0;
+        background: var(--ot-line);
     }
 
     .tracking-fill {
-        background: linear-gradient(90deg, #0a6c5c, #0e8f7a);
+        background: linear-gradient(90deg, var(--ot-green-dark), var(--ot-green));
         border-radius: 2px;
         height: 3px;
         left: 12%;
@@ -226,21 +240,22 @@
     .tracking-pkg {
         align-items: center;
         background: #fff;
-        border: 2px solid #0e8f7a;
+        border: 2px solid var(--ot-green);
         border-radius: 50%;
         box-shadow: 0 6px 14px rgba(14, 143, 122, .28);
         display: flex;
-        font-size: 11px;
-        height: 22px;
+        height: 24px;
         justify-content: center;
         left: 12%;
         position: absolute;
-        top: 8px;
+        top: 7px;
         transform: translateX(-50%);
         transition: left 1.1s cubic-bezier(.22, .9, .3, 1);
-        width: 22px;
+        width: 24px;
         z-index: 2;
     }
+
+    .tracking-pkg svg { width: 13px; height: 13px; stroke: var(--ot-green-dark); }
 
     .tracking-line.rejected .tracking-fill,
     .tracking-line.rejected .tracking-pkg {
@@ -254,10 +269,10 @@
     }
 
     .tracking-step span {
-        background: #e4e8f0;
+        background: var(--ot-line);
         border: 4px solid #fff;
         border-radius: 50%;
-        box-shadow: 0 0 0 1px #e4e8f0;
+        box-shadow: 0 0 0 1px var(--ot-line);
         display: inline-block;
         height: 24px;
         margin-bottom: 10px;
@@ -266,29 +281,29 @@
     }
 
     .tracking-step strong {
-        color: #98a2b3;
+        color: var(--ot-muted);
         display: block;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 700;
         transition: color .2s ease;
     }
 
     .tracking-step.active span {
-        background: #0e8f7a;
-        box-shadow: 0 0 0 1px #0e8f7a;
+        background: var(--ot-green);
+        box-shadow: 0 0 0 1px var(--ot-green);
     }
 
     .tracking-step.active strong {
-        color: #101820;
+        color: var(--ot-ink);
     }
 
     .tracking-line.rejected::before {
-        background: #d94c43;
+        background: var(--ot-red);
     }
 
     .tracking-line.rejected .tracking-step span {
-        background: #d94c43;
-        box-shadow: 0 0 0 1px #d94c43;
+        background: var(--ot-red);
+        box-shadow: 0 0 0 1px var(--ot-red);
     }
 
     .tracking-line.rejected .tracking-step strong {
@@ -303,65 +318,74 @@
 
     .track-meta-grid {
         display: grid;
-        gap: 12px;
+        gap: 10px;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         margin-bottom: 20px;
     }
 
     .track-meta {
-        background: #fbfbfd;
-        border: 1px solid #eef1f6;
-        border-radius: 8px;
-        padding: 12px 14px;
+        border-left: 2px solid var(--ot-line);
+        padding: 2px 0 2px 12px;
     }
 
     .track-meta span {
-        color: #98a2b3;
+        color: var(--ot-muted);
         display: block;
         font-size: 11px;
-        letter-spacing: .03em;
+        letter-spacing: .04em;
         margin-bottom: 4px;
         text-transform: uppercase;
     }
 
     .track-meta strong {
-        color: #101820;
         display: block;
-        font-size: 14px;
+        font-size: 13.5px;
+        font-weight: 700;
     }
 
     .track-summary {
-        background: #fbfbfd;
-        border: 1px solid #eef1f6;
-        border-radius: 8px;
+        background: var(--ot-panel-tint);
+        border: 1px solid rgba(14, 143, 122, .2);
+        border-radius: 12px;
         margin-bottom: 20px;
         padding: 18px 20px;
     }
 
     .track-summary-line {
         align-items: center;
-        color: #4b5563;
+        color: var(--ot-ink-soft);
         display: flex;
-        font-size: 14px;
+        font-size: 13.5px;
         justify-content: space-between;
         padding: 6px 0;
     }
 
     .track-summary-line + .track-summary-line {
-        border-top: 1px dashed #eef1f6;
+        border-top: 1px dashed rgba(14, 143, 122, .2);
     }
 
     .track-summary-line strong {
-        color: #101820;
+        font-family: var(--ot-mono);
+        color: var(--ot-ink);
     }
 
     .track-summary-line.total {
-        margin-top: 6px;
+        margin-top: 4px;
         padding-top: 14px;
     }
 
     .track-summary-line.total strong {
-        font-size: 18px;
+        font-size: 19px;
+        color: var(--ot-green-dark);
+    }
+
+    .recent-heading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 14px;
     }
 
     .recent-list {
@@ -371,11 +395,11 @@
 
     .recent-item {
         align-items: center;
-        background: #fbfbfd;
-        border: 1px solid #eef1f6;
-        border-radius: 8px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 12px;
         display: flex;
-        gap: 12px;
+        gap: 14px;
         justify-content: space-between;
         padding: 14px 16px;
         text-decoration: none;
@@ -383,19 +407,40 @@
     }
 
     .recent-item:hover {
-        border-color: #d6dce8;
-        box-shadow: 0 4px 14px rgba(18, 33, 60, .06);
+        border-color: rgba(14, 143, 122, .35);
+        box-shadow: var(--ot-shadow-sm);
     }
 
+    .recent-item-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .recent-item-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--ot-panel-tint);
+        border: 1px solid var(--ot-line);
+        display: grid;
+        place-items: center;
+        flex: none;
+    }
+
+    .recent-item-icon svg { width: 18px; height: 18px; stroke: var(--ot-green-dark); }
+
     .recent-item strong {
-        color: #101820;
         display: block;
         font-size: 14px;
+        overflow-wrap: anywhere;
     }
 
     .recent-item small {
-        color: #98a2b3;
-        font-size: 12px;
+        color: var(--ot-muted);
+        font-family: var(--ot-mono);
+        font-size: 11.5px;
     }
 
     @media (max-width: 767px) {
@@ -419,6 +464,15 @@
     }
 </style>
 
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+    <symbol id="tk-search" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></symbol>
+    <symbol id="tk-alert" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"></path><circle cx="12" cy="12" r="9"></circle></symbol>
+    <symbol id="tk-info" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16v-4M12 8h.01"></path><circle cx="12" cy="12" r="9"></circle></symbol>
+    <symbol id="tk-download" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"></path><path d="M4 19h16"></path></symbol>
+    <symbol id="tk-box" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4.5L21 8l-9 4.5z"></path><path d="M3 8v9l9 4.5V12.5"></path><path d="M21 8v9l-9 4.5"></path></symbol>
+    <symbol id="tk-clock" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></symbol>
+</svg>
+
 <section class="track-section">
     <div class="container">
         <div class="row justify-content-center">
@@ -428,7 +482,7 @@
                     <h2>Track Shipment</h2>
 
                     @if(session('error'))
-                        <div class="track-alert track-alert-danger">{{ session('error') }}</div>
+                        <div class="track-alert track-alert-danger"><svg viewBox="0 0 24 24"><use href="#tk-alert"></use></svg> {{ session('error') }}</div>
                     @endif
 
                     <form method="GET" action="{{ route('shipment.track') }}" class="track-form">
@@ -440,7 +494,7 @@
                     </form>
 
                     @if($trackingNumber && !$lead)
-                        <div class="track-alert track-alert-danger">No shipment found for this tracking number.</div>
+                        <div class="track-alert track-alert-danger"><svg viewBox="0 0 24 24"><use href="#tk-search"></use></svg> No shipment found for this tracking number.</div>
                     @endif
 
                     @if($lead)
@@ -451,7 +505,7 @@
                             $badgeClass = match(true) {
                                 $isRejected  => 'stopped',
                                 $isDelivered => 'done',
-                                default      => 'progress',
+                                default      => 'ongoing',
                             };
                         @endphp
 
@@ -462,13 +516,13 @@
                             </div>
                             <div class="track-status-actions">
                                 <span class="status-badge {{ $badgeClass }}">
-                                    @if($badgeClass === 'progress')<span class="live-dot"></span>@endif
+                                    @if($badgeClass === 'ongoing')<span class="live-dot"></span>@endif
                                     {{ ucfirst($lead->admin_status) }}
                                 </span>
                                 @if($isDelivered)
                                     <div>
                                         <a class="track-invoice-btn" href="{{ route('shipment.invoice.download', $lead->tracking_number) }}">
-                                            <i class="bi bi-download"></i> Download Invoice
+                                            <svg viewBox="0 0 24 24"><use href="#tk-download"></use></svg> Download Invoice
                                         </a>
                                     </div>
                                 @else
@@ -478,8 +532,8 @@
                         </div>
 
                         @if($isRejected)
-                            <div class="track-alert track-alert-danger" style="display:flex; align-items:center; gap:8px;">
-                                <i class="bi bi-x-circle-fill"></i>
+                            <div class="track-alert track-alert-danger">
+                                <svg viewBox="0 0 24 24"><use href="#tk-alert"></use></svg>
                                 <span>This shipment has been {{ strtolower($lead->admin_status) }}.</span>
                             </div>
                         @endif
@@ -487,7 +541,7 @@
                         <div class="tracking-line {{ $isRejected ? 'rejected' : '' }}" id="trackingLine">
                             @unless($isRejected)
                                 <div class="tracking-fill" id="trackingFill" data-target-width="{{ $trackFillWidth }}"></div>
-                                <div class="tracking-pkg" id="trackingPkg" data-target-left="{{ $trackPkgLeft }}">📦</div>
+                                <div class="tracking-pkg" id="trackingPkg" data-target-left="{{ $trackPkgLeft }}"><svg viewBox="0 0 24 24"><use href="#tk-box"></use></svg></div>
                             @endunless
                             @foreach($steps as $key => $label)
                                 @php $index = $loop->index; @endphp
@@ -507,10 +561,10 @@
                                 <span>To</span>
                                 <strong>{{ optional($lead->cityRoute)->to_city ?? '-' }}</strong>
                             </div>
-                            <div class="track-meta">
+                            <!-- <div class="track-meta">
                                 <span>Payment</span>
                                 <strong>{{ ucfirst($lead->payment_status) }}</strong>
-                            </div>
+                            </div> -->
                             <div class="track-meta">
                                 <span>Pickup</span>
                                 <strong>{{ optional($lead->confirmed_pickup_date ?: $lead->requested_pickup_date)->format('d M Y') }}</strong>
@@ -552,23 +606,26 @@
                         </div>
 
                         @if($lead->admin_description)
-                            <div class="track-alert track-alert-info mb-0">{{ $lead->admin_description }}</div>
+                            <div class="track-alert track-alert-info mb-0"><svg viewBox="0 0 24 24"><use href="#tk-info"></use></svg> {{ $lead->admin_description }}</div>
                         @endif
                     @elseif($userLeads->isNotEmpty())
-                        <h5 class="mb-3" style="color:#101820; font-weight:800;">Recent Shipments</h5>
+                        <div class="recent-heading">Recent Shipments</div>
                         <div class="recent-list">
                             @foreach($userLeads as $item)
                                 @php
                                     $itemBadge = match(true) {
                                         in_array($item->admin_status, ['rejected', 'cancelled']) => 'stopped',
                                         $item->admin_status === 'delivered' => 'done',
-                                        default => 'progress',
+                                        default => 'ongoing',
                                     };
                                 @endphp
                                 <a class="recent-item" href="{{ route('shipment.track', ['tracking_number' => $item->tracking_number]) }}">
-                                    <div>
-                                        <strong>{{ $item->item_name }}</strong>
-                                        <small>{{ $item->tracking_number }}</small>
+                                    <div class="recent-item-left">
+                                        <span class="recent-item-icon"><svg viewBox="0 0 24 24"><use href="#tk-box"></use></svg></span>
+                                        <div>
+                                            <strong>{{ $item->item_name }}</strong>
+                                            <small>{{ $item->tracking_number }}</small>
+                                        </div>
                                     </div>
                                     <span class="status-badge {{ $itemBadge }}">{{ ucfirst($item->admin_status) }}</span>
                                 </a>

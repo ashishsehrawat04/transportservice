@@ -43,6 +43,25 @@
         <div class="value">{{ $transportAddress?->pickup_address ?: (optional($quote->user)->address_line_1 ? collect([optional($quote->user)->address_line_1, optional($quote->user)->address_line_2, optional($quote->user)->city, optional($quote->user)->state, optional($quote->user)->country, optional($quote->user)->pincode])->filter()->join(', ') : '-') }}</div>
     </div>
 
+    @php
+        $itemRows = $quote->quote_data['shipment_items'] ?? null;
+        if (empty($itemRows)) {
+            $itemRows = [[
+                'item_name' => $quote->item_name,
+                'item_type' => $quote->item_type,
+                'quantity' => $quote->quantity,
+                'length_cm' => $quote->length_cm,
+                'width_cm' => $quote->width_cm,
+                'height_cm' => $quote->height_cm,
+                'weight_kg' => $quote->weight_kg,
+                'charge_basis' => $quote->calculation_type,
+                'charge_weight_kg' => (float) $quote->weight_charge > (float) $quote->volume_charge ? $quote->weight_kg : $quote->volume_cft,
+                'volumetric_weight_kg' => null,
+                'estimated_total' => $quote->subtotal,
+            ]];
+        }
+    @endphp
+
     <div class="section">
         <div class="label">Items</div>
         <table>
@@ -53,38 +72,45 @@
                     <th>Weight</th>
                     <th>Dimensions</th>
                     <th>Volume</th>
-                    <th>Route</th>
+                    <th>Charge Basis</th>
+                    <th class="right">Price</th>
                 </tr>
             </thead>
             <tbody>
+                @foreach ($itemRows as $row)
+                    <tr>
+                        <td>{{ $row['item_name'] ?: '-' }}<br><small>{{ $row['item_type'] ?: '-' }}</small></td>
+                        <td>{{ $row['quantity'] ?: 1 }}</td>
+                        <td>{{ number_format((float) ($row['weight_kg'] ?? 0), 2) }} KG</td>
+                        <td>{{ number_format((float) ($row['length_cm'] ?? 0), 2) }} x {{ number_format((float) ($row['width_cm'] ?? 0), 2) }} x {{ number_format((float) ($row['height_cm'] ?? 0), 2) }} CM</td>
+                        <td>{{ ($row['volumetric_weight_kg'] ?? null) !== null ? number_format((float) $row['volumetric_weight_kg'], 2) . ' KG' : '-' }}</td>
+                        <td>{{ ucfirst($row['charge_basis'] ?? '-') }}</td>
+                        <td class="right">{{ number_format((float) ($row['estimated_total'] ?? 0), 2) }}</td>
+                    </tr>
+                @endforeach
                 <tr>
-                    <td>{{ $quote->item_name ?: '-' }}<br><small>{{ $quote->item_type ?: '-' }}</small></td>
-                    <td>{{ $quote->quantity ?: 1 }}</td>
-                    <td>{{ number_format((float)$quote->weight_kg,2) }} KG</td>
-                    <td>{{ number_format((float)$quote->length_cm,2) }} x {{ number_format((float)$quote->width_cm,2) }} x {{ number_format((float)$quote->height_cm,2) }} CM</td>
-                    <td>{{ number_format((float)$quote->volume_cft,2) }} CFT</td>
-                    <td>{{ $quote->from_city ?: '-' }} to {{ $quote->to_city ?: '-' }} ({{ number_format((float)$quote->distance_km,2) }} KM)</td>
+                    <td colspan="6" class="right"><strong>Items Subtotal</strong></td>
+                    <td class="right"><strong>{{ number_format((float) $quote->subtotal, 2) }}</strong></td>
+                </tr>
+                @if((float) $quote->tax_amount > 0)
+                    <tr>
+                        <td colspan="6" class="right">Tax</td>
+                        <td class="right">+{{ number_format((float) $quote->tax_amount, 2) }}</td>
+                    </tr>
+                @endif
+                @if((float) $quote->discount_amount > 0)
+                    <tr>
+                        <td colspan="6" class="right">Discount</td>
+                        <td class="right">-{{ number_format((float) $quote->discount_amount, 2) }}</td>
+                    </tr>
+                @endif
+                <tr>
+                    <td colspan="6" class="right"><strong>Total</strong></td>
+                    <td class="right"><strong>{{ number_format((float) $quote->total_payment, 2) }}</strong></td>
                 </tr>
             </tbody>
         </table>
-    </div>
-
-    <div class="section">
-        <div class="label">Charges</div>
-        <table>
-            <tbody>
-                <tr><td>Calculation By</td><td class="right">{{ ucfirst($quote->calculation_type ?: ((float)$quote->volume_charge > (float)$quote->weight_charge ? 'volume' : 'weight')) }}</td></tr>
-                <tr><td>Minimum Charge</td><td class="right">{{ number_format((float)$quote->base_price,2) }}</td></tr>
-                @if(in_array($quote->calculation_type, ['weight','mixed'], true))
-                <tr><td>Weight Charge</td><td class="right">{{ number_format((float)$quote->weight_charge,2) }}</td></tr>
-                @endif
-                @if(in_array($quote->calculation_type, ['volume','mixed'], true))
-                <tr><td>Volume Charge</td><td class="right">{{ number_format((float)$quote->volume_charge,2) }}</td></tr>
-                @endif
-                <tr><td>Subtotal</td><td class="right">{{ number_format((float)$quote->subtotal,2) }}</td></tr>
-                <tr><td><strong>Total</strong></td><td class="right"><strong>{{ number_format((float)$quote->total_payment,2) }}</strong></td></tr>
-            </tbody>
-        </table>
+        <div style="margin-top:6px;font-size:11px;color:#6b7280">Route: {{ $quote->from_city ?: '-' }} to {{ $quote->to_city ?: '-' }}</div>
     </div>
 
     <div style="margin-top:18px;font-size:12px;color:#6b7280">Notes: {{ $quote->admin_description ?: $quote->special_instructions ?: '-' }}</div>

@@ -3,7 +3,9 @@
 <style>
     .shipment-cart-section {
         padding: 110px 0 80px;
-        background: #f5f7fb;
+        background:
+            radial-gradient(ellipse 900px 400px at 12% 0%, rgba(14, 143, 122, .05), transparent 60%),
+            var(--ot-bg);
     }
 
     .cart-page-head {
@@ -11,318 +13,583 @@
         align-items: flex-end;
         justify-content: space-between;
         gap: 18px;
-        margin-bottom: 24px;
+        margin-bottom: 26px;
     }
 
     .cart-eyebrow {
-        color: #ff7a45;
-        font-size: 13px;
+        color: var(--ot-amber-dark);
+        font-size: 12.5px;
         font-weight: 700;
-        letter-spacing: .08em;
+        letter-spacing: .1em;
         text-transform: uppercase;
     }
 
     .cart-page-head h2 {
-        margin: 4px 0 0;
-        color: #101820;
-        font-size: 34px;
-        font-weight: 800;
+        margin: 5px 0 0;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: .01em;
     }
 
     .cart-subtitle {
-        color: #6b7280;
+        color: var(--ot-muted);
         margin: 8px 0 0;
+        font-size: 14px;
     }
 
+    /* ===== stat strip ===== */
     .cart-stat-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
     }
 
     .cart-stat {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 16px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: var(--ot-shadow-sm);
     }
 
     .cart-stat span {
-        color: #6b7280;
+        color: var(--ot-muted);
         display: block;
-        font-size: 13px;
-        margin-bottom: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 8px;
     }
 
     .cart-stat strong {
-        color: #101820;
         display: block;
+        font-family: var(--ot-mono);
         font-size: 22px;
         line-height: 1.1;
     }
 
+    /* ===== layout ===== */
+    .cart-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 352px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    @media (max-width: 991px) {
+        .cart-grid { grid-template-columns: minmax(0, 1fr); }
+        .cart-summary-panel { position: static !important; }
+        .cart-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     .cart-list {
-        display: grid;
-        gap: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
 
-    .cart-shipment-count {
-        color: #6b7280;
-        font-size: 13px;
-        font-weight: 700;
-        margin-top: 4px;
-    }
-
-    .cart-subitem-list {
-        display: grid;
-        gap: 12px;
-    }
-
-    .cart-subitem {
-        border: 1px solid #eef2f7;
-        border-radius: 8px;
-        box-shadow: 0 8px 20px rgba(15, 23, 42, .035);
-        padding: 14px;
-    }
-
-    .cart-subitem .cart-item-top {
-        background: #fbfdff;
-        border-bottom: 1px solid #eef2f7;
-        margin: -14px -14px 14px;
-        padding: 14px;
-    }
-
-    .cart-item-card,
-    .cart-summary-panel,
-    .cart-empty-state {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
-    }
-
+    /* ===== shipment card ===== */
     .cart-item-card {
-        padding: 18px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 16px;
+        box-shadow: var(--ot-shadow-sm);
+        overflow: hidden;
+        transition: box-shadow .2s ease;
+    }
+
+    .cart-item-card:hover {
+        box-shadow: var(--ot-shadow);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .cart-item-card {
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity .5s ease, transform .5s cubic-bezier(.22, .9, .3, 1), box-shadow .2s ease;
+        }
+
+        .cart-item-card.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .cart-item-top {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
-        margin-bottom: 16px;
+        flex-wrap: wrap;
+        padding: 16px 20px;
+        background: linear-gradient(180deg, var(--ot-panel-tint), transparent);
+        border-bottom: 1px solid var(--ot-line);
     }
 
     .cart-item-title {
-        align-items: center;
         display: flex;
+        align-items: center;
         gap: 12px;
+        flex-wrap: wrap;
         min-width: 0;
     }
 
-    .cart-item-icon {
+    .cart-shipment-name-row {
         align-items: center;
-        background: #fff4e8;
-        border-radius: 8px;
-        color: #ff7a45;
-        display: inline-flex;
-        flex: 0 0 46px;
-        font-size: 22px;
-        height: 46px;
-        justify-content: center;
-        width: 46px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
     }
 
     .cart-item-title h5 {
-        color: #101820;
-        font-size: 18px;
-        font-weight: 800;
         margin: 0;
+        font-size: 16px;
+        font-weight: 600;
         overflow-wrap: anywhere;
     }
 
-    .cart-item-title small {
-        color: #6b7280;
-        display: block;
-        margin-top: 3px;
+    .cart-route-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ot-ink-soft);
+        background: var(--ot-bg);
+        border: 1px solid var(--ot-line);
+        padding: 4px 10px 4px 8px;
+        border-radius: 999px;
+    }
+
+    .cart-route-chip svg { width: 12px; height: 12px; stroke: var(--ot-muted); }
+
+    .cart-shipment-count {
+        color: var(--ot-muted);
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .cart-pending-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        color: var(--ot-gold);
+        background: var(--ot-gold-bg);
+        border: 1px solid var(--ot-gold-line);
+        padding: 5px 11px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .cart-pending-badge svg { width: 12px; height: 12px; stroke: var(--ot-gold); }
+
+    .cart-shipment-side {
+        align-items: flex-end;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
 
     .cart-price {
-        color: #101820;
-        font-size: 20px;
-        font-weight: 800;
         text-align: right;
+        font-family: var(--ot-mono);
+        font-weight: 700;
+        font-size: 19px;
         white-space: nowrap;
     }
 
     .cart-price span {
-        color: #6b7280;
         display: block;
-        font-size: 12px;
+        font-family: Corbel, 'Segoe UI', sans-serif;
         font-weight: 600;
-        margin-bottom: 2px;
+        font-size: 11px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--ot-muted);
+        margin-bottom: 3px;
+    }
+
+    .cart-min-note {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ot-muted);
+        margin-top: 2px;
     }
 
     .cart-error {
-        color: #dc2626;
-        font-size: 13px;
+        background: #FEF3F2;
+        color: #B42318;
+        border: 1px solid #FECDCA;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
         font-weight: 700;
-        text-align: right;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
+    .cart-actions-row {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+    }
+
+    .cart-btn {
+        font-family: var(--ot-display);
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: .02em;
+        border-radius: 9px;
+        padding: 8px 14px;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
+    }
+
+    .cart-btn svg { width: 13px; height: 13px; stroke: currentColor; }
+
+    .cart-btn:hover { transform: translateY(-1px); }
+
+    .cart-cancel-shipment-btn {
+        background: #FEF3F2;
+        border-color: #FECDCA;
+        color: #B42318;
+    }
+
+    .cart-cancel-shipment-btn:hover {
+        background: #B42318;
+        border-color: #B42318;
+        color: #fff;
+    }
+
+    .cart-book-shipment-btn {
+        background: linear-gradient(135deg, var(--ot-green), var(--ot-green-dark));
+        border-color: transparent;
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(14, 143, 122, .25);
+    }
+
+    .cart-book-shipment-btn:hover {
+        box-shadow: 0 14px 26px rgba(14, 143, 122, .32);
+    }
+
+    /* ===== route + meta strip ===== */
     .cart-route-row {
         align-items: center;
-        background: #f8fafc;
-        border: 1px solid #eef2f7;
-        border-radius: 8px;
         display: flex;
         gap: 10px;
         justify-content: space-between;
-        margin-bottom: 16px;
-        padding: 12px 14px;
+        margin: 16px 20px 14px;
+        padding: 12px 16px;
+        background: var(--ot-bg);
+        border: 1px solid var(--ot-line);
+        border-radius: 10px;
     }
 
     .cart-city {
-        color: #101820;
-        font-weight: 800;
+        font-weight: 700;
         min-width: 0;
         overflow-wrap: anywhere;
     }
 
     .cart-route-arrow {
-        color: #ff7a45;
+        color: var(--ot-amber);
         flex: 0 0 auto;
-        font-size: 20px;
+        display: flex;
     }
+
+    .cart-route-arrow svg { width: 18px; height: 18px; stroke: currentColor; }
 
     .cart-meta-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
+        margin: 0 20px 16px;
     }
 
     .cart-meta {
-        border-left: 2px solid #e5e7eb;
+        border-left: 2px solid var(--ot-line);
         padding: 2px 0 2px 10px;
     }
 
     .cart-meta span {
-        color: #6b7280;
+        color: var(--ot-muted);
         display: block;
-        font-size: 12px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .03em;
         margin-bottom: 4px;
     }
 
     .cart-meta strong {
-        color: #101820;
         display: block;
-        font-size: 14px;
-        font-weight: 800;
+        font-size: 13.5px;
+        font-weight: 700;
         overflow-wrap: anywhere;
     }
 
-    .cart-item-actions {
-        align-items: center;
-        border-top: 1px solid #eef2f7;
+    .text-ready { color: var(--ot-green-dark) !important; }
+    .text-review { color: #B42318 !important; }
+
+    /* ===== item rows ===== */
+    .cart-item-list {
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 16px;
-        padding-top: 14px;
+        flex-direction: column;
     }
 
-    .cart-item-actions small {
-        color: #6b7280;
-    }
-
-    .cart-delete-link {
+    .item-row {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1.6fr) auto auto auto 56px;
         align-items: center;
-        border: 1px solid #fecaca;
-        border-radius: 6px;
-        color: #dc2626;
-        display: inline-flex;
-        font-size: 13px;
-        font-weight: 800;
-        gap: 6px;
-        padding: 8px 12px;
-        text-decoration: none;
+        gap: 14px;
+        padding: 14px 20px;
+        border-top: 1px solid var(--ot-line);
     }
 
-    .cart-delete-link:hover {
-        background: #fef2f2;
-        color: #b91c1c;
+    .ship-group.is-pending .item-row { opacity: .8; }
+
+    @media (max-width: 720px) {
+        .item-row {
+            grid-template-columns: 44px 1fr;
+            grid-template-areas:
+                "thumb info"
+                "thumb weight"
+                "thumb basis"
+                "thumb price";
+            row-gap: 8px;
+        }
+        .item-row .item-actions { display: none; }
     }
 
-    .cart-edit-link {
-        align-items: center;
-        border: 1px solid #bfdbfe;
-        border-radius: 6px;
-        color: #2563eb;
-        display: inline-flex;
-        font-size: 13px;
-        font-weight: 800;
-        gap: 6px;
-        padding: 8px 12px;
-        text-decoration: none;
+    .item-thumb {
+        width: 46px;
+        height: 46px;
+        border-radius: 11px;
+        background: var(--ot-panel-tint);
+        border: 1px solid var(--ot-line);
+        display: grid;
+        place-items: center;
+        flex: none;
     }
 
-    .cart-edit-link:hover {
-        background: #eff6ff;
-        color: #1d4ed8;
+    .item-thumb svg { width: 24px; height: 24px; stroke: var(--ot-green-dark); fill: none; }
+
+    .item-info .item-name {
+        font-weight: 700;
+        font-size: 14px;
+        overflow-wrap: anywhere;
     }
 
-    .cart-action-group {
+    .item-info .item-type {
+        font-size: 11px;
+        color: var(--ot-muted);
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-top: 2px;
+    }
+
+    .item-specs {
         display: flex;
+        align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 7px;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--ot-muted);
+    }
+
+    .item-specs .mono { color: var(--ot-ink-soft); font-family: var(--ot-mono); }
+
+    .item-specs .sep {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--ot-line);
+    }
+
+    .weight-compare {
+        display: flex;
+        gap: 12px;
+    }
+
+    .metric {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 10.5px;
+        color: var(--ot-muted);
+        min-width: 60px;
+        position: relative;
+    }
+
+    .metric span { text-transform: uppercase; letter-spacing: .05em; font-size: 9.5px; }
+    .metric b { font-family: var(--ot-mono); font-size: 13px; color: var(--ot-ink-soft); font-weight: 700; }
+    .metric.winner b { color: var(--ot-green-dark); }
+
+    .metric.winner::after {
+        content: "billed";
+        position: absolute;
+        top: -12px;
+        left: 0;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--ot-green);
+    }
+
+    .basis-chip {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        padding: 5px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .basis-chip.volume { background: var(--ot-panel-tint); color: var(--ot-green-dark); border: 1px solid rgba(14, 143, 122, .3); }
+    .basis-chip.weight { background: rgba(47, 143, 224, .12); color: var(--ot-sky); border: 1px solid rgba(47, 143, 224, .3); }
+
+    .item-price {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .item-price .amount {
+        font-family: var(--ot-mono);
+        font-weight: 700;
+        font-size: 14.5px;
+    }
+
+    .item-price .rate {
+        display: block;
+        font-size: 10px;
+        color: var(--ot-muted);
+        margin-top: 2px;
+    }
+
+    .cart-row-error {
+        color: #B42318;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: help;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .item-actions {
+        display: flex;
+        gap: 6px;
         justify-content: flex-end;
     }
 
+    .icon-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--ot-line);
+        background: var(--ot-panel);
+        color: var(--ot-muted);
+        text-decoration: none;
+        transition: all .15s ease;
+    }
+
+    .icon-btn svg { width: 13px; height: 13px; stroke: currentColor; }
+
+    .icon-btn:hover { border-color: var(--ot-green); color: var(--ot-green-dark); }
+    .icon-btn.danger:hover { border-color: #B42318; color: #B42318; background: #FEF3F2; }
+
+    .ship-group-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 13px 20px;
+        background: var(--ot-bg);
+        border-top: 1px solid var(--ot-line);
+        font-size: 12px;
+        color: var(--ot-muted);
+    }
+
+    .ship-group-foot b {
+        font-family: var(--ot-mono);
+        color: var(--ot-ink);
+        font-size: 14px;
+    }
+
+    /* ===== order summary ===== */
     .cart-summary-panel {
-        padding: 20px;
         position: sticky;
         top: 96px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 16px;
+        box-shadow: var(--ot-shadow);
+        padding: 22px;
     }
 
     .cart-summary-panel h4 {
-        color: #101820;
-        font-size: 20px;
-        font-weight: 800;
-        margin-bottom: 18px;
+        margin: 0 0 16px;
+        font-size: 17px;
+        font-weight: 600;
     }
 
     .cart-summary-line {
         align-items: center;
-        color: #4b5563;
+        color: var(--ot-ink-soft);
         display: flex;
         justify-content: space-between;
         gap: 14px;
-        margin-bottom: 12px;
+        font-size: 13.5px;
+        margin-bottom: 11px;
     }
 
     .cart-summary-line strong {
-        color: #101820;
+        font-family: var(--ot-mono);
+        color: var(--ot-ink);
     }
 
     .cart-summary-total {
-        border-top: 1px solid #e5e7eb;
-        margin-top: 16px;
+        border-top: 1px dashed var(--ot-line);
+        margin-top: 14px;
         padding-top: 16px;
     }
 
-    .cart-summary-total strong {
-        color: #101820;
+    .cart-summary-total span {
+        color: var(--ot-muted);
         display: block;
-        font-size: 28px;
-        line-height: 1.1;
+        font-size: 12px;
+        font-weight: 600;
     }
 
-    .cart-summary-total span {
-        color: #6b7280;
+    .cart-summary-total strong {
         display: block;
-        font-size: 13px;
-        margin-top: 4px;
+        font-family: var(--ot-mono);
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.15;
+        margin-top: 3px;
     }
 
     .cart-summary-actions {
@@ -331,46 +598,95 @@
         margin-top: 20px;
     }
 
+    .btn-cta {
+        width: 100%;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--ot-amber), var(--ot-amber-dark));
+        color: #fff !important;
+        font-family: var(--ot-display);
+        font-size: 14.5px;
+        font-weight: 600;
+        letter-spacing: .02em;
+        padding: 13px 18px;
+        border-radius: 11px;
+        border: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 14px 28px rgba(255, 122, 69, .3);
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 18px 32px rgba(255, 122, 69, .36); }
+    .btn-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-cta svg { width: 15px; height: 15px; stroke: #fff; }
+
     .cart-secondary-btn {
         align-items: center;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        color: #101820;
+        border: 1px solid var(--ot-line);
+        border-radius: 10px;
+        color: var(--ot-ink);
         display: inline-flex;
-        font-weight: 800;
+        font-family: var(--ot-display);
+        font-weight: 600;
+        font-size: 13.5px;
         gap: 8px;
         justify-content: center;
-        min-height: 46px;
+        min-height: 44px;
         text-decoration: none;
     }
 
-    .cart-secondary-btn:hover {
-        background: #f9fafb;
-        color: #101820;
-    }
+    .cart-secondary-btn svg { width: 14px; height: 14px; stroke: currentColor; }
+    .cart-secondary-btn:hover { background: var(--ot-panel-tint); color: var(--ot-green-dark); }
 
     .cart-checkout-note {
-        background: #f8fafc;
-        border-radius: 8px;
-        color: #6b7280;
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 12px;
+        line-height: 1.55;
+        color: var(--ot-muted);
         margin-top: 16px;
-        padding: 12px;
     }
 
+    .cart-trust-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid var(--ot-line);
+    }
+
+    .cart-trust-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-align: center;
+        font-size: 9.5px;
+        font-weight: 700;
+        color: var(--ot-muted);
+    }
+
+    .cart-trust-item svg { width: 17px; height: 17px; stroke: var(--ot-green-dark); }
+
+    /* ===== empty state ===== */
     .cart-empty-state {
-        padding: 48px 24px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 16px;
+        box-shadow: var(--ot-shadow-sm);
+        padding: 56px 24px;
         text-align: center;
     }
 
     .cart-empty-state i {
         align-items: center;
-        background: #fff4e8;
+        background: var(--ot-panel-tint);
         border-radius: 50%;
-        color: #ff7a45;
+        color: var(--ot-green-dark);
         display: inline-flex;
-        font-size: 36px;
+        font-size: 34px;
         height: 76px;
         justify-content: center;
         margin-bottom: 18px;
@@ -378,60 +694,43 @@
     }
 
     .cart-empty-state h4 {
-        color: #101820;
-        font-weight: 800;
+        font-weight: 600;
         margin-bottom: 8px;
     }
 
     .cart-empty-state p {
-        color: #6b7280;
+        color: var(--ot-muted);
         margin: 0 auto 22px;
         max-width: 460px;
-    }
-
-    @media (max-width: 991px) {
-        .cart-stat-grid,
-        .cart-meta-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .cart-summary-panel {
-            position: static;
-        }
+        font-size: 14px;
     }
 
     @media (max-width: 575px) {
-        .cart-page-head,
-        .cart-item-top,
-        .cart-item-actions {
-            align-items: stretch;
-            flex-direction: column;
-        }
-
-        .cart-page-head h2 {
-            font-size: 28px;
-        }
-
-        .cart-stat-grid,
-        .cart-meta-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .cart-route-row {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .cart-route-arrow {
-            transform: rotate(90deg);
-        }
-
-        .cart-price,
-        .cart-error {
-            text-align: left;
-        }
+        .cart-page-head { align-items: stretch; flex-direction: column; }
+        .cart-page-head h2 { font-size: 26px; }
+        .cart-stat-grid { grid-template-columns: 1fr; }
+        .cart-item-top { align-items: stretch; flex-direction: column; }
+        .cart-shipment-side { align-items: flex-start; }
+        .cart-route-row { align-items: flex-start; flex-direction: column; }
+        .cart-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-left: 20px; margin-right: 20px; }
     }
 </style>
+
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+    <symbol id="ico-arrow" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"></path></symbol>
+    <symbol id="ico-clock" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></symbol>
+    <symbol id="ico-pin" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-6.2 6.5-11A6.5 6.5 0 1 0 5.5 10c0 4.8 6.5 11 6.5 11z"></path><circle cx="12" cy="10" r="2.2"></circle></symbol>
+    <symbol id="ico-shield" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.4-3 7.5-7 9-4-1.5-7-4.6-7-9V6z"></path><path d="M9 12l2 2 4-4"></path></symbol>
+    <symbol id="ico-check" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></symbol>
+    <symbol id="ico-edit" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"></path></symbol>
+    <symbol id="ico-trash" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></symbol>
+    <symbol id="ico-x" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></symbol>
+    <symbol id="ico-plus" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></symbol>
+    <symbol id="ico-alert" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"></path><path d="M10.3 3.9L2.9 17a1.8 1.8 0 001.6 2.7h15a1.8 1.8 0 001.6-2.7L13.7 3.9a1.8 1.8 0 00-3.4 0z"></path></symbol>
+    <symbol id="ico-box" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l12-6 12 6-12 6z"></path><path d="M4 10v12l12 6 12-6V10"></path><path d="M16 16v12"></path></symbol>
+    <symbol id="ico-bike" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="22" r="5"></circle><circle cx="24" cy="22" r="5"></circle><path d="M8 22l6-11h6l4 11"></path><path d="M14 11h6"></path><path d="M14 22h10"></path></symbol>
+    <symbol id="ico-electronics" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="24" height="16" rx="1.6"></rect><path d="M12 26h8M16 22v4"></path></symbol>
+</svg>
 
 @php
     $itemCount = $cartItems->count();
@@ -443,6 +742,14 @@
         optional($item->pickup_date)->format('Y-m-d'),
         optional($item->delivery_date)->format('Y-m-d'),
     ]));
+
+    $itemIcon = function ($type) {
+        return match ($type) {
+            'bike' => 'ico-bike',
+            'electronics' => 'ico-electronics',
+            default => 'ico-box',
+        };
+    };
 @endphp
 
 <section class="shipment-cart-section">
@@ -454,7 +761,7 @@
                 <p class="cart-subtitle">Check route, dimensions and estimated pricing before saving items to leads.</p>
             </div>
             <a href="{{ route('shipment.add_item') }}" class="primary-btn1 btn-hover">
-                Add Item
+                Add Shipment
                 <span></span>
             </a>
         </div>
@@ -488,585 +795,225 @@
                 </div>
                 <div class="cart-stat">
                     <span>Estimated Total</span>
-                    <strong>{{ number_format($cartTotal, 2) }}</strong>
+                    <strong>₹{{ number_format($cartTotal, 2) }}</strong>
                 </div>
             </div>
 
-            <div class="row g-4">
-                <div class="col-lg-8">
-    <div class="cart-list">
-        @foreach($cartShipments as $shipmentItems)
-            @php
-                $firstItem = $shipmentItems->first();
-                $route = $firstItem->cityRoute;
-                $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
-                $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
-                $shipmentMinCharge = round((float) optional($route)->min_charge, 2);
-                $shipmentTotal = $shipmentMinCharge + $shipmentItems->sum('calculated_price');
-                $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
-            @endphp
+            <div class="cart-grid">
+                <div class="cart-list">
+                    @foreach($cartShipments as $shipmentItems)
+                        @php
+                            $firstItem = $shipmentItems->first();
+                            $route = $firstItem->cityRoute;
+                            $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
+                            $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
+                            $shipmentMinCharge = round((float) optional($route)->min_charge, 2);
+                            $shipmentTotal = $shipmentItems->sum('calculated_price');
+                            $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
+                            $shipmentIsPending = (bool) optional($firstItem)->booking_status;
+                            $shipmentLeadId = optional($firstItem)->transport_lead_id;
+                        @endphp
 
-            <div class="cart-item-card">
-                {{-- Shipment header --}}
-                <div class="cart-item-top">
-                    <div class="cart-item-title">
-                        <span class="cart-item-icon">
-                            <i class="bi bi-box2"></i>
-                        </span>
-                        <div>
-                            <h5>Shipment {{ $loop->iteration }}</h5>
-                            <small>{{ optional($route)->from_city ?? '-' }} to {{ optional($route)->to_city ?? '-' }}</small>
-                            <div class="cart-shipment-count">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
-                        </div>
-                    </div>
-
-                    @if($shipmentHasError)
-                        <div class="cart-error"><i class="bi bi-exclamation-triangle"></i> Needs Review</div>
-                    @else
-                        <div class="cart-price">
-                            <span>Shipment Total</span>
-                            ₹{{ number_format($shipmentTotal, 2) }}
-                            @if($shipmentMinCharge > 0)
-                                <small class="d-block text-muted" style="font-size:11px; font-weight:600;">incl. ₹{{ number_format($shipmentMinCharge, 2) }} Fair charge</small>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-
-                {{-- Route + meta strip --}}
-                <div class="cart-route-row">
-                    <div>
-                        <small class="text-muted d-block">Pickup City</small>
-                        <div class="cart-city">{{ optional($route)->from_city ?? '-' }}</div>
-                    </div>
-                    <span class="cart-route-arrow"><i class="bi bi-arrow-right"></i></span>
-                    <div class="text-lg-end">
-                        <small class="text-muted d-block">Deliver To</small>
-                        <div class="cart-city">{{ optional($route)->to_city ?? '-' }}</div>
-                    </div>
-                </div>
-
-                <div class="cart-meta-grid mb-3">
-                    <div class="cart-meta">
-                        <span>Pickup Date</span>
-                        <strong>{{ $pickupDate }}</strong>
-                    </div>
-                    <div class="cart-meta">
-                        <span>Delivery Date</span>
-                        <strong>{{ $deliveryDate }}</strong>
-                    </div>
-                    <div class="cart-meta">
-                        <span>Distance</span>
-                        <strong>{{ $route ? number_format($route->distance_km, 2) . ' KM' : '-' }}</strong>
-                    </div>
-                    <div class="cart-meta">
-                        <span>Status</span>
-                        <strong class="{{ $shipmentHasError ? 'text-danger' : 'text-success' }}">
-                            {{ $shipmentHasError ? 'Needs Review' : 'Ready' }}
-                        </strong>
-                    </div>
-                </div>
-
-                {{-- Items — single row per item --}}
-                <div class="cart-item-list">
-                    <div class="cart-item-list-head">
-                        <span class="col-item">Item</span>
-                        <span class="col-dim">Dimensions</span>
-                        <span class="col-qty">Qty</span>
-                        <span class="col-weight">Weight</span>
-                        <span class="col-volume">Volume</span>
-                        <span class="col-price">Price</span>
-                        <span class="col-actions">Actions</span>
-                    </div>
-
-                    @foreach($shipmentItems as $item)
-                        @php $volume = $item->price_breakdown['volume_cft'] ?? null; @endphp
-                        <div class="cart-item-row">
-                            <span class="col-item" data-label="Item">
-                                <span class="cart-row-icon"><i class="bi bi-box2"></i></span>
-                                <span class="cart-row-text">
-                                    <strong>{{ $item->item_name }}</strong>
-                                    <small>{{ $item->item_type ?: 'Shipment item' }}</small>
-                                </span>
-                            </span>
-
-                            <span class="col-dim" data-label="Dimensions">
-                                {{ $item->length_cm ? number_format($item->length_cm, 1) : '-' }}
-                                × {{ $item->width_cm ? number_format($item->width_cm, 1) : '-' }}
-                                × {{ number_format($item->height_cm, 1) }} cm
-                            </span>
-
-                            <span class="col-qty" data-label="Qty">{{ $item->quantity }}</span>
-
-                            <span class="col-weight" data-label="Weight">{{ number_format($item->weight_kg, 2) }} kg</span>
-
-                            <span class="col-volume" data-label="Volume">
-                                {{ $volume !== null ? number_format($volume, 2) . ' cft' : '-' }}
-                            </span>
-
-                            <span class="col-price" data-label="Price">
-                                @if($item->price_error)
-                                    <span class="cart-row-error" title="{{ $item->price_error }}">
-                                        <i class="bi bi-exclamation-circle"></i> Error
+                        <article class="cart-item-card ship-group {{ $shipmentIsPending ? 'is-pending' : '' }}">
+                            <div class="cart-item-top">
+                                <div class="cart-item-title">
+                                    <span class="cart-shipment-name-row">
+                                        <h5>Shipment {{ $loop->iteration }}</h5>
+                                        @if($shipmentIsPending)
+                                            <span class="cart-pending-badge">
+                                                <svg><use href="#ico-clock"></use></svg>
+                                                Pending Approval
+                                            </span>
+                                        @endif
                                     </span>
-                                @else
-                                    ₹{{ number_format($item->calculated_price, 2) }}
-                                    <div class="charge-line">
-                                        <span class="basis-chip {{ $item->charge_basis }}">{{ $item->charge_basis === 'volume' ? 'Volume' : 'Weight' }}</span>
-                                        <span class="charge-kg">{{ number_format($item->charge_weight_kg, 2) }} kg</span>
+                                    <span class="cart-route-chip">
+                                        <svg viewBox="0 0 24 24"><use href="#ico-pin"></use></svg>
+                                        {{ optional($route)->from_city ?? '-' }} → {{ optional($route)->to_city ?? '-' }}
+                                    </span>
+                                    <div class="cart-shipment-count" style="width:100%;">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
+                                </div>
+
+                                <div class="cart-shipment-side">
+                                    @if($shipmentHasError)
+                                        <div class="cart-error"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor"><use href="#ico-alert"></use></svg> Needs Review</div>
+                                    @else
+                                        <div class="cart-price">
+                                            <span>Shipment Total</span>
+                                            ₹{{ number_format($shipmentTotal, 2) }}
+                                            @if($shipmentMinCharge > 0)
+                                                <small class="cart-min-note">min ₹{{ number_format($shipmentMinCharge, 2) }} per item</small>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    <div class="cart-actions-row">
+                                        @if($shipmentIsPending && $shipmentLeadId)
+                                            <form action="{{ route('shipment.cart.cancel', $shipmentLeadId) }}" method="POST" data-confirm="Cancel this entire shipment request? This cannot be undone." data-confirm-ok="Yes, cancel it" data-confirm-danger>
+                                                @csrf
+                                                <button type="submit" class="cart-btn cart-cancel-shipment-btn">
+                                                    <svg><use href="#ico-x"></use></svg> Cancel Shipment
+                                                </button>
+                                            </form>
+                                        @elseif(!$shipmentIsPending)
+                                            @if(!$shipmentHasError)
+                                                <form action="{{ route('shipment.cart.checkout_one') }}" method="POST" data-confirm="Proceed to booking for this shipment only? The other shipments in your cart will stay untouched." data-confirm-ok="Yes, proceed">
+                                                    @csrf
+                                                    @foreach($shipmentItems as $shipmentItem)
+                                                        <input type="hidden" name="item_ids[]" value="{{ $shipmentItem->id }}">
+                                                    @endforeach
+                                                    <button type="submit" class="cart-btn cart-book-shipment-btn">
+                                                        <svg><use href="#ico-check"></use></svg> Proceed to Booking
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            <form action="{{ route('shipment.cart.cancel_fresh') }}" method="POST" data-confirm="Cancel this entire shipment? All items in it will be removed from your cart." data-confirm-ok="Yes, cancel it" data-confirm-danger>
+                                                @csrf
+                                                @foreach($shipmentItems as $shipmentItem)
+                                                    <input type="hidden" name="item_ids[]" value="{{ $shipmentItem->id }}">
+                                                @endforeach
+                                                <button type="submit" class="cart-btn cart-cancel-shipment-btn">
+                                                    <svg><use href="#ico-x"></use></svg> Cancel Shipment
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
-                                @endif
-                            </span>
+                                </div>
+                            </div>
 
-                            <span class="col-actions" data-label="Actions">
-                                @if($item->booking_status)
-                                    <span class="cart-pending-badge" title="Submitted — awaiting admin approval">
-                                        <i class="bi bi-hourglass-split"></i> Pending Approval
-                                    </span>
-                                @else
-                                    <a href="{{ route('shipment.cart.edit', $item->id) }}" class="cart-row-btn cart-row-btn-edit" title="Edit item">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a href="{{ route('shipment.cart.delete', $item->id) }}" class="cart-row-btn cart-row-btn-delete" title="Remove item" onclick="return confirm('Remove this item?')">
-                                        <i class="bi bi-trash3"></i>
-                                    </a>
-                                @endif
-                            </span>
-                        </div>
+                            <div class="cart-route-row">
+                                <div>
+                                    <small class="text-muted d-block" style="font-size:11px; color:var(--ot-muted);">Pickup City</small>
+                                    <div class="cart-city">{{ optional($route)->from_city ?? '-' }}</div>
+                                </div>
+                                <span class="cart-route-arrow"><svg viewBox="0 0 24 24"><use href="#ico-arrow"></use></svg></span>
+                                <div class="text-lg-end">
+                                    <small class="text-muted d-block" style="font-size:11px; color:var(--ot-muted);">Deliver To</small>
+                                    <div class="cart-city">{{ optional($route)->to_city ?? '-' }}</div>
+                                </div>
+                            </div>
+
+                            <div class="cart-meta-grid">
+                                <div class="cart-meta">
+                                    <span>Pickup Date</span>
+                                    <strong>{{ $pickupDate }}</strong>
+                                </div>
+                                <div class="cart-meta">
+                                    <span>Delivery Date</span>
+                                    <strong>{{ $deliveryDate }}</strong>
+                                </div>
+                                <div class="cart-meta">
+                                    <span>Transit Time</span>
+                                    <strong>{{ optional($route)->transit_days ? $route->transit_days . ' Day' . ($route->transit_days > 1 ? 's' : '') : '-' }}</strong>
+                                </div>
+                                <div class="cart-meta">
+                                    <span>Status</span>
+                                    <strong class="{{ $shipmentHasError ? 'text-review' : 'text-ready' }}">
+                                        {{ $shipmentHasError ? 'Needs Review' : 'Ready' }}
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div class="cart-item-list">
+                                @foreach($shipmentItems as $item)
+                                    @php
+                                        $volumetricWeight = $item->price_breakdown['volumetric_weight_kg'] ?? $item->volumetric_weight_kg;
+                                        $actualTotalWeight = round((float) $item->weight_kg * (int) $item->quantity, 2);
+                                        $isVolumeBasis = $item->charge_basis === 'volume';
+                                    @endphp
+                                    <div class="item-row">
+                                        <div class="item-thumb"><svg viewBox="0 0 32 32"><use href="#{{ $itemIcon($item->item_type) }}"></use></svg></div>
+
+                                        <div class="item-info">
+                                            <div class="item-name">{{ $item->item_name }}</div>
+                                            <div class="item-type">{{ $item->item_type ? str_replace('_', ' ', $item->item_type) : 'Shipment item' }}</div>
+                                            <div class="item-specs">
+                                                <span class="mono">{{ $item->length_cm ? number_format($item->length_cm, 0) : '-' }}×{{ $item->width_cm ? number_format($item->width_cm, 0) : '-' }}×{{ number_format($item->height_cm, 0) }} cm</span>
+                                                <span class="sep"></span>
+                                                <span class="mono">Qty {{ $item->quantity }}</span>
+                                            </div>
+                                        </div>
+
+                                        @if($item->price_error)
+                                            <span class="cart-row-error" title="{{ $item->price_error }}" style="grid-column: span 3;">
+                                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor"><use href="#ico-alert"></use></svg> {{ $item->price_error }}
+                                            </span>
+                                        @else
+                                            <div class="weight-compare">
+                                                <div class="metric {{ !$isVolumeBasis ? 'winner' : '' }}"><span>Actual</span><b>{{ number_format($actualTotalWeight, 2) }} kg</b></div>
+                                                <div class="metric {{ $isVolumeBasis ? 'winner' : '' }}"><span>Volumetric</span><b>{{ $volumetricWeight !== null ? number_format($volumetricWeight, 2) : '0.00' }} kg</b></div>
+                                            </div>
+
+                                            <span class="basis-chip {{ $item->charge_basis }}">{{ $isVolumeBasis ? 'Volume' : 'Weight' }}</span>
+
+                                            <div class="item-price">
+                                                <span class="amount">₹{{ number_format($item->calculated_price, 2) }}</span>
+                                                <span class="rate">{{ number_format($item->charge_weight_kg, 2) }} kg billed</span>
+                                            </div>
+                                        @endif
+
+                                        <div class="item-actions">
+                                            @unless($item->booking_status)
+                                                <a href="{{ route('shipment.cart.edit', $item->id) }}" class="icon-btn" title="Edit item">
+                                                    <svg viewBox="0 0 24 24"><use href="#ico-edit"></use></svg>
+                                                </a>
+                                                <a href="{{ route('shipment.cart.delete', $item->id) }}" class="icon-btn danger" title="Remove item" data-confirm="Remove this item from your cart?" data-confirm-ok="Yes, remove it" data-confirm-danger>
+                                                    <svg viewBox="0 0 24 24"><use href="#ico-trash"></use></svg>
+                                                </a>
+                                            @endunless
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <footer class="ship-group-foot">
+                                <span>{{ $shipmentIsPending ? 'Awaiting admin review — locked from edits' : 'Min charge applies per item only if the calculated price falls below it' }}</span>
+                                <span>Shipment Subtotal <b>₹{{ number_format($shipmentTotal, 2) }}</b></span>
+                            </footer>
+                        </article>
                     @endforeach
                 </div>
-            </div>
-        @endforeach
-    </div>
-</div>
 
-<style>
-    /* ===== Shipment card ===== */
-    .cart-item-card {
-        background: #ffffff;
-        border: 1px solid #E4E8F0;
-        border-radius: 14px;
-        padding: 22px 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(18, 33, 60, 0.04);
-        transition: box-shadow .2s ease, transform .2s ease;
-    }
+                <div class="cart-summary-panel">
+                    <h4>Order Summary</h4>
 
-    .cart-item-card:hover {
-        box-shadow: 0 14px 32px rgba(18, 33, 60, .1);
-    }
+                    <div class="cart-summary-line">
+                        <span>Shipment items</span>
+                        <strong>{{ $itemCount }}</strong>
+                    </div>
+                    <div class="cart-summary-line">
+                        <span>Total quantity</span>
+                        <strong>{{ $totalQuantity }}</strong>
+                    </div>
+                    <div class="cart-summary-line">
+                        <span>Pricing status</span>
+                        <strong>{{ $hasPriceIssue ? 'Review needed' : 'Ready' }}</strong>
+                    </div>
 
-    @media (prefers-reduced-motion: no-preference) {
-        .cart-item-card {
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity .5s ease, transform .5s cubic-bezier(.22, .9, .3, 1), box-shadow .2s ease;
-        }
+                    <div class="cart-summary-total">
+                        <span>Estimated total amount</span>
+                        <strong>₹{{ number_format($cartTotal, 2) }}</strong>
+                    </div>
 
-        .cart-item-card.in-view {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+                    <div class="cart-summary-actions">
+                        <form action="{{ route('shipment.cart.checkout') }}" method="POST" data-confirm="Are you sure you want to proceed with the checkout?" data-confirm-ok="Yes, proceed">
+                            @csrf
+                            <button type="submit" class="btn-cta" {{ !$hasCheckoutableItems || $hasPriceIssue ? 'disabled' : '' }}>
+                                Proceed to Booking
+                                <svg viewBox="0 0 24 24"><use href="#ico-arrow"></use></svg>
+                            </button>
+                        </form>
+                        <a href="{{ route('shipment.add_item') }}" class="cart-secondary-btn">
+                            <svg viewBox="0 0 24 24"><use href="#ico-plus"></use></svg>
+                            Add More Items
+                        </a>
+                    </div>
 
-    .cart-item-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
+                    <p class="cart-checkout-note">Each item is billed on whichever is higher — actual weight or volumetric weight — at the route's per-kg rate, with a per-item minimum applied automatically.</p>
 
-    .cart-item-title {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-    }
-
-    .cart-item-icon {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        border-radius: 10px;
-        background: #101820;
-        color: #ff7a45;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-
-    .cart-item-title h5 {
-        margin: 0 0 2px;
-        font-weight: 700;
-        color: #101820;
-        font-size: 16px;
-    }
-
-    .cart-item-title small {
-        color: #667085;
-        font-size: 13px;
-    }
-
-    .cart-shipment-count {
-        font-size: 12px;
-        color: #98A2B3;
-        margin-top: 4px;
-    }
-
-    .cart-price {
-        text-align: right;
-        font-weight: 700;
-        font-size: 18px;
-        color: #101820;
-        white-space: nowrap;
-    }
-
-    .cart-price span {
-        display: block;
-        font-weight: 500;
-        font-size: 11px;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-        color: #98A2B3;
-        margin-bottom: 2px;
-    }
-
-    .cart-error {
-        background: #FEF3F2;
-        color: #B42318;
-        border: 1px solid #FECDCA;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    /* ===== Route strip ===== */
-    .cart-route-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #F8F9FC;
-        border: 1px solid #EEF1F6;
-        border-radius: 10px;
-        padding: 12px 18px;
-        margin-bottom: 14px;
-    }
-
-    .cart-city {
-        font-weight: 700;
-        color: #101820;
-        font-size: 15px;
-    }
-
-    .cart-route-arrow {
-        color: #ff7a45;
-        font-size: 16px;
-    }
-
-    /* ===== Meta grid ===== */
-    .cart-meta-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-    }
-
-    .cart-meta {
-        background: #FBFBFD;
-        border: 1px solid #EEF1F6;
-        border-radius: 8px;
-        padding: 8px 12px;
-    }
-
-    .cart-meta span {
-        display: block;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: .03em;
-        color: #98A2B3;
-        margin-bottom: 3px;
-    }
-
-    .cart-meta strong {
-        font-size: 13px;
-        color: #101820;
-    }
-
-    .text-success { color: #067647 !important; }
-    .text-danger { color: #B42318 !important; }
-
-    /* ===== Item list ===== */
-    .cart-item-list {
-        margin-top: 18px;
-        border-top: 1px dashed #E4E8F0;
-        padding-top: 14px;
-    }
-
-    .cart-item-list-head {
-        display: grid;
-        grid-template-columns: 2.2fr 1.4fr .7fr 1fr 1fr 1fr .9fr;
-        gap: 10px;
-        padding: 0 14px 8px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .03em;
-        color: #98A2B3;
-    }
-
-    .cart-item-row {
-        display: grid;
-        grid-template-columns: 2.2fr 1.4fr .7fr 1fr 1fr 1fr .9fr;
-        gap: 10px;
-        align-items: center;
-        background: #FBFBFD;
-        border: 1px solid #EEF1F6;
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 8px;
-        transition: border-color .15s ease, box-shadow .15s ease;
-    }
-
-    .cart-item-row:hover {
-        border-color: #D6DCE8;
-        box-shadow: 0 2px 8px rgba(18, 33, 60, 0.06);
-    }
-
-    .cart-item-row:last-child {
-        margin-bottom: 0;
-    }
-
-    .col-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-    }
-
-    .cart-row-icon {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
-        border-radius: 8px;
-        background: #EEF1F6;
-        color: #101820;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-    }
-
-    .cart-row-text {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
-    .cart-row-text strong {
-        font-size: 13.5px;
-        color: #101820;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .cart-row-text small {
-        font-size: 11.5px;
-        color: #98A2B3;
-    }
-
-    .col-dim,
-    .col-qty,
-    .col-weight,
-    .col-volume {
-        font-size: 13px;
-        color: #344054;
-    }
-
-    .col-price {
-        font-weight: 700;
-        color: #101820;
-        font-size: 13.5px;
-    }
-
-    .charge-line {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-top: 5px;
-    }
-
-    .basis-chip {
-        display: inline-flex;
-        align-items: center;
-        font-size: 10.5px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .02em;
-        padding: 2px 7px;
-        border-radius: 20px;
-        border: 1px solid;
-        white-space: nowrap;
-    }
-
-    .basis-chip.weight {
-        color: #175CD3;
-        background: #EAF2FF;
-        border-color: #C8DDFF;
-    }
-
-    .basis-chip.volume {
-        color: #6941C6;
-        background: #F4EBFF;
-        border-color: #E2D2FB;
-    }
-
-    .charge-kg {
-        font-size: 11.5px;
-        color: #667085;
-    }
-
-    .cart-pending-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11.5px;
-        font-weight: 700;
-        color: #b5750c;
-        background: #fff6e8;
-        border: 1px solid #ffe1ab;
-        padding: 5px 10px;
-        border-radius: 20px;
-        white-space: nowrap;
-    }
-
-    .cart-row-error {
-        color: #B42318;
-        font-weight: 600;
-        font-size: 12px;
-        cursor: help;
-    }
-
-    .col-actions {
-        display: flex;
-        gap: 6px;
-        justify-content: flex-end;
-    }
-
-    .cart-row-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        border: 1px solid transparent;
-        text-decoration: none;
-        transition: all .15s ease;
-    }
-
-    .cart-row-btn-edit {
-        background: #EAF2FF;
-        color: #175CD3;
-    }
-
-    .cart-row-btn-edit:hover {
-        background: #175CD3;
-        color: #fff;
-    }
-
-    .cart-row-btn-delete {
-        background: #FEF3F2;
-        color: #B42318;
-    }
-
-    .cart-row-btn-delete:hover {
-        background: #B42318;
-        color: #fff;
-    }
-
-    /* ===== Responsive: stack rows on small screens ===== */
-    @media (max-width: 767px) {
-        .cart-item-list-head {
-            display: none;
-        }
-
-        .cart-item-row {
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-
-        .cart-item-row > span:not(.col-item) {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            border-top: 1px dashed #EEF1F6;
-            padding-top: 6px;
-        }
-
-        .cart-item-row > span[data-label]:not(.col-item)::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: #98A2B3;
-            text-transform: uppercase;
-            font-size: 10.5px;
-            letter-spacing: .03em;
-        }
-
-        .col-actions {
-            justify-content: flex-start;
-            border-top: 1px dashed #EEF1F6;
-            padding-top: 8px;
-        }
-
-        .cart-meta-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-</style>
-
-                <div class="col-lg-4">
-                    <div class="cart-summary-panel">
-                        <h4>Order Summary</h4>
-
-                        <div class="cart-summary-line">
-                            <span>Shipment items</span>
-                            <strong>{{ $itemCount }}</strong>
-                        </div>
-                        <div class="cart-summary-line">
-                            <span>Total quantity</span>
-                            <strong>{{ $totalQuantity }}</strong>
-                        </div>
-                        <div class="cart-summary-line">
-                            <span>Pricing status</span>
-                            <strong>{{ $hasPriceIssue ? 'Review needed' : 'Ready' }}</strong>
-                        </div>
-
-                        <div class="cart-summary-total">
-                            <strong>{{ number_format($cartTotal, 2) }}</strong>
-                            <span>Estimated total amount</span>
-                        </div>
-
-                        <div class="cart-summary-actions">
-                            <form action="{{ route('shipment.cart.checkout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="primary-btn1 btn-hover w-100 justify-content-center" {{ !$hasCheckoutableItems || $hasPriceIssue ? 'disabled' : '' }} onclick="return confirm('Save cart items to transport leads?')">
-                                    Proceed to booking
-                                    <span></span>
-                                </button>
-                            </form>
-                            <a href="{{ route('shipment.add_item') }}" class="cart-secondary-btn">
-                                <i class="bi bi-plus-circle"></i>
-                                Add More Items
-                            </a>
-                        </div>
-
-                        <div class="cart-checkout-note">
-                            After saving to leads, admin can review pickup, dispatch, delivery and payment updates.
-                        </div>
+                    <div class="cart-trust-grid">
+                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-pin"></use></svg>Live Tracking</div>
+                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-shield"></use></svg>Insured Move</div>
+                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-check"></use></svg>Verified Fleet</div>
                     </div>
                 </div>
             </div>
@@ -1078,10 +1025,6 @@
     (function () {
         var cards = document.querySelectorAll('.cart-item-card');
 
-        // Most carts are short enough that every card is already on-screen at
-        // load, so a scroll-triggered IntersectionObserver would fire before
-        // the browser ever paints the opacity:0 starting state — the reveal
-        // would be invisible. Trigger on load instead, staggered per card.
         cards.forEach(function (card, index) {
             var delay = 70 + Math.min(index * 90, 360);
             setTimeout(function () {

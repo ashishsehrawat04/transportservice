@@ -9,11 +9,10 @@ class CityRoute extends Model
     protected $fillable = [
         'from_city',
         'to_city',
-        'distance_km',
-        'base_rate_per_weight',
+        'rate_per_weight',
+        'transit_days',
         'min_charge',
         'is_active',
-        'base_rate_per_volume',
     ];
 
     protected $casts = [

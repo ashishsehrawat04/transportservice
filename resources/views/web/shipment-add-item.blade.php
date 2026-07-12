@@ -63,7 +63,7 @@
     }
 
     .select2-results__option--highlighted[aria-selected] {
-        background-color: #ff7a45;
+        background-color: var(--ot-green);
         color: #fff;
     }
 
@@ -93,41 +93,283 @@
     }
 
     .shipment-city-select + .select2-container .select2-selection--single {
-        height: 50px;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
+        height: 48px;
+        border: 1px solid var(--ot-line);
+        border-radius: 8px;
     }
 
     .shipment-city-select + .select2-container .select2-selection__rendered {
-        line-height: 50px;
+        line-height: 48px;
         padding-left: 12px;
         padding-right: 34px;
     }
 
     .shipment-city-select + .select2-container .select2-selection__arrow {
-        height: 50px;
+        height: 48px;
         right: 8px;
     }
 
     .select2-dropdown.shipment-city-dropdown {
-        border-color: #dee2e6;
+        border-color: var(--ot-line);
     }
 
     .select2-dropdown.shipment-city-dropdown .select2-search__field {
         min-height: 40px;
-        border: 1px solid #dee2e6;
+        border: 1px solid var(--ot-line);
         border-radius: 4px;
         outline: none;
     }
 </style>
 
 <style>
-    .estimate-panel {
-        margin-top: 16px;
-        background: #F8FAFC;
-        border: 1px solid #E4E8F0;
+    .booking-section {
+        padding: 110px 0 80px;
+        background:
+            radial-gradient(ellipse 900px 400px at 88% 0%, rgba(255, 122, 69, .06), transparent 60%),
+            var(--ot-bg);
+    }
+
+    .booking-panel {
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 16px;
+        box-shadow: var(--ot-shadow);
+        padding: 30px;
+    }
+
+    .booking-head {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--ot-line);
+    }
+
+    .booking-eyebrow {
+        color: var(--ot-amber-dark);
+        display: block;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+
+    .booking-head h2 {
+        font-size: 27px;
+        font-weight: 700;
+        margin: 5px 0 0;
+    }
+
+    .booking-panel .form-label {
+        color: var(--ot-ink-soft);
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: .01em;
+    }
+
+    .booking-panel .form-control,
+    .booking-panel select.form-control {
+        border: 1px solid var(--ot-line);
         border-radius: 8px;
-        padding: 20px;
+        min-height: 48px;
+        background: #fbfdfc;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .booking-panel textarea.form-control {
+        min-height: 92px;
+    }
+
+    .booking-panel .form-control:focus {
+        border-color: var(--ot-green);
+        box-shadow: 0 0 0 3px rgba(14, 143, 122, .12);
+        outline: none;
+        background: #fff;
+    }
+
+    .booking-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        color: var(--ot-muted);
+        margin: 30px 0 16px;
+    }
+
+    .booking-section-title::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--ot-line);
+    }
+
+    .item-card {
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 14px;
+        margin-bottom: 14px;
+        padding: 18px 20px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .item-card:hover {
+        border-color: rgba(14, 143, 122, .35);
+        box-shadow: var(--ot-shadow-sm);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .item-card.item-card-enter {
+            animation: itemCardEnter .35s cubic-bezier(.22, .9, .3, 1);
+        }
+    }
+
+    @keyframes itemCardEnter {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .item-card-head {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .item-card-title {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+    }
+
+    .item-card-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--ot-panel-tint);
+        border: 1px solid var(--ot-line);
+        display: grid;
+        place-items: center;
+        flex: none;
+    }
+
+    .item-card-icon svg { width: 19px; height: 19px; stroke: var(--ot-green-dark); fill: none; }
+
+    .item-card-head h5 {
+        font-family: var(--ot-display);
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .btn-outline-teal {
+        align-items: center;
+        background: transparent;
+        border: 1px solid var(--ot-green);
+        border-radius: 9px;
+        color: var(--ot-green-dark);
+        display: inline-flex;
+        font-family: var(--ot-display);
+        font-size: 13px;
+        font-weight: 600;
+        gap: 8px;
+        min-height: 46px;
+        padding: 0 18px;
+        transition: background .15s ease, color .15s ease;
+    }
+
+    .btn-outline-teal svg { width: 15px; height: 15px; stroke: currentColor; }
+
+    .btn-outline-teal:hover {
+        background: var(--ot-green);
+        color: #fff;
+    }
+
+    .btn-spinner {
+        display: none;
+        width: 15px;
+        height: 15px;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        opacity: .75;
+        flex: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .btn-spinner { animation: btnSpin .7s linear infinite; }
+    }
+
+    @keyframes btnSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    #calculateEstimateBtn.is-loading {
+        cursor: default;
+        opacity: .85;
+    }
+
+    #calculateEstimateBtn.is-loading .btn-spinner { display: inline-block; }
+    #calculateEstimateBtn.is-loading .btn-icon { display: none; }
+
+    .btn-remove-item {
+        align-items: center;
+        background: #fef3f2;
+        border: 1px solid #fecdca;
+        border-radius: 8px;
+        color: #b42318;
+        display: inline-flex;
+        font-size: 11.5px;
+        font-weight: 700;
+        gap: 5px;
+        padding: 6px 12px;
+    }
+
+    .btn-remove-item svg { width: 11px; height: 11px; stroke: currentColor; }
+
+    .btn-remove-item:hover {
+        background: #b42318;
+        border-color: #b42318;
+        color: #fff;
+    }
+
+    .btn-neutral-outline {
+        align-items: center;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 9px;
+        color: var(--ot-ink);
+        display: inline-flex;
+        font-family: var(--ot-display);
+        font-weight: 600;
+        font-size: 13.5px;
+        gap: 8px;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0 18px;
+    }
+
+    .btn-neutral-outline svg { width: 14px; height: 14px; stroke: currentColor; }
+
+    .btn-neutral-outline:hover {
+        background: var(--ot-panel-tint);
+        color: var(--ot-green-dark);
+    }
+</style>
+
+<style>
+    .estimate-panel {
+        margin-top: 18px;
+        background: var(--ot-panel-tint);
+        border: 1px solid rgba(14, 143, 122, .25);
+        border-radius: 14px;
+        padding: 20px 22px;
     }
 
     @media (prefers-reduced-motion: no-preference) {
@@ -147,7 +389,7 @@
 
     .estimate-skeleton-row {
         height: 44px;
-        border-radius: 8px;
+        border-radius: 10px;
         margin-bottom: 10px;
         background: linear-gradient(90deg, #EEF1F6 25%, #E4E8F0 37%, #EEF1F6 63%);
         background-size: 400% 100%;
@@ -170,9 +412,17 @@
     }
 
     .estimate-panel-header {
-        font-size: 14px;
-        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--ot-display);
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--ot-amber-dark);
+        margin-bottom: 14px;
     }
+
+    .estimate-panel-header svg { width: 16px; height: 16px; stroke: currentColor; }
 
     .estimate-item-row {
         display: flex;
@@ -180,10 +430,9 @@
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 10px;
-        padding: 8px 0;
-        border-bottom: 1px solid #E4E8F0;
+        padding: 9px 0;
+        border-bottom: 1px dashed rgba(14, 143, 122, .2);
         font-size: 13.5px;
-        color: #101820;
     }
 
     .estimate-item-row:last-child {
@@ -191,226 +440,94 @@
     }
 
     .estimate-item-index {
-        font-weight: 600;
-        min-width: 60px;
+        font-weight: 700;
+        min-width: 56px;
+        font-size: 12.5px;
+        color: var(--ot-ink-soft);
     }
 
     .estimate-item-figure {
-        color: #667085;
+        color: var(--ot-ink-soft);
+        font-family: var(--ot-mono);
         font-size: 12.5px;
     }
 
     .estimate-item-charge {
+        font-family: var(--ot-mono);
         font-weight: 700;
     }
 
     .estimate-summary {
         margin-top: 14px;
         padding-top: 14px;
-        border-top: 1px solid #E4E8F0;
+        border-top: 1px solid rgba(14, 143, 122, .25);
     }
 
     .estimate-summary-line {
         display: flex;
         justify-content: space-between;
-        font-size: 13.5px;
-        color: #667085;
-        padding: 3px 0;
+        font-size: 13px;
+        color: var(--ot-muted);
+        padding: 4px 0;
+    }
+
+    .estimate-summary-line span:last-child {
+        font-family: var(--ot-mono);
+        color: var(--ot-ink-soft);
     }
 
     .estimate-summary-total {
-        color: #101820;
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(14, 143, 122, .25);
+    }
+
+    .estimate-summary-total span:first-child {
         font-weight: 700;
-        font-size: 15px;
+        color: var(--ot-ink);
+        font-size: 14px;
+    }
+
+    .estimate-summary-total span:last-child {
+        color: var(--ot-green-dark) !important;
+        font-weight: 700;
+        font-size: 17px;
     }
 
     .basis-chip {
         display: inline-flex;
         align-items: center;
-        font-size: 10.5px;
-        font-weight: 700;
+        font-size: 10px;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: .02em;
-        padding: 2px 7px;
-        border-radius: 20px;
-        border: 1px solid;
+        letter-spacing: .04em;
+        padding: 3px 9px;
+        border-radius: 999px;
         white-space: nowrap;
     }
 
     .basis-chip.weight {
-        color: #175CD3;
-        background: #EAF2FF;
-        border-color: #C8DDFF;
+        color: var(--ot-sky);
+        background: rgba(47, 143, 224, .12);
+        border: 1px solid rgba(47, 143, 224, .3);
     }
 
     .basis-chip.volume {
-        color: #6941C6;
-        background: #F4EBFF;
-        border-color: #E2D2FB;
+        color: var(--ot-green-dark);
+        background: rgba(14, 143, 122, .1);
+        border: 1px solid rgba(14, 143, 122, .3);
     }
 </style>
 
-<style>
-    .booking-section {
-        background: #f5f7fb;
-        padding: 110px 0 80px;
-    }
-
-    .booking-panel {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
-        padding: 28px;
-    }
-
-    .booking-head {
-        align-items: center;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        justify-content: space-between;
-        margin-bottom: 22px;
-    }
-
-    .booking-eyebrow {
-        color: #ff7a45;
-        display: block;
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
-
-    .booking-head h2 {
-        color: #101820;
-        font-size: 26px;
-        font-weight: 800;
-        margin: 4px 0 0;
-    }
-
-    .booking-panel .form-label {
-        color: #344054;
-        font-size: 13px;
-        font-weight: 700;
-    }
-
-    .booking-panel .form-control,
-    .booking-panel select.form-control {
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        min-height: 46px;
-        transition: border-color .15s ease, box-shadow .15s ease;
-    }
-
-    .booking-panel textarea.form-control {
-        min-height: 92px;
-    }
-
-    .booking-panel .form-control:focus {
-        border-color: #0e8f7a;
-        box-shadow: 0 0 0 3px rgba(14, 143, 122, .12);
-        outline: none;
-    }
-
-    .booking-section-title {
-        color: #101820;
-        font-size: 15px;
-        font-weight: 800;
-        margin: 26px 0 14px;
-    }
-
-    .item-card {
-        background: #fbfbfd;
-        border: 1px solid #eef1f6;
-        border-radius: 10px;
-        margin-bottom: 14px;
-        padding: 18px;
-        transition: border-color .15s ease, box-shadow .15s ease;
-    }
-
-    .item-card:hover {
-        border-color: #d6dce8;
-        box-shadow: 0 4px 14px rgba(18, 33, 60, .05);
-    }
-
-    @media (prefers-reduced-motion: no-preference) {
-        .item-card.item-card-enter {
-            animation: itemCardEnter .35s cubic-bezier(.22, .9, .3, 1);
-        }
-    }
-
-    @keyframes itemCardEnter {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .item-card-head {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 14px;
-    }
-
-    .item-card-head h5 {
-        color: #101820;
-        font-size: 14.5px;
-        font-weight: 800;
-        margin: 0;
-    }
-
-    .btn-outline-teal {
-        background: transparent;
-        border: 1px solid #0e8f7a;
-        border-radius: 6px;
-        color: #0a6c5c;
-        font-size: 13px;
-        font-weight: 800;
-        min-height: 46px;
-        padding: 0 18px;
-        transition: background .15s ease, color .15s ease;
-    }
-
-    .btn-outline-teal:hover {
-        background: #0e8f7a;
-        color: #fff;
-    }
-
-    .btn-remove-item {
-        background: #fef3f2;
-        border: 1px solid #fecdca;
-        border-radius: 6px;
-        color: #b42318;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 5px 12px;
-    }
-
-    .btn-remove-item:hover {
-        background: #b42318;
-        border-color: #b42318;
-        color: #fff;
-    }
-
-    .btn-neutral-outline {
-        align-items: center;
-        background: #fff;
-        border: 1px solid #d1d5db;
-        border-radius: 6px;
-        color: #101820;
-        display: inline-flex;
-        font-weight: 700;
-        gap: 8px;
-        justify-content: center;
-        min-height: 46px;
-        padding: 0 18px;
-    }
-
-    .btn-neutral-outline:hover {
-        background: #f9fafb;
-        color: #101820;
-    }
-</style>
+<svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
+    <symbol id="ai-calc" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"></rect><path d="M8 6h8M8 11h1M12 11h1M16 11h1M8 15h1M12 15h1M16 15h1M8 19h1M12 19h1"></path></symbol>
+    <symbol id="ai-plus" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></symbol>
+    <symbol id="ai-trash" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></symbol>
+    <symbol id="ai-box" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l12-6 12 6-12 6z"></path><path d="M4 10v12l12 6 12-6V10"></path><path d="M16 16v12"></path></symbol>
+    <symbol id="ai-bike" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="22" r="5"></circle><circle cx="24" cy="22" r="5"></circle><path d="M8 22l6-11h6l4 11"></path><path d="M14 11h6"></path><path d="M14 22h10"></path></symbol>
+    <symbol id="ai-electronics" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="24" height="16" rx="1.6"></rect><path d="M12 26h8M16 22v4"></path></symbol>
+    <symbol id="ai-sparkle" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path></symbol>
+</svg>
 
 <section class="booking-section">
     <div class="container">
@@ -422,10 +539,10 @@
                             <span class="booking-eyebrow">Shipment</span>
                             <h2>Add Shipment</h2>
                         </div>
-                        <a href="{{ route('shipment.cart') }}" class="primary-btn1 btn-hover">
+                        <!-- <a href="{{ route('shipment.cart') }}" class="primary-btn1 btn-hover">
                             My Cart
                             <span></span>
-                        </a>
+                        </a> -->
                     </div>
 
                     @if ($errors->any())
@@ -492,8 +609,13 @@
                         <div id="shipmentItems">
                             <div class="shipment-item-row item-card">
                                 <div class="item-card-head">
-                                    <h5>Item 1</h5>
-                                    <button type="button" class="btn-remove-item remove-item" style="display:none;">Delete</button>
+                                    <div class="item-card-title">
+                                        <span class="item-card-icon"><svg viewBox="0 0 32 32"><use href="#ai-box" class="item-type-icon-use"></use></svg></span>
+                                        <h5>Item 1</h5>
+                                    </div>
+                                    <button type="button" class="btn-remove-item remove-item" style="display:none;">
+                                        <svg viewBox="0 0 24 24"><use href="#ai-trash"></use></svg> Delete
+                                    </button>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
@@ -502,7 +624,7 @@
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label"> Shipment Item Type</label>
-                                        <select name="items[0][item_type]" class="form-control" required>
+                                        <select name="items[0][item_type]" class="form-control item-type-select" required>
                                             <option value="">Select item type</option>
                                             @foreach($itemTypes as $itemType)
                                                 <option value="{{ $itemType }}" {{ old('items.0.item_type') == $itemType ? 'selected' : '' }}>
@@ -537,7 +659,19 @@
 
                         <div class="d-flex justify-content-start">
                             <button type="button" class="btn-outline-teal" id="calculateEstimateBtn">
-                                <i class="bi bi-calculator"></i> Calculate Estimate
+                                <svg class="btn-icon" viewBox="0 0 24 24"><use href="#ai-calc"></use></svg>
+                                <span class="btn-spinner"></span>
+                                <span id="calculateEstimateLabel">Calculate Estimate</span>
+                            </button>
+                        </div>
+
+                         <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
+                            <button type="button" class="btn-neutral-outline" id="addMoreItem">
+                                <svg viewBox="0 0 24 24"><use href="#ai-plus"></use></svg> Add More
+                            </button>
+                            <button type="submit" class="primary-btn1 btn-hover">
+                                Add To Cart
+                                <span></span>
                             </button>
                         </div>
                         <div class="text-danger small mt-2 d-none" id="estimateError"></div>
@@ -548,11 +682,15 @@
                         </div>
 
                         <div class="estimate-panel d-none" id="estimateResult">
-                            <div class="estimate-panel-header" style="color:#ff7a45; font-weight:600;">Estimated Price</div>
+                            <div class="estimate-panel-header"><svg viewBox="0 0 24 24"><use href="#ai-sparkle"></use></svg> Estimated Price</div>
                             <div id="estimateItemsList"></div>
                             <div class="estimate-summary">
                                 <div class="estimate-summary-line">
-                                    <span>Route Fair Charges</span>
+                                    <span>Transit Time</span>
+                                    <span id="estimateTransitTime">-</span>
+                                </div>
+                                <div class="estimate-summary-line">
+                                    <span>Min Charge (per item)</span>
                                     <span id="estimateMinCharge">₹0.00</span>
                                 </div>
                                 <div class="estimate-summary-line">
@@ -566,13 +704,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between flex-wrap gap-3 mt-4">
-                            <button type="button" class="btn-neutral-outline" id="addMoreItem">Add More</button>
-                            <button type="submit" class="primary-btn1 btn-hover">
-                                Save To Cart
-                                <span></span>
-                            </button>
-                        </div>
+
                     </form>
                 </div>
             </div>
@@ -594,6 +726,20 @@
             'to_city' => $route->to_city,
         ])->values());
 
+        const typeIconMap = { bike: 'ai-bike', electronics: 'ai-electronics' };
+
+        function iconForType(type) {
+            return typeIconMap[type] || 'ai-box';
+        }
+
+        function syncTypeIcon(row) {
+            const select = row.querySelector('.item-type-select');
+            const use = row.querySelector('.item-type-icon-use');
+            if (select && use) {
+                use.setAttribute('href', '#' + iconForType(select.value));
+            }
+        }
+
         if (window.jQuery && jQuery.fn.select2) {
             jQuery('.shipment-city-select').select2({
                 width: '100%',
@@ -609,9 +755,15 @@
             const rows = itemsWrapper.querySelectorAll('.shipment-item-row');
             rows.forEach((row, index) => {
                 row.querySelector('h5').textContent = 'Item ' + (index + 1);
-                row.querySelector('.remove-item').style.display = rows.length > 1 ? 'inline-block' : 'none';
+                row.querySelector('.remove-item').style.display = rows.length > 1 ? 'inline-flex' : 'none';
             });
         }
+
+        itemsWrapper.addEventListener('change', function (event) {
+            if (event.target.classList.contains('item-type-select')) {
+                syncTypeIcon(event.target.closest('.shipment-item-row'));
+            }
+        });
 
         addButton.addEventListener('click', function () {
             const firstRow = itemsWrapper.querySelector('.shipment-item-row');
@@ -625,18 +777,21 @@
                 select.name = select.name.replace(/items\[\d+\]/, 'items[' + itemIndex + ']');
                 select.value = '';
             });
+            syncTypeIcon(newRow);
 
             newRow.classList.add('item-card-enter');
             itemsWrapper.appendChild(newRow);
             itemIndex++;
             refreshRows();
             newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            autoRecalcIfOpen();
         });
 
         itemsWrapper.addEventListener('click', function (event) {
-            if (event.target.classList.contains('remove-item')) {
+            if (event.target.closest('.remove-item')) {
                 event.target.closest('.shipment-item-row').remove();
                 refreshRows();
+                autoRecalcIfOpen();
             }
         });
 
@@ -652,6 +807,7 @@
         [fromCitySelect, toCitySelect].forEach(function (select) {
             select.addEventListener('change', function () {
                 cityRouteError.classList.add('d-none');
+                autoRecalcIfOpen();
             });
         });
 
@@ -669,24 +825,41 @@
         });
 
         const calculateEstimateBtn = document.getElementById('calculateEstimateBtn');
+        const calculateEstimateLabel = document.getElementById('calculateEstimateLabel');
         const estimateError = document.getElementById('estimateError');
         const estimateSkeleton = document.getElementById('estimateSkeleton');
         const estimateResult = document.getElementById('estimateResult');
         const estimateItemsList = document.getElementById('estimateItemsList');
+        const estimateTransitTime = document.getElementById('estimateTransitTime');
         const estimateMinCharge = document.getElementById('estimateMinCharge');
         const estimateItemsSubtotal = document.getElementById('estimateItemsSubtotal');
         const estimateGrandTotal = document.getElementById('estimateGrandTotal');
 
-        calculateEstimateBtn.addEventListener('click', async function (event) {
-            event.preventDefault();
+        function isEstimateOpen() {
+            return !estimateResult.classList.contains('d-none');
+        }
+
+        function debounce(fn, delay) {
+            let timer;
+            return function () {
+                clearTimeout(timer);
+                timer = setTimeout(fn, delay);
+            };
+        }
+
+        async function runEstimate() {
             estimateError.classList.add('d-none');
-            estimateResult.classList.add('d-none');
 
             if (!hasActiveRoute()) {
                 estimateError.textContent = 'Please select a valid active route first.';
                 estimateError.classList.remove('d-none');
+                estimateResult.classList.add('d-none');
                 return;
             }
+
+            calculateEstimateBtn.disabled = true;
+            calculateEstimateBtn.classList.add('is-loading');
+            calculateEstimateLabel.textContent = 'Calculating...';
 
             const items = [];
             itemsWrapper.querySelectorAll('.shipment-item-row').forEach(function (row) {
@@ -705,9 +878,6 @@
                 items: items,
             };
 
-            const originalLabel = calculateEstimateBtn.innerHTML;
-            calculateEstimateBtn.disabled = true;
-            calculateEstimateBtn.textContent = 'Calculating...';
             estimateSkeleton.classList.remove('d-none');
 
             try {
@@ -735,9 +905,7 @@
                     const isVolume = item.charge_basis === 'volume';
                     const chipClass = isVolume ? 'basis-chip volume' : 'basis-chip weight';
                     const chipLabel = isVolume ? 'Volume' : 'Weight';
-                    const figure = isVolume
-                        ? Number(item.volume_cft).toFixed(2) + ' cft'
-                        : Number(item.charge_weight_kg).toFixed(2) + ' kg';
+                    const figure = Number(item.charge_weight_kg).toFixed(2) + ' kg';
 
                     const row = document.createElement('div');
                     row.className = 'estimate-item-row';
@@ -749,6 +917,8 @@
                     estimateItemsList.appendChild(row);
                 });
 
+                const transitDays = data.route && data.route.transit_days;
+                estimateTransitTime.textContent = transitDays ? transitDays + (transitDays > 1 ? ' Days' : ' Day') : '-';
                 estimateMinCharge.textContent = '₹' + Number(data.min_charge).toFixed(2);
                 estimateItemsSubtotal.textContent = '₹' + Number(data.items_total).toFixed(2);
                 estimateGrandTotal.textContent = '₹' + Number(data.grand_total).toFixed(2);
@@ -761,7 +931,92 @@
                 estimateError.classList.remove('d-none');
             } finally {
                 calculateEstimateBtn.disabled = false;
-                calculateEstimateBtn.innerHTML = originalLabel;
+                calculateEstimateBtn.classList.remove('is-loading');
+                calculateEstimateLabel.textContent = 'Calculate Estimate';
+            }
+        }
+
+        const debouncedAutoRecalc = debounce(function () {
+            if (isEstimateOpen()) {
+                runEstimate();
+            }
+        }, 500);
+
+        function autoRecalcIfOpen() {
+            if (isEstimateOpen()) {
+                runEstimate();
+            }
+        }
+
+        itemsWrapper.addEventListener('input', function (event) {
+            if (event.target.matches('input[name$="[length_cm]"], input[name$="[width_cm]"], input[name$="[height_cm]"], input[name$="[weight_kg]"], input[name$="[quantity]"]')) {
+                debouncedAutoRecalc();
+            }
+        });
+
+        calculateEstimateBtn.addEventListener('click', function (event) {
+            event.preventDefault();
+            runEstimate();
+        });
+
+        function resetShipmentForm() {
+            shipmentForm.reset();
+
+            if (window.jQuery && jQuery.fn.select2) {
+                jQuery('.shipment-city-select').val('').trigger('change');
+            }
+
+            itemsWrapper.querySelectorAll('.shipment-item-row').forEach(function (row, index) {
+                if (index > 0) {
+                    row.remove();
+                }
+            });
+            itemIndex = 1;
+
+            const firstRow = itemsWrapper.querySelector('.shipment-item-row');
+            if (firstRow) {
+                firstRow.querySelectorAll('input').forEach(function (input) {
+                    input.value = input.name.includes('[quantity]') ? 1 : '';
+                });
+                firstRow.querySelectorAll('select').forEach(function (select) {
+                    select.value = '';
+                });
+                syncTypeIcon(firstRow);
+            }
+            refreshRows();
+
+            estimateResult.classList.add('d-none');
+            estimateSkeleton.classList.add('d-none');
+            estimateError.classList.add('d-none');
+            cityRouteError.classList.add('d-none');
+        }
+
+        function isBackForwardNavigation() {
+            if (window.performance && typeof performance.getEntriesByType === 'function') {
+                const entries = performance.getEntriesByType('navigation');
+                if (entries.length && entries[0].type === 'back_forward') {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Using the browser's Back button to return here — whether the page
+        // is served from bfcache or the browser just restores old field
+        // values on a fresh load — must not leave stale item data behind,
+        // or a stray "Add to Cart" click resubmits the same shipment again.
+        // Chrome applies its own field-value restoration late (after load,
+        // not at DOMContentLoaded), so the reset has to happen after that —
+        // hooking `load` plus a short fallback delay covers it reliably.
+        if (isBackForwardNavigation()) {
+            resetShipmentForm();
+            window.addEventListener('load', resetShipmentForm);
+            setTimeout(resetShipmentForm, 300);
+        }
+
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                resetShipmentForm();
             }
         });
     });

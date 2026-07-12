@@ -52,7 +52,6 @@ class TransportQuotePdfService
             'Dimensions: ' . $this->dimensions($quote),
             'Volume: ' . number_format((float) $quote->volume_cft, 2) . ' CFT',
             'Route: ' . (($quote->from_city ?: '-') . ' to ' . ($quote->to_city ?: '-')),
-            'Distance: ' . number_format((float) $quote->distance_km, 2) . ' KM',
             '',
             'Charges',
             ...$chargeLines,

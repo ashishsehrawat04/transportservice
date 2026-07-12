@@ -24,7 +24,6 @@ class TransportQuote extends Model
         'volume_cft',
         'from_city',
         'to_city',
-        'distance_km',
         'calculation_type',
         'base_price',
         'weight_charge',
@@ -70,6 +69,22 @@ class TransportQuote extends Model
         $lead->loadMissing(['user', 'cityRoute', 'latestPayment']);
         $invoiceNumber ??= $lead->latestPayment?->invoice_number;
 
+        // quote_data below is refreshed from the lead's current fields on
+        // every sync, but the per-item shipment breakdown and delivery
+        // address only exist at checkout time — preserve them instead of
+        // letting them get wiped out by later re-syncs (status changes,
+        // payments, admin edits, etc).
+        $existingData = self::where('transport_lead_id', $lead->id)->value('quote_data') ?? [];
+        $quoteData = $lead->toArray();
+
+        if (!empty($existingData['shipment_items'])) {
+            $quoteData['shipment_items'] = $existingData['shipment_items'];
+        }
+
+        if (!empty($existingData['transport_address'])) {
+            $quoteData['transport_address'] = $existingData['transport_address'];
+        }
+
         return self::updateOrCreate(
             ['transport_lead_id' => $lead->id],
             [
@@ -89,7 +104,6 @@ class TransportQuote extends Model
                 'volume_cft' => $lead->volume_cft,
                 'from_city' => optional($lead->cityRoute)->from_city,
                 'to_city' => optional($lead->cityRoute)->to_city,
-                'distance_km' => $lead->distance_km,
                 'calculation_type' => $lead->calculation_type,
                 'base_price' => $lead->base_price,
                 'weight_charge' => $lead->weight_charge,
@@ -109,7 +123,7 @@ class TransportQuote extends Model
                 'actual_delivery_date' => $lead->actual_delivery_date,
                 'admin_description' => $lead->admin_description,
                 'special_instructions' => $lead->special_instructions,
-                'quote_data' => $lead->toArray(),
+                'quote_data' => $quoteData,
             ]
         );
     }

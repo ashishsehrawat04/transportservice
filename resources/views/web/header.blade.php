@@ -738,7 +738,7 @@
                             <a href="{{ route('shipment.track') }}">Track & Trace</a>
                         </li>
                     </ul>
-                    <a class="primary-btn1 btn-hover d-xl-none" href="{{ route('shipment.track') }}">
+                    <!-- <a class="primary-btn1 btn-hover d-xl-none" href="{{ route('shipment.track') }}">
                         Track & Trace
                         <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
                             <g>
@@ -748,7 +748,7 @@
                             </g>
                         </svg>
                         <span></span>
-                    </a>
+                    </a> -->
                 </div>
             </div>
             <div class="nav-right">
@@ -874,17 +874,7 @@
                                 <div class="banner-content">
                                     <span>Doorstep Transport Service</span>
                                     <h1>Ship Your Home, Bike & Goods</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
-                                        Request A Quote
-                                        <svg width="10" height="10" viewBox="0 0 10 10"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <g>
-                                                <path
-                                                    d="M5.83333 4.16667V0H4.16667V4.16667H0V5.83333H4.16667V10H5.83333V5.83333H10V4.16667H5.83333Z" />
-                                            </g>
-                                        </svg>
-                                        <span></span>
-                                    </a>
+
                                 </div>
                             </div>
                         </div>
@@ -898,7 +888,7 @@
                             <div class="gif-cloud cloud-two"></div>
                             <div class="gif-city"></div>
                             <div class="gif-road"></div>
-                            <div class="gif-car"></div>
+                            <div class="gif-car"></div>r
                             <div class="gif-truck">
                                 <div class="box"></div>
                                 <div class="cab"></div>
@@ -912,7 +902,7 @@
                                 <div class="banner-content">
                                     <span>Route Based Premium</span>
                                     <h1>Know Your Transport Cost</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Request A Quote
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -922,7 +912,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -951,7 +941,7 @@
                                 <div class="banner-content">
                                     <span>Live Tracking</span>
                                     <h1>Track Pickup To Delivery</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Request A Quote
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -961,7 +951,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -989,7 +979,7 @@
                                 <div class="banner-content">
                                     <span>Admin Verified Requests</span>
                                     <h1>Reliable Shipment Approval</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Request A Quote
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -999,7 +989,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1027,7 +1017,7 @@
                                 <div class="banner-content">
                                     <span>Secure Transport</span>
                                     <h1>Your Goods. Our Priority.</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Request A Quote
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1038,7 +1028,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1067,7 +1057,7 @@
                                 <div class="banner-content">
                                     <span>Secure Payments</span>
                                     <h1>Invoice Ready Transport Billing</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.cart') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.cart') }}">
                                         View Cart
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1078,7 +1068,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1106,7 +1096,7 @@
                                 <div class="banner-content">
                                     <span>Scheduled Pickup</span>
                                     <h1>Choose Dates. We Move It.</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Book Pickup
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1117,7 +1107,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1145,7 +1135,7 @@
                                 <div class="banner-content">
                                     <span>Business & Office Moves</span>
                                     <h1>Bulk Goods With Clear Billing</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.track') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.track') }}">
                                         Track Shipment
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1156,7 +1146,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1184,7 +1174,7 @@
                                 <div class="banner-content">
                                     <span>Bike Transport</span>
                                     <h1>Move Your Bike City To City</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Add Bike
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1195,7 +1185,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1223,7 +1213,7 @@
                                 <div class="banner-content">
                                     <span>Home Shifting</span>
                                     <h1>Boxes, Furniture And Appliances</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.add_item') }}">
                                         Start Moving
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1234,7 +1224,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>
@@ -1262,7 +1252,7 @@
                                 <div class="banner-content">
                                     <span>Transparent Pricing</span>
                                     <h1>Route, Weight And Volume Based</h1>
-                                    <a class="primary-btn1 btn-hover" href="{{ route('shipment.cart') }}">
+                                    <!-- <a class="primary-btn1 btn-hover" href="{{ route('shipment.cart') }}">
                                         Check Cart
                                         <svg width="10" height="10" viewBox="0 0 10 10"
                                             xmlns="http://www.w3.org/2000/svg">
@@ -1273,7 +1263,7 @@
                                             </g>
                                         </svg>
                                         <span></span>
-                                    </a>
+                                    </a> -->
                                 </div>
                             </div>
                         </div>

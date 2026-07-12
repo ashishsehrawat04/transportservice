@@ -33,7 +33,6 @@
                                     <th>User</th>
                                     <th>Item</th>
                                     <th>Route</th>
-                                    <th>Distance</th>
                                     <th>Base Price</th>
                                     <th>Discount</th>
                                     <th>Total</th>
@@ -64,7 +63,7 @@
                             return json.data;
                         }
 
-                        alert(json.message);
+                        sweetNotify(json.message);
                         return [];
                     },
 
@@ -72,9 +71,9 @@
                         let response = xhr.responseJSON;
 
                         if (response && response.message) {
-                            alert(response.message);
+                            sweetNotify(response.message);
                         } else {
-                            alert('Something went wrong');
+                            sweetNotify('Something went wrong');
                         }
                     }
                 },
@@ -107,12 +106,6 @@
                             let fromCity = row.city_route ? row.city_route.from_city : '-';
                             let toCity = row.city_route ? row.city_route.to_city : '-';
                             return `${fromCity} to ${toCity}`;
-                        }
-                    },
-                    {
-                        data: 'distance_km',
-                        render: function(data) {
-                            return parseFloat(data || 0).toFixed(2) + ' KM';
                         }
                     },
                     {
@@ -163,9 +156,9 @@
                                 <div class="action-buttons">
                                 <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
                                 <a href="${quoteUrl}" class="btn btn-sm btn-info">Quote View</a>
-                                <a href="${quoteDownloadUrl}" class="btn btn-sm btn-warning">Quote PDF</a>
+                                <a href="${quoteDownloadUrl}" class="btn btn-sm btn-warning">Download PDF</a>
                                 ${invoiceButton}
-                                <a href="${deleteUrl}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                                <a href="${deleteUrl}" class="btn btn-sm btn-danger" data-label="${row.tracking_number || 'this lead'}">Delete</a>
                                 </div>
                             `;
                         }

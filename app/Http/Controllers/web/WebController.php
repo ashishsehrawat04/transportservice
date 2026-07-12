@@ -96,7 +96,7 @@ class WebController extends Controller
 
             $this->updateCartEstimate($cartItem);
 
-            if (auth()->check() && ($validated['pickup_address'] || $validated['delivery_address'])) {
+            if (auth()->check() && (($validated['pickup_address'] ?? null) || ($validated['delivery_address'] ?? null))) {
                 TransportAddress::create([
                     'user_id' => auth()->id(),
                     'item_id' => $cartItem->id,
@@ -147,6 +147,7 @@ class WebController extends Controller
                 'index' => $index,
                 'charge_basis' => $breakdown['charge_basis'],
                 'charge_weight_kg' => $breakdown['charge_weight_kg'],
+                'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
                 'volume_cft' => $breakdown['volume_cft'],
                 'item_charge' => $breakdown['total_payment'],
             ];
@@ -159,12 +160,15 @@ class WebController extends Controller
             'route' => [
                 'from_city' => $route->from_city,
                 'to_city' => $route->to_city,
-                'distance_km' => $route->distance_km,
+                'transit_days' => $route->transit_days,
             ],
+            // Min charge is a per-item floor (already applied inside each
+            // item's charge above), not an additive fee — kept here only
+            // for display.
             'min_charge' => $minCharge,
             'items' => $itemBreakdowns,
             'items_total' => $itemsTotal,
-            'grand_total' => round($minCharge + $itemsTotal, 2),
+            'grand_total' => $itemsTotal,
         ]);
     }
 
@@ -202,7 +206,7 @@ class WebController extends Controller
                     'estimated_total' => $calculatedPrice,
                     'charge_basis' => $breakdown['charge_basis'],
                     'charge_weight_kg' => $breakdown['charge_weight_kg'],
-                    'volumetric_weight_kg' => 0,
+                    'volumetric_weight_kg' => $breakdown['volumetric_weight_kg'],
                 ]);
             }
 
@@ -212,12 +216,7 @@ class WebController extends Controller
 
         $cartTotal = $cartItems
             ->filter(fn (TransportCartItem $item) => !$item->price_error && !$item->booking_status)
-            ->groupBy(fn (TransportCartItem $item) => $this->shipmentGroupKey($item))
-            ->sum(function ($shipmentItems) {
-                $route = $shipmentItems->first()->cityRoute;
-
-                return round((float) optional($route)->min_charge, 2) + $shipmentItems->sum('calculated_price');
-            });
+            ->sum('calculated_price');
 
         return view('web.shipment-cart', compact('cartItems', 'cartTotal'));
     }
@@ -294,6 +293,31 @@ class WebController extends Controller
         $cartItem->delete();
 
         return redirect()->route('shipment.cart')->with('success', 'Item removed from cart');
+    }
+
+    public function cancelShipment($leadId)
+    {
+        $lead = TransportLead::where('id', $leadId)
+            ->where('user_id', auth()->id())
+            ->whereIn('admin_status', ['pending', 'reviewed'])
+            ->first();
+
+        if (!$lead) {
+            return redirect()->route('shipment.cart')->with('error', 'This shipment can no longer be cancelled.');
+        }
+
+        DB::transaction(function () use ($lead) {
+            $lead->update([
+                'admin_status' => 'cancelled',
+                'user_status' => 'cancelled',
+            ]);
+
+            TransportCartItem::where('transport_lead_id', $lead->id)->delete();
+
+            TransportQuote::syncFromLead($lead->fresh(['user', 'cityRoute', 'latestPayment']));
+        });
+
+        return redirect()->route('shipment.cart')->with('success', 'Shipment cancelled.');
     }
 
     public function editShipmentCartItem($id)
@@ -416,56 +440,8 @@ class WebController extends Controller
         DB::transaction(function () use ($cartItems) {
             $cartItems->groupBy(fn (TransportCartItem $item) => $this->shipmentGroupKey($item))
                 ->each(function ($shipmentItems) {
-                    $firstItem = $shipmentItems->first();
-                    $route = $this->findRoute($firstItem);
-                    $breakdowns = $shipmentItems->map(function (TransportCartItem $item) use ($route) {
-                        return $this->pricingService->calculateCartItem($item, $route);
-                    });
-
-                    $transportLead = TransportLead::create(array_merge([
-                        'user_id' => auth()->id(),
-                        'item_name' => $this->shipmentItemName($shipmentItems),
-                        'item_type' => $shipmentItems->pluck('item_type')->filter()->unique()->count() === 1
-                            ? $shipmentItems->first()->item_type
-                            : 'multiple',
-                        'quantity' => $shipmentItems->sum('quantity'),
-                        'length_cm' => $shipmentItems->max('length_cm'),
-                        'width_cm' => $shipmentItems->max('width_cm'),
-                        'height_cm' => $shipmentItems->max('height_cm'),
-                        'weight_kg' => $shipmentItems->sum('weight_kg'),
-                        'volume_cft' => $breakdowns->sum('volume_cft'),
-                        'city_route_id' => $firstItem->city_route_id,
-                        'requested_pickup_date' => $firstItem->pickup_date,
-                        'expected_delivery_date' => $firstItem->delivery_date,
-                        'admin_status' => 'pending',
-                        'user_status' => 'pending',
-                        'payment_status' => 'unpaid',
-                        'tracking_number' => $this->generateTrackingNumber(),
-                    ], $this->aggregateShipmentBreakdown($breakdowns, $route)));
-
-                    $quote = TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
-                    $quoteData = $quote->quote_data ?: [];
-                    $quoteData['shipment_items'] = $shipmentItems->map(fn (TransportCartItem $item) => [
-                        'item_name' => $item->item_name,
-                        'item_type' => $item->item_type,
-                        'quantity' => $item->quantity,
-                        'length_cm' => $item->length_cm,
-                        'width_cm' => $item->width_cm,
-                        'height_cm' => $item->height_cm,
-                        'weight_kg' => $item->weight_kg,
-                        'estimated_total' => $item->estimated_total,
-                    ])->values()->all();
-
-                    $address = $shipmentItems->first(fn (TransportCartItem $item) => $item->transportAddress);
-                    if ($address?->transportAddress) {
-                        $quoteData['transport_address'] = [
-                            'pickup_address' => $address->transportAddress->pickup_address,
-                            'delivery_address' => $address->transportAddress->delivery_address,
-                            'status' => $address->transportAddress->status,
-                        ];
-                    }
-
-                    $quote->update(['quote_data' => $quoteData]);
+                    $route = $this->findRoute($shipmentItems->first());
+                    $transportLead = $this->createLeadFromShipmentItems($shipmentItems, $route);
 
                     TransportCartItem::whereIn('id', $shipmentItems->pluck('id'))->update([
                         'transport_lead_id' => $transportLead->id,
@@ -475,6 +451,132 @@ class WebController extends Controller
         });
 
         return redirect()->route('shipment.cart')->with('success', 'Cart saved to transport leads successfully.');
+    }
+
+    public function checkoutOneShipment(Request $request)
+    {
+        $validated = $request->validate([
+            'item_ids' => ['required', 'array', 'min:1'],
+            'item_ids.*' => ['integer'],
+        ]);
+
+        $shipmentItems = TransportCartItem::with(['cityRoute', 'transportAddress'])
+            ->where('user_id', auth()->id())
+            ->whereNull('booking_status')
+            ->whereIn('id', $validated['item_ids'])
+            ->get();
+
+        if ($shipmentItems->isEmpty()) {
+            return redirect()->route('shipment.cart')->with('error', 'These items are no longer in your cart.');
+        }
+
+        $route = $this->findRoute($shipmentItems->first());
+
+        if (!$route) {
+            return redirect()->route('shipment.cart')->with('error', 'Please add an active city route for this shipment before saving to leads.');
+        }
+
+        DB::transaction(function () use ($shipmentItems, $route) {
+            $transportLead = $this->createLeadFromShipmentItems($shipmentItems, $route);
+
+            TransportCartItem::whereIn('id', $shipmentItems->pluck('id'))->update([
+                'transport_lead_id' => $transportLead->id,
+                'booking_status' => 'pending',
+            ]);
+        });
+
+        return redirect()->route('shipment.cart')->with('success', 'Shipment saved to transport leads successfully.');
+    }
+
+    public function cancelFreshShipment(Request $request)
+    {
+        $validated = $request->validate([
+            'item_ids' => ['required', 'array', 'min:1'],
+            'item_ids.*' => ['integer'],
+        ]);
+
+        $shipmentItems = TransportCartItem::with(['cityRoute', 'transportAddress'])
+            ->where('user_id', auth()->id())
+            ->whereNull('booking_status')
+            ->whereIn('id', $validated['item_ids'])
+            ->get();
+
+        if ($shipmentItems->isEmpty()) {
+            return redirect()->route('shipment.cart')->with('error', 'These items are no longer in your cart.');
+        }
+
+        $route = $this->findRoute($shipmentItems->first());
+
+        DB::transaction(function () use ($shipmentItems, $route) {
+            if ($route) {
+                $this->createLeadFromShipmentItems($shipmentItems, $route, [
+                    'admin_status' => 'cancelled',
+                    'user_status' => 'cancelled',
+                ]);
+            }
+
+            TransportCartItem::whereIn('id', $shipmentItems->pluck('id'))->delete();
+        });
+
+        return redirect()->route('shipment.cart')->with('success', 'Shipment cancelled.');
+    }
+
+    private function createLeadFromShipmentItems($shipmentItems, CityRoute $route, array $statusOverrides = []): TransportLead
+    {
+        $firstItem = $shipmentItems->first();
+        $breakdowns = $shipmentItems->map(function (TransportCartItem $item) use ($route) {
+            return $this->pricingService->calculateCartItem($item, $route);
+        });
+
+        $transportLead = TransportLead::create(array_merge([
+            'user_id' => auth()->id(),
+            'item_name' => $this->shipmentItemName($shipmentItems),
+            'item_type' => $shipmentItems->pluck('item_type')->filter()->unique()->count() === 1
+                ? $shipmentItems->first()->item_type
+                : 'multiple',
+            'quantity' => $shipmentItems->sum('quantity'),
+            'length_cm' => $shipmentItems->max('length_cm'),
+            'width_cm' => $shipmentItems->max('width_cm'),
+            'height_cm' => $shipmentItems->max('height_cm'),
+            'weight_kg' => $shipmentItems->sum('weight_kg'),
+            'volume_cft' => $breakdowns->sum('volume_cft'),
+            'city_route_id' => $firstItem->city_route_id,
+            'requested_pickup_date' => $firstItem->pickup_date,
+            'expected_delivery_date' => $firstItem->delivery_date,
+            'admin_status' => 'pending',
+            'user_status' => 'pending',
+            'payment_status' => 'unpaid',
+            'tracking_number' => $this->generateTrackingNumber(),
+        ], $this->aggregateShipmentBreakdown($breakdowns, $route), $statusOverrides));
+
+        $quote = TransportQuote::syncFromLead($transportLead->fresh(['user', 'cityRoute', 'latestPayment']));
+        $quoteData = $quote->quote_data ?: [];
+        $quoteData['shipment_items'] = $shipmentItems->map(fn (TransportCartItem $item) => [
+            'item_name' => $item->item_name,
+            'item_type' => $item->item_type,
+            'quantity' => $item->quantity,
+            'length_cm' => $item->length_cm,
+            'width_cm' => $item->width_cm,
+            'height_cm' => $item->height_cm,
+            'weight_kg' => $item->weight_kg,
+            'charge_basis' => $item->charge_basis,
+            'charge_weight_kg' => $item->charge_weight_kg,
+            'volumetric_weight_kg' => $item->volumetric_weight_kg,
+            'estimated_total' => $item->estimated_total,
+        ])->values()->all();
+
+        $address = $shipmentItems->first(fn (TransportCartItem $item) => $item->transportAddress);
+        if ($address?->transportAddress) {
+            $quoteData['transport_address'] = [
+                'pickup_address' => $address->transportAddress->pickup_address,
+                'delivery_address' => $address->transportAddress->delivery_address,
+                'status' => $address->transportAddress->status,
+            ];
+        }
+
+        $quote->update(['quote_data' => $quoteData]);
+
+        return $transportLead;
     }
 
     private function cartQuery()
@@ -541,7 +643,6 @@ class WebController extends Controller
         $itemsTotal = $breakdowns->sum('total_payment');
 
         return [
-            'distance_km' => $breakdowns->max('distance_km'),
             'calculation_type' => $calculationTypes->count() === 1 ? $calculationTypes->first() : 'mixed',
             'base_price' => $minCharge,
             'weight_charge' => $breakdowns->sum('weight_charge'),
@@ -551,7 +652,9 @@ class WebController extends Controller
             'subtotal' => $itemsTotal,
             'tax_amount' => $breakdowns->sum('tax_amount'),
             'discount_amount' => $breakdowns->sum('discount_amount'),
-            'total_payment' => round($minCharge + $itemsTotal, 2),
+            // min_charge is a per-item floor already baked into each
+            // breakdown's total_payment above — not added again here.
+            'total_payment' => round($itemsTotal, 2),
         ];
     }
 

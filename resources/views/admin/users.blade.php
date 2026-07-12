@@ -114,7 +114,7 @@
                         return json.data;
                     }
 
-                    alert(json.message);
+                    sweetNotify(json.message);
 
                     return [];
                 },
@@ -124,9 +124,9 @@
                     let response = xhr.responseJSON;
 
                     if (response && response.message) {
-                        alert(response.message);
+                        sweetNotify(response.message);
                     } else {
-                        alert('Something went wrong');
+                        sweetNotify('Something went wrong');
                     }
 
                     console.error(xhr);
@@ -168,7 +168,7 @@
 
                             <a href="${delete_url}"
                             class="btn btn-sm btn-danger"
-                            onclick="return confirm('Are you sure?')">
+                            data-label="${row.name || 'this user'}">
                                 Delete
                             </a>
                             </div>
@@ -198,12 +198,6 @@
           $("#addRowModal").modal("hide");
         });
 
-        // Edit Button
-        $(document).on('click', '.editBtn', function () {
-            let id = $(this).data('id');
-            alert("Edit ID: " + id);
-        });
-
         $(document).on('click', '.viewUserBtn', function () {
             let id = $(this).data('id');
             let userDetailsUrl = "{{ url('admin/get-users') }}" + "/" + id;
@@ -213,7 +207,7 @@
                 method: 'GET',
                 success: function (json) {
                     if (json.status !== true) {
-                        alert(json.message || 'User details not found');
+                        sweetNotify(json.message || 'User details not found');
                         return;
                     }
 
@@ -234,15 +228,9 @@
                 },
                 error: function(xhr) {
                     let response = xhr.responseJSON;
-                    alert(response && response.message ? response.message : 'Something went wrong');
+                    sweetNotify(response && response.message ? response.message : 'Something went wrong');
                 }
             });
-        });
-
-        // Delete Button
-        $(document).on('click', '.deleteBtn', function () {
-            let id = $(this).data('id');
-            alert("Delete ID: " + id);
         });
     });
 </script>

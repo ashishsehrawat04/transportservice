@@ -61,7 +61,7 @@
                         return json.data;
                     }
 
-                    alert(json.message);
+                    sweetNotify(json.message);
                     return [];
                 },
 
@@ -69,9 +69,9 @@
                     let response = xhr.responseJSON;
 
                     if (response && response.message) {
-                        alert(response.message);
+                        sweetNotify(response.message);
                     } else {
-                        alert('Something went wrong');
+                        sweetNotify('Something went wrong');
                     }
                 }
             },
@@ -130,7 +130,7 @@
                         return `
                             <div class="action-buttons">
                             <a href="${editUrl}" class="btn btn-sm btn-primary">Edit</a>
-                            <a href="${deleteUrl}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                            <a href="${deleteUrl}" class="btn btn-sm btn-danger" data-label="${row.item_type || 'this price rule'}">Delete</a>
                             </div>
                         `;
                     }

@@ -1,17 +1,44 @@
+/* Oswald — SIL OFL licensed, modeled on highway/transit signage lettering.
+   Used for headings, buttons and price figures across the customer site. */
+@font-face {
+  font-family: 'Oswald';
+  src: url('../fonts/Oswald-Variable.ttf') format('truetype');
+  font-weight: 200 700;
+  font-display: swap;
+}
+
 :root {
   --ot-ink: #101820;
   --ot-ink-soft: #24333b;
   --ot-muted: #65727a;
   --ot-line: #dfe8e5;
   --ot-panel: #ffffff;
+  --ot-panel-tint: #e7f5f1;
   --ot-bg: #f4f7f6;
   --ot-green: #0e8f7a;
   --ot-green-dark: #0a6c5c;
   --ot-amber: #ff7a45;
+  --ot-amber-dark: #e35d29;
   --ot-sky: #2f8fe0;
   --ot-red: #d94c43;
+  --ot-gold: #b5750c;
+  --ot-gold-bg: #fff6e8;
+  --ot-gold-line: #ffe1ab;
+  --ot-shadow-sm: 0 1px 2px rgba(16, 24, 32, .06);
   --ot-shadow: 0 18px 45px rgba(16, 24, 32, .09);
   --ot-shadow-lg: 0 26px 70px rgba(16, 24, 32, .16);
+  --ot-display: 'Oswald', 'Segoe UI Semibold', system-ui, sans-serif;
+  --ot-mono: Consolas, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
+}
+
+.ot-display {
+  font-family: var(--ot-display);
+}
+
+.ot-mono {
+  font-family: var(--ot-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 html {
@@ -92,6 +119,7 @@ button,
 }
 
 .primary-btn1,
+.primary-btn2,
 .btn-success,
 .btn-primary {
   border: 0;
@@ -99,9 +127,12 @@ button,
   background: linear-gradient(135deg, var(--ot-green), var(--ot-green-dark)) !important;
   color: #fff !important;
   box-shadow: 0 16px 32px rgba(14, 143, 122, .22);
+  font-family: var(--ot-display);
+  letter-spacing: .02em;
 }
 
 .primary-btn1:hover,
+.primary-btn2:hover,
 .btn-success:hover,
 .btn-primary:hover {
   transform: translateY(-2px);
@@ -109,7 +140,9 @@ button,
 }
 
 .primary-btn1.white-bg,
-.primary-btn1.white-bg:hover {
+.primary-btn1.white-bg:hover,
+.primary-btn2.white-bg,
+.primary-btn2.white-bg:hover {
   background: #fff !important;
   color: var(--ot-ink) !important;
   box-shadow: 0 12px 28px rgba(16, 24, 32, .11);
@@ -189,6 +222,12 @@ h4,
 h5 {
   color: var(--ot-ink);
   letter-spacing: 0;
+  font-family: var(--ot-display);
+}
+
+.header-logo-text,
+.brand-mark-text {
+  font-family: var(--ot-display);
 }
 
 .service-tile,
@@ -213,6 +252,11 @@ div[style*="background:#fff; border:1px solid #e7e7e7"] {
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--ot-shadow-lg) !important;
+}
+
+.stat-tile strong {
+  font-family: var(--ot-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .tile-icon,
