@@ -365,6 +365,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.warehouses') || request()->routeIs('admin.manage.warehouse') ? 'active' : '' }}">
+                    <a href="{{ route('admin.warehouses') }} ">
+                    <i class="fas fa-warehouse"></i>
+                    <p>Warehouses</p>
+                    </a>
+                </li>
+
                 <!-- <li class="nav-item {{ request()->routeIs('admin.transport_prices') ? 'active' : '' }}">
                     <a href="{{ route('admin.transport_prices') }} ">
                     <i class="fas fa-dollar-sign"></i>
@@ -376,6 +383,13 @@
                     <a href="{{ route('admin.transport_leads') }} ">
                     <i class="fas fa-truck"></i>
                     <p>Transport Leads</p>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.warehouse_leads') || request()->routeIs('admin.manage.warehouse_lead') ? 'active' : '' }}">
+                    <a href="{{ route('admin.warehouse_leads') }} ">
+                    <i class="fas fa-boxes-stacked"></i>
+                    <p>Warehouse Leads</p>
                     </a>
                 </li>
 

@@ -11,6 +11,9 @@ use App\Models\TransportLead;
 use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
 use App\Models\ShipmentPayment;
+use App\Models\Warehouse;
+use App\Models\WarehouseLead;
+use App\Models\WarehousePayment;
 
 
 class ApiController extends Controller
@@ -219,6 +222,92 @@ class ApiController extends Controller
             return Response::success(
                 $quotes,
                 'Transport quotes fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetWarehouses()
+    {
+        try {
+            $warehouses = Warehouse::get();
+
+            if ($warehouses->isEmpty()) {
+                return Response::error(
+                    'No warehouses found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $warehouses,
+                'Warehouses fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetWarehouseLeads()
+    {
+        try {
+            $leads = WarehouseLead::with(['user:id,name,email', 'warehouse', 'assignedUser:id,name'])
+                ->latest()
+                ->get();
+
+            if ($leads->isEmpty()) {
+                return Response::error(
+                    'No warehouse leads found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $leads,
+                'Warehouse leads fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetWarehousePayments()
+    {
+        try {
+            $payments = WarehousePayment::with([
+                    'user:id,name,email,mobile',
+                    'warehouseLead:id,tracking_number,item_name,warehouse_id',
+                    'warehouseLead.warehouse',
+                ])
+                ->latest()
+                ->get();
+
+            if ($payments->isEmpty()) {
+                return Response::error(
+                    'No warehouse payments found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $payments,
+                'Warehouse payments fetched successfully',
                 200
             );
 

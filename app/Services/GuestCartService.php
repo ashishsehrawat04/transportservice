@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TransportCartItem;
+use App\Models\WarehouseCartItem;
 use Illuminate\Support\Str;
 
 class GuestCartService
@@ -23,6 +24,12 @@ class GuestCartService
         }
 
         TransportCartItem::where('guest_id', session('guest_cart_id'))
+            ->update([
+                'user_id' => $userId,
+                'guest_id' => null,
+            ]);
+
+        WarehouseCartItem::where('guest_id', session('guest_cart_id'))
             ->update([
                 'user_id' => $userId,
                 'guest_id' => null,

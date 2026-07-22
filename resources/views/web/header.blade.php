@@ -734,6 +734,21 @@
                                 @endauth
                             </ul>
                         </li>
+                        <li class="menu-item-has-children">
+                            <a href="{{ route('warehouse.cart') }}" class="drop-down">
+                                Warehouse
+                                <i class="bi bi-caret-down-fill"></i>
+                            </a>
+                            <i class="bi bi-plus dropdown-icon"></i>
+                            <ul class="sub-menu">
+                                <li><a href="{{ route('warehouse.add_item') }}">Create Storage Request</a></li>
+                                <li><a href="{{ route('warehouse.cart') }}">My Storage Cart</a></li>
+                                @auth
+                                    <li><a href="{{ route('warehouse.leads') }}">Storage Requests</a></li>
+                                @endauth
+                                <li><a href="{{ route('warehouse.track') }}">Track Storage</a></li>
+                            </ul>
+                        </li>
                         <li class="{{ request()->routeIs('shipment.track') ? 'active' : '' }}">
                             <a href="{{ route('shipment.track') }}">Track & Trace</a>
                         </li>
@@ -771,7 +786,8 @@
 
                             @auth
                                 @php
-                                    $cartCount = \App\Models\TransportCartItem::where('user_id', Auth::id())->count();
+                                    $cartCount = \App\Models\TransportCartItem::where('user_id', Auth::id())->count()
+                                        + \App\Models\WarehouseCartItem::where('user_id', Auth::id())->count();
                                     $userInitial = strtoupper(substr(Auth::user()->name ?? 'U', 0, 1));
                                 @endphp
 

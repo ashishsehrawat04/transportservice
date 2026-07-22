@@ -2,14 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\CityRoute;
-use App\Models\TransportCartItem;
-use App\Models\ShipmentPriceLog;
-use Illuminate\Support\Facades\Auth;
-use RuntimeException;
-use Throwable;
+use App\Models\Warehouse;
+use App\Models\WarehouseCartItem;
 
-class ShipmentPricingService
+class WarehousePricingService
 {
     /**
      * cm³ per "volumetric kg" for surface/road cargo. Volumetric weight
@@ -17,7 +13,7 @@ class ShipmentPricingService
      */
     private const VOLUMETRIC_DIVISOR = 4500;
 
-    public function calculateCartItem(TransportCartItem $item, CityRoute $route): array
+    public function calculateCartItem(WarehouseCartItem $item, Warehouse $warehouse): array
     {
         return $this->calculateFromDimensions([
             'quantity' => $item->quantity,
@@ -25,10 +21,11 @@ class ShipmentPricingService
             'width_cm' => $item->width_cm,
             'height_cm' => $item->height_cm,
             'weight_kg' => $item->weight_kg,
-        ], $route);
+            'storage_days' => $item->storage_days,
+        ], $warehouse);
     }
 
-    public function calculateFromDimensions(array $item, CityRoute $route): array
+    public function calculateFromDimensions(array $item, Warehouse $warehouse): array
     {
         $volumeCft = 0;
         $volumetricWeightKg = 0;
@@ -42,24 +39,26 @@ class ShipmentPricingService
         $item['volume_cft'] = $volumeCft;
         $item['volumetric_weight_kg'] = $volumetricWeightKg;
 
-        return $this->calculate($item, $route);
+        return $this->calculate($item, $warehouse);
     }
 
     /**
      * Chargeable weight is the greater of actual weight and volumetric
-     * weight (both in kg) — standard courier "whichever is higher"
-     * billing. That chargeable weight is billed at the route's flat
-     * per-kg rate. This returns the raw item charge with no min_charge
-     * floor applied — the floor is a shipment-level rule, not a per-item
-     * one, so callers must apply it once across a shipment's combined
-     * total via floorShipmentTotal().
+     * weight (both in kg) — same "whichever is higher" rule as shipment
+     * billing. That chargeable weight is billed at the warehouse's flat
+     * per-day-per-kg rate, multiplied by the number of storage days. This
+     * returns the raw item charge with no min_charge floor applied — the
+     * floor is a request-level rule, not a per-item one, so callers must
+     * apply it once across a request's combined total via
+     * floorShipmentTotal().
      */
-    public function calculate(array $item, CityRoute $route): array
+    public function calculate(array $item, Warehouse $warehouse): array
     {
         $quantity = max(1, (int) ($item['quantity'] ?? 1));
         $weightKg = (float) ($item['weight_kg'] ?? 0);
         $volumeCft = (float) ($item['volume_cft'] ?? 0);
         $volumetricWeightKgPerUnit = (float) ($item['volumetric_weight_kg'] ?? 0);
+        $storageDays = max(1, (int) ($item['storage_days'] ?? 1));
 
         $actualWeightKg = round($weightKg * $quantity, 2);
         $totalVolumeCft = round($volumeCft * $quantity, 2);
@@ -68,10 +67,10 @@ class ShipmentPricingService
         $chargeBasis = $volumetricWeightKg > $actualWeightKg ? 'volume' : 'weight';
         $chargeableWeightKg = max($actualWeightKg, $volumetricWeightKg);
 
-        $rate = (float) $route->rate_per_weight;
-        $rawCharge = round($chargeableWeightKg * $rate, 2);
+        $rate = (float) $warehouse->price_per_day_per_kg;
+        $rawCharge = round($chargeableWeightKg * $rate * $storageDays, 2);
 
-        $minCharge = round((float) $route->min_charge, 2);
+        $minCharge = round((float) $warehouse->min_charge, 2);
         $itemCharge = $rawCharge;
 
         $weightCharge = $chargeBasis === 'weight' ? $itemCharge : 0.0;
@@ -82,27 +81,12 @@ class ShipmentPricingService
         $discountAmount = round((float) ($item['discount_amount'] ?? 0), 2);
         $totalPayment = max(0.0, round($subtotal + $taxAmount - $discountAmount, 2));
 
-        $this->logCalculation([
-            'calculation_type' => $chargeBasis,
-            'volume_cft' => $totalVolumeCft,
-            'base_price' => $minCharge,
-            'weight_charge' => $weightCharge,
-            'volume_charge' => $volumeCharge,
-            'distance_charge' => 0,
-            'multiplier_applied' => 1,
-            'subtotal' => $subtotal,
-            'tax_amount' => $taxAmount,
-            'discount_amount' => $discountAmount,
-            'total_payment' => $totalPayment,
-        ]);
-
         return [
             'volume_cft' => $totalVolumeCft,
             'calculation_type' => $chargeBasis,
             'base_price' => $minCharge,
             'weight_charge' => $weightCharge,
             'volume_charge' => $volumeCharge,
-            'distance_charge' => 0,
             'multiplier_applied' => 1,
             'subtotal' => $subtotal,
             'tax_amount' => $taxAmount,
@@ -113,42 +97,19 @@ class ShipmentPricingService
             'actual_weight_kg' => $actualWeightKg,
             'volumetric_weight_kg' => $volumetricWeightKg,
             'billing_volume_cft' => $totalVolumeCft,
+            'storage_days' => $storageDays,
         ];
     }
 
     /**
-     * Applies the route's min_charge as a single floor across a whole
-     * shipment's combined item total. Call this once on the sum of every
-     * item's raw charge in the shipment/group — never per individual item.
+     * Applies the warehouse's min_charge as a single floor across a whole
+     * request's combined item total. Call this once on the sum of every
+     * item's raw charge in the request/group — never per individual item.
      */
-    public function floorShipmentTotal(float $itemsTotal, CityRoute $route): float
+    public function floorShipmentTotal(float $itemsTotal, Warehouse $warehouse): float
     {
-        $minCharge = round((float) $route->min_charge, 2);
+        $minCharge = round((float) $warehouse->min_charge, 2);
 
         return max(round($itemsTotal, 2), $minCharge);
-    }
-
-    private function logCalculation(array $data): void
-    {
-        $user = $this->authUser();
-
-        try {
-            ShipmentPriceLog::create(array_merge($data, [
-                'user_id' => $user?->id,
-                'user_name' => $user?->name,
-                'user_email' => $user?->email,
-            ]));
-        } catch (Throwable) {
-            // Pricing should stay usable in pure calculation contexts without an app/database.
-        }
-    }
-
-    private function authUser(): ?object
-    {
-        try {
-            return Auth::user();
-        } catch (RuntimeException) {
-            return null;
-        }
     }
 }

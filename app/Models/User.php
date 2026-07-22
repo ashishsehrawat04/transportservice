@@ -93,4 +93,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(WalletTransaction::class);
     }
+
+    public function warehouseLeads()
+    {
+        return $this->hasMany(WarehouseLead::class);
+    }
+
+    public function warehouseCartItems()
+    {
+        return $this->hasMany(WarehouseCartItem::class);
+    }
+
+    public function warehousePayments()
+    {
+        return $this->hasMany(WarehousePayment::class);
+    }
 }

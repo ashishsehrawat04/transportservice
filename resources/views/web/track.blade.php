@@ -1,12 +1,19 @@
 @include('web.header')
 
 @php
-    $steps = [
+    $shipmentSteps = [
         'pending' => 'Request Received',
         'approved' => 'Pickup Approved',
         'dispatched' => 'In Transit',
         'delivered' => 'Delivered',
     ];
+    $warehouseSteps = [
+        'pending' => 'Request Received',
+        'approved' => 'Pickup Confirmed',
+        'dispatched' => 'In Storage',
+        'delivered' => 'Stored',
+    ];
+    $steps = $leadType === 'warehouse' ? $warehouseSteps : $shipmentSteps;
     $current = match (optional($lead)->admin_status) {
         'approved', 'reviewed' => 1,
         'dispatched' => 2,
@@ -99,6 +106,22 @@
         background: #eaf6fc;
         color: #1d6687;
         border: 1px solid #bfe3f2;
+    }
+
+    .track-type-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        color: var(--ot-ink-soft);
+        background: var(--ot-bg);
+        border: 1px solid var(--ot-line);
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-bottom: 8px;
     }
 
     .track-result-head {
@@ -207,7 +230,6 @@
         margin-top: 10px;
     }
 
-    /* ===== Tracking stepper ===== */
     .tracking-line {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -443,6 +465,14 @@
         font-size: 11.5px;
     }
 
+    .recent-item-type {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+        color: var(--ot-muted);
+    }
+
     @media (max-width: 767px) {
         .track-meta-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -471,6 +501,7 @@
     <symbol id="tk-download" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"></path><path d="M4 19h16"></path></symbol>
     <symbol id="tk-box" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l9-4.5L21 8l-9 4.5z"></path><path d="M3 8v9l9 4.5V12.5"></path><path d="M21 8v9l-9 4.5"></path></symbol>
     <symbol id="tk-clock" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></symbol>
+    <symbol id="tk-warehouse" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-6 9 6v12"></path><path d="M7 21v-8h10v8"></path></symbol>
 </svg>
 
 <section class="track-section">
@@ -479,14 +510,14 @@
             <div class="col-xl-9">
                 <div class="track-panel">
                     <span class="track-eyebrow">Track &amp; Trace</span>
-                    <h2>Track Shipment</h2>
+                    <h2>Track Shipment or Storage Request</h2>
 
                     @if(session('error'))
                         <div class="track-alert track-alert-danger"><svg viewBox="0 0 24 24"><use href="#tk-alert"></use></svg> {{ session('error') }}</div>
                     @endif
 
                     <form method="GET" action="{{ route('shipment.track') }}" class="track-form">
-                        <input type="text" name="tracking_number" value="{{ $trackingNumber }}" placeholder="Enter tracking number">
+                        <input type="text" name="tracking_number" value="{{ $trackingNumber }}" placeholder="Enter tracking number (TL- or WH-)">
                         <button type="submit" class="primary-btn1 btn-hover">
                             Track
                             <span></span>
@@ -494,11 +525,12 @@
                     </form>
 
                     @if($trackingNumber && !$lead)
-                        <div class="track-alert track-alert-danger"><svg viewBox="0 0 24 24"><use href="#tk-search"></use></svg> No shipment found for this tracking number.</div>
+                        <div class="track-alert track-alert-danger"><svg viewBox="0 0 24 24"><use href="#tk-search"></use></svg> No shipment or storage request found for this tracking number.</div>
                     @endif
 
                     @if($lead)
                         @php
+                            $isWarehouse = $leadType === 'warehouse';
                             $isRejected = in_array($lead->admin_status, ['rejected', 'cancelled']);
                             $isDelivered = $lead->admin_status === 'delivered';
 
@@ -507,7 +539,14 @@
                                 $isDelivered => 'done',
                                 default      => 'ongoing',
                             };
+
+                            $invoiceRoute = $isWarehouse ? 'warehouse.invoice.download' : 'shipment.invoice.download';
                         @endphp
+
+                        <span class="track-type-chip">
+                            <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor"><use href="#{{ $isWarehouse ? 'tk-warehouse' : 'tk-box' }}"></use></svg>
+                            {{ $isWarehouse ? 'Warehouse Storage' : 'Shipment' }}
+                        </span>
 
                         <div class="track-result-head">
                             <div>
@@ -521,12 +560,12 @@
                                 </span>
                                 @if($isDelivered)
                                     <div>
-                                        <a class="track-invoice-btn" href="{{ route('shipment.invoice.download', $lead->tracking_number) }}">
+                                        <a class="track-invoice-btn" href="{{ route($invoiceRoute, $lead->tracking_number) }}">
                                             <svg viewBox="0 0 24 24"><use href="#tk-download"></use></svg> Download Invoice
                                         </a>
                                     </div>
                                 @else
-                                    <div class="track-invoice-note">Invoice available after delivery</div>
+                                    <div class="track-invoice-note">{{ $isWarehouse ? 'Invoice available once your items are stored' : 'Invoice available after delivery' }}</div>
                                 @endif
                             </div>
                         </div>
@@ -534,7 +573,7 @@
                         @if($isRejected)
                             <div class="track-alert track-alert-danger">
                                 <svg viewBox="0 0 24 24"><use href="#tk-alert"></use></svg>
-                                <span>This shipment has been {{ strtolower($lead->admin_status) }}.</span>
+                                <span>This {{ $isWarehouse ? 'storage request' : 'shipment' }} has been {{ strtolower($lead->admin_status) }}.</span>
                             </div>
                         @endif
 
@@ -553,30 +592,45 @@
                         </div>
 
                         <div class="track-meta-grid">
-                            <div class="track-meta">
-                                <span>From</span>
-                                <strong>{{ optional($lead->cityRoute)->from_city ?? '-' }}</strong>
-                            </div>
-                            <div class="track-meta">
-                                <span>To</span>
-                                <strong>{{ optional($lead->cityRoute)->to_city ?? '-' }}</strong>
-                            </div>
-                            <!-- <div class="track-meta">
-                                <span>Payment</span>
-                                <strong>{{ ucfirst($lead->payment_status) }}</strong>
-                            </div> -->
-                            <div class="track-meta">
-                                <span>Pickup</span>
-                                <strong>{{ optional($lead->confirmed_pickup_date ?: $lead->requested_pickup_date)->format('d M Y') }}</strong>
-                            </div>
-                            <div class="track-meta">
-                                <span>Expected Delivery</span>
-                                <strong>{{ optional($lead->expected_delivery_date)->format('d M Y') ?? '-' }}</strong>
-                            </div>
-                            <div class="track-meta">
-                                <span>Actual Delivery</span>
-                                <strong>{{ optional($lead->actual_delivery_date)->format('d M Y') ?? '-' }}</strong>
-                            </div>
+                            @if($isWarehouse)
+                                <div class="track-meta">
+                                    <span>Warehouse</span>
+                                    <strong>{{ optional($lead->warehouse)->name ?? '-' }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Location</span>
+                                    <strong>{{ optional($lead->warehouse)->city ?? '-' }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Pickup</span>
+                                    <strong>{{ optional($lead->requested_pickup_date)->format('d M Y') }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Storage Days</span>
+                                    <strong>{{ $lead->storage_days }} Day{{ $lead->storage_days > 1 ? 's' : '' }}</strong>
+                                </div>
+                            @else
+                                <div class="track-meta">
+                                    <span>From</span>
+                                    <strong>{{ optional($lead->cityRoute)->from_city ?? '-' }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>To</span>
+                                    <strong>{{ optional($lead->cityRoute)->to_city ?? '-' }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Pickup</span>
+                                    <strong>{{ optional($lead->confirmed_pickup_date ?: $lead->requested_pickup_date)->format('d M Y') }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Expected Delivery</span>
+                                    <strong>{{ optional($lead->expected_delivery_date)->format('d M Y') ?? '-' }}</strong>
+                                </div>
+                                <div class="track-meta">
+                                    <span>Actual Delivery</span>
+                                    <strong>{{ optional($lead->actual_delivery_date)->format('d M Y') ?? '-' }}</strong>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="track-summary">
@@ -609,25 +663,28 @@
                             <div class="track-alert track-alert-info mb-0"><svg viewBox="0 0 24 24"><use href="#tk-info"></use></svg> {{ $lead->admin_description }}</div>
                         @endif
                     @elseif($userLeads->isNotEmpty())
-                        <div class="recent-heading">Recent Shipments</div>
+                        <div class="recent-heading">Recent Requests</div>
                         <div class="recent-list">
-                            @foreach($userLeads as $item)
+                            @foreach($userLeads as $entry)
                                 @php
+                                    $entryLead = $entry->lead;
+                                    $entryIsWarehouse = $entry->type === 'warehouse';
                                     $itemBadge = match(true) {
-                                        in_array($item->admin_status, ['rejected', 'cancelled']) => 'stopped',
-                                        $item->admin_status === 'delivered' => 'done',
+                                        in_array($entryLead->admin_status, ['rejected', 'cancelled']) => 'stopped',
+                                        $entryLead->admin_status === 'delivered' => 'done',
                                         default => 'ongoing',
                                     };
                                 @endphp
-                                <a class="recent-item" href="{{ route('shipment.track', ['tracking_number' => $item->tracking_number]) }}">
+                                <a class="recent-item" href="{{ route('shipment.track', ['tracking_number' => $entryLead->tracking_number]) }}">
                                     <div class="recent-item-left">
-                                        <span class="recent-item-icon"><svg viewBox="0 0 24 24"><use href="#tk-box"></use></svg></span>
+                                        <span class="recent-item-icon"><svg viewBox="0 0 24 24"><use href="#{{ $entryIsWarehouse ? 'tk-warehouse' : 'tk-box' }}"></use></svg></span>
                                         <div>
-                                            <strong>{{ $item->item_name }}</strong>
-                                            <small>{{ $item->tracking_number }}</small>
+                                            <strong>{{ $entryLead->item_name }}</strong>
+                                            <small>{{ $entryLead->tracking_number }}</small>
+                                            <div class="recent-item-type">{{ $entryIsWarehouse ? 'Warehouse' : 'Shipment' }}</div>
                                         </div>
                                     </div>
-                                    <span class="status-badge {{ $itemBadge }}">{{ ucfirst($item->admin_status) }}</span>
+                                    <span class="status-badge {{ $itemBadge }}">{{ ucfirst($entryLead->admin_status) }}</span>
                                 </a>
                             @endforeach
                         </div>

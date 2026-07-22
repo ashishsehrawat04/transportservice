@@ -5,6 +5,7 @@ use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\ApiController;
 use App\Http\Controllers\web\WebController;
+use App\Http\Controllers\web\WarehouseController;
 
 
 Route::get('/', function () {
@@ -45,6 +46,21 @@ Route::get('/shipment/leads', [WebController::class, 'shipmentLeads'])->middlewa
 Route::get('/track-and-trace', [WebController::class, 'trackShipment'])->name('shipment.track');
 Route::get('/track-and-trace/{trackingNumber}/invoice', [WebController::class, 'downloadShipmentInvoice'])->name('shipment.invoice.download');
 
+Route::get('/warehouse/add-item', [WarehouseController::class, 'addWarehouseItem'])->name('warehouse.add_item');
+Route::post('/warehouse/add-item', [WarehouseController::class, 'saveWarehouseItems'])->name('warehouse.save_items');
+Route::post('/warehouse/estimate-items', [WarehouseController::class, 'estimateWarehouseItems'])->name('warehouse.estimate_items');
+Route::get('/warehouse/cart', [WarehouseController::class, 'warehouseCart'])->name('warehouse.cart');
+Route::post('/warehouse/cart/checkout', [WarehouseController::class, 'checkoutWarehouseCart'])->middleware('auth')->name('warehouse.cart.checkout');
+Route::post('/warehouse/cart/checkout-one', [WarehouseController::class, 'checkoutOneWarehouse'])->middleware('auth')->name('warehouse.cart.checkout_one');
+Route::get('/warehouse/cart/edit/{id}', [WarehouseController::class, 'editWarehouseCartItem'])->name('warehouse.cart.edit');
+Route::post('/warehouse/cart/update/{id}', [WarehouseController::class, 'updateWarehouseCartItem'])->name('warehouse.cart.update');
+Route::get('/warehouse/cart/delete/{id}', [WarehouseController::class, 'deleteWarehouseCartItem'])->name('warehouse.cart.delete');
+Route::post('/warehouse/cart/cancel/{leadId}', [WarehouseController::class, 'cancelWarehouse'])->middleware('auth')->name('warehouse.cart.cancel');
+Route::post('/warehouse/cart/cancel-fresh', [WarehouseController::class, 'cancelFreshWarehouse'])->middleware('auth')->name('warehouse.cart.cancel_fresh');
+Route::get('/warehouse/leads', [WarehouseController::class, 'warehouseLeads'])->middleware('auth')->name('warehouse.leads');
+Route::get('/track-storage', [WarehouseController::class, 'trackWarehouse'])->name('warehouse.track');
+Route::get('/track-storage/{trackingNumber}/invoice', [WarehouseController::class, 'downloadWarehouseInvoice'])->name('warehouse.invoice.download');
+
 
 // admin routes
 
@@ -62,6 +78,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::post('/city-routes/manage/{id?}', [AdminController::class, 'AdminSaveCityRoute'])->name('admin.save.city_route');
     Route::get('/city-routes/delete/{id}', [AdminController::class, 'AdminDeleteCityRoute'])->name('admin.delete.city_route');
     Route::get('/get-city-routes', [ApiController::class, 'AdminGetCityRoutes'])->name('adminget.city.routes');
+
+    Route::get('/warehouses', [AdminController::class, 'AdminWarehouses'])->name('admin.warehouses');
+    Route::get('/warehouses/manage/{id?}', [AdminController::class, 'AdminManageWarehouse'])->name('admin.manage.warehouse');
+    Route::post('/warehouses/manage/{id?}', [AdminController::class, 'AdminSaveWarehouse'])->name('admin.save.warehouse');
+    Route::get('/warehouses/delete/{id}', [AdminController::class, 'AdminDeleteWarehouse'])->name('admin.delete.warehouse');
+    Route::get('/get-warehouses', [ApiController::class, 'AdminGetWarehouses'])->name('adminget.warehouses');
+
+    Route::get('/warehouse-leads', [AdminController::class, 'AdminWarehouseLeads'])->name('admin.warehouse_leads');
+    Route::get('/warehouse-leads/manage/{id?}', [AdminController::class, 'AdminManageWarehouseLead'])->name('admin.manage.warehouse_lead');
+    Route::post('/warehouse-leads/manage/{id?}', [AdminController::class, 'AdminSaveWarehouseLead'])->name('admin.save.warehouse_lead');
+    Route::get('/warehouse-leads/{id}/quote', [AdminController::class, 'AdminViewWarehouseLeadQuote'])->name('admin.warehouse_lead.quote');
+    Route::get('/warehouse-leads/{id}/quote/download', [AdminController::class, 'AdminDownloadWarehouseLeadQuote'])->name('admin.warehouse_lead.quote.download');
+    Route::get('/warehouse-leads/{id}/invoice', [AdminController::class, 'AdminDownloadWarehouseLeadInvoice'])->name('admin.warehouse_lead.invoice');
+    Route::get('/warehouse-leads/delete/{id}', [AdminController::class, 'AdminDeleteWarehouseLead'])->name('admin.delete.warehouse_lead');
+    Route::get('/get-warehouse-leads', [ApiController::class, 'AdminGetWarehouseLeads'])->name('adminget.warehouse_leads');
+    Route::get('/get-warehouse-payments', [ApiController::class, 'AdminGetWarehousePayments'])->name('adminget.warehouse_payments');
 
     Route::get('/transport-prices', [AdminController::class, 'AdminTransportPrices'])->name('admin.transport_prices');
     Route::get('/transport-prices/manage/{id?}', [AdminController::class, 'AdminManageTransportPrice'])->name('admin.manage.transport_price');

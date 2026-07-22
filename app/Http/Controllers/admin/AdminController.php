@@ -13,16 +13,26 @@ use App\Models\TransportServicePrice;
 use App\Models\TransportAddress;
 use App\Models\TransportCartItem;
 use App\Models\ShipmentPayment;
+use App\Models\Warehouse;
+use App\Models\WarehouseAddress;
+use App\Models\WarehouseCartItem;
+use App\Models\WarehouseLead;
+use App\Models\WarehousePayment;
+use App\Models\WarehouseQuote;
 use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
 use App\Services\TransportQuotePdfService;
+use App\Services\WarehouseInvoicePdfService;
+use App\Services\WarehousePricingService;
+use App\Services\WarehouseQuotePdfService;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
     public function __construct(
-        private ShipmentPricingService $pricingService
+        private ShipmentPricingService $pricingService,
+        private WarehousePricingService $warehousePricingService
     ) {
     }
 
@@ -163,6 +173,67 @@ class AdminController extends Controller
         return redirect()->route('admin.city_routes')->with('error', 'City route not found');
     }
 
+    public function AdminWarehouses()
+    {
+        return view('admin.warehouse.index');
+    }
+
+    public function AdminManageWarehouse($id = null)
+    {
+        $warehouse = $id ? Warehouse::find($id) : new Warehouse();
+
+        if ($id && !$warehouse) {
+            return redirect()->route('admin.warehouses')->with('error', 'Warehouse not found');
+        }
+
+        return view('admin.warehouse.manage', compact('warehouse'));
+    }
+
+    public function AdminSaveWarehouse(Request $request, $id = null)
+    {
+        $warehouse = $id ? Warehouse::find($id) : null;
+
+        if ($id && !$warehouse) {
+            return redirect()->route('admin.warehouses')->with('error', 'Warehouse not found');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255',
+                        Rule::unique('warehouses')->where(function ($query) use ($request) {
+                            return $query->where('city', $request->city);
+                        })->ignore($warehouse?->id),],
+            'city' => ['required', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'price_per_day_per_kg' => ['required', 'numeric', 'min:0'],
+            'min_charge' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $validated['is_active'] = $request->has('is_active') ? 1 : 0;
+
+        if ($warehouse) {
+            $warehouse->update($validated);
+            $message = 'Warehouse updated successfully';
+        } else {
+            Warehouse::create($validated);
+            $message = 'Warehouse added successfully';
+        }
+
+        return redirect()->route('admin.warehouses')->with('success', $message);
+    }
+
+    public function AdminDeleteWarehouse($id)
+    {
+        $warehouse = Warehouse::find($id);
+
+        if ($warehouse) {
+            $warehouse->delete();
+            return redirect()->route('admin.warehouses')->with('success', 'Warehouse deleted successfully');
+        }
+
+        return redirect()->route('admin.warehouses')->with('error', 'Warehouse not found');
+    }
+
     public function AdminEditUsers($slug)
     {
         $user = User::where('slug', $slug)->first();
@@ -297,6 +368,185 @@ class AdminController extends Controller
         return view('admin.transport-leads');
     }
 
+    public function AdminWarehouseLeads()
+    {
+        return view('admin.warehouse.leads');
+    }
+
+    public function AdminManageWarehouseLead($id = null)
+    {
+        $warehouseLead = $id ? WarehouseLead::find($id) : new WarehouseLead();
+
+        if ($id && !$warehouseLead) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+        }
+
+        $users = User::orderBy('name')->get();
+        $warehouses = Warehouse::where('is_active', true)
+            ->orderBy('city')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.warehouse.manage-lead', compact('warehouseLead', 'users', 'warehouses'));
+    }
+
+    public function AdminSaveWarehouseLead(Request $request, $id = null)
+    {
+        $warehouseLead = $id ? WarehouseLead::find($id) : null;
+
+        if ($id && !$warehouseLead) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+        }
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'item_name' => ['required', 'string', 'max:255'],
+            'item_type' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'length_cm' => ['nullable', 'numeric', 'min:0'],
+            'width_cm' => ['nullable', 'numeric', 'min:0'],
+            'height_cm' => ['nullable', 'numeric', 'min:0'],
+            'weight_kg' => ['required', 'numeric', 'min:0.01'],
+            'warehouse_id' => ['required', 'exists:warehouses,id'],
+            'storage_days' => ['required', 'integer', 'min:1'],
+            'tax_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'requested_pickup_date' => ['required', 'date'],
+            'admin_status' => ['required', Rule::in(['pending', 'reviewed', 'approved', 'dispatched', 'delivered', 'cancelled', 'rejected'])],
+            'admin_description' => ['nullable', 'string'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'user_status' => ['required', Rule::in(['pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'])],
+            'payment_status' => ['required', Rule::in(['unpaid', 'partial', 'paid', 'refunded'])],
+            'payment_method' => ['nullable', Rule::in(['cash', 'online', 'upi', 'bank_transfer'])],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
+            'special_instructions' => ['nullable', 'string'],
+        ]);
+
+        $warehouse = Warehouse::where('is_active', true)->find($validated['warehouse_id']);
+
+        if (!$warehouse) {
+            return back()->withInput()->with('error', 'Please select an active warehouse first');
+        }
+
+        $breakdown = $this->warehousePricingService->calculateFromDimensions($validated, $warehouse);
+        // This lead is a single-item storage request on its own, so the
+        // warehouse's min_charge floor applies directly to its total here.
+        $breakdown['total_payment'] = $this->warehousePricingService->floorShipmentTotal($breakdown['total_payment'], $warehouse);
+        $leadPricing = array_intersect_key($breakdown, array_flip([
+            'volume_cft', 'calculation_type', 'base_price',
+            'weight_charge', 'volume_charge',
+            'multiplier_applied', 'subtotal', 'tax_amount', 'discount_amount',
+            'total_payment',
+        ]));
+        $validated = array_merge($validated, $leadPricing);
+
+        if (!$warehouseLead) {
+            $validated['tracking_number'] = $this->generateWarehouseTrackingNumber();
+        }
+
+        $oldPaymentStatus = $warehouseLead?->payment_status;
+        $oldTransactionId = $warehouseLead?->transaction_id;
+
+        if ($warehouseLead) {
+            $warehouseLead->update($validated);
+            $message = 'Warehouse lead updated successfully';
+        } else {
+            $warehouseLead = WarehouseLead::create($validated);
+            $message = 'Warehouse lead added successfully';
+        }
+
+        $this->recordWarehouseLeadPaymentIfNeeded($warehouseLead->fresh(), $oldPaymentStatus, $oldTransactionId);
+        WarehouseQuote::syncFromLead($warehouseLead->fresh(['user', 'warehouse', 'latestPayment']));
+
+        // Once admin moves the lead past pending/reviewed, the cart items that
+        // were awaiting this decision are done — drop them so they stop
+        // showing up in the customer's storage cart.
+        if (!in_array($warehouseLead->admin_status, ['pending', 'reviewed'])) {
+            WarehouseCartItem::where('warehouse_lead_id', $warehouseLead->id)->delete();
+        }
+
+        return redirect()->route('admin.warehouse_leads')->with('success', $message);
+    }
+
+    public function AdminDeleteWarehouseLead($id)
+    {
+        $warehouseLead = WarehouseLead::find($id);
+
+        if ($warehouseLead) {
+            $warehouseLead->delete();
+            return redirect()->route('admin.warehouse_leads')->with('success', 'Warehouse lead deleted successfully');
+        }
+
+        return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+    }
+
+    public function AdminViewWarehouseLeadQuote($id)
+    {
+        $warehouseLead = WarehouseLead::with(['user', 'warehouse', 'latestPayment'])->find($id);
+
+        if (!$warehouseLead) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+        }
+
+        $quote = WarehouseQuote::syncFromLead($warehouseLead);
+        $quote->load('user');
+        $warehouseAddress = $this->warehouseAddressForQuote($quote);
+
+        return view('admin.warehouse.quote-show', compact('quote', 'warehouseAddress'));
+    }
+
+    public function AdminDownloadWarehouseLeadQuote($id, WarehouseQuotePdfService $quotePdfService)
+    {
+        $warehouseLead = WarehouseLead::with(['user', 'warehouse', 'latestPayment'])->find($id);
+
+        if (!$warehouseLead) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+        }
+
+        $quote = WarehouseQuote::syncFromLead($warehouseLead);
+        $quote->load('user');
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'warehouse-quote-' . $quote->id);
+
+        $result = $quotePdfService->output($quote, $this->warehouseAddressForQuote($quote));
+
+        if (is_array($result) && isset($result['content'], $result['mimetype'])) {
+            $content = $result['content'];
+            $mimetype = $result['mimetype'];
+        } else {
+            $content = is_string($result) ? $result : '';
+            $mimetype = 'application/pdf';
+        }
+
+        $ext = $mimetype === 'text/html' ? 'html' : 'pdf';
+
+        return response($content, 200, [
+            'Content-Type' => $mimetype,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '.' . $ext . '"',
+        ]);
+    }
+
+    public function AdminDownloadWarehouseLeadInvoice($id, WarehouseInvoicePdfService $invoicePdfService)
+    {
+        $warehouseLead = WarehouseLead::with(['user', 'warehouse', 'latestPayment'])->find($id);
+
+        if (!$warehouseLead) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
+        }
+
+        if (!$this->warehouseInvoiceCanBeDownloaded($warehouseLead)) {
+            return redirect()->route('admin.warehouse_leads')->with('error', 'Mark storage request as stored before downloading invoice.');
+        }
+
+        $payment = $warehouseLead->latestPayment ?: $this->createWarehouseInvoicePayment($warehouseLead);
+        WarehouseQuote::syncFromLead($warehouseLead, $payment->invoice_number);
+        $fileName = ($payment->invoice_number ?: $warehouseLead->tracking_number) . '.pdf';
+
+        return response($invoicePdfService->output($warehouseLead, $payment), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
     public function AdminPayments()
     {
         $paymentStatusCounts = ShipmentPayment::selectRaw('status, COUNT(*) as total')
@@ -313,7 +563,21 @@ class AdminController extends Controller
             'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
         ];
 
-        return view('admin.payments', compact('paymentStats'));
+        $warehousePaymentStatusCounts = WarehousePayment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $warehousePaymentStats = [
+            'totalPayments' => WarehousePayment::count(),
+            'successPayments' => (int) ($warehousePaymentStatusCounts['success'] ?? 0),
+            'pendingPayments' => (int) ($warehousePaymentStatusCounts['pending'] ?? 0),
+            'refundedPayments' => (int) ($warehousePaymentStatusCounts['refunded'] ?? 0),
+            'failedPayments' => (int) ($warehousePaymentStatusCounts['failed'] ?? 0),
+            'totalRevenue' => (float) WarehousePayment::where('status', 'success')->sum('amount'),
+            'todayRevenue' => (float) WarehousePayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+        ];
+
+        return view('admin.payments', compact('paymentStats', 'warehousePaymentStats'));
     }
 
     public function AdminTransportQuotes()
@@ -421,6 +685,9 @@ class AdminController extends Controller
         }
 
         $breakdown = $this->pricingService->calculateFromDimensions($validated, $route);
+        // This lead is a single-item shipment on its own, so the route's
+        // min_charge floor applies directly to its total here.
+        $breakdown['total_payment'] = $this->pricingService->floorShipmentTotal($breakdown['total_payment'], $route);
         $leadPricing = array_intersect_key($breakdown, array_flip([
             'volume_cft', 'calculation_type', 'base_price',
             'weight_charge', 'volume_charge', 'distance_charge',
@@ -627,6 +894,80 @@ class AdminController extends Controller
         }
 
         return TransportAddress::where('user_id', $quote->user_id)
+            ->latest()
+            ->first();
+    }
+
+    private function generateWarehouseTrackingNumber(): string
+    {
+        do {
+            $trackingNumber = 'WH-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (WarehouseLead::where('tracking_number', $trackingNumber)->exists());
+
+        return $trackingNumber;
+    }
+
+    private function recordWarehouseLeadPaymentIfNeeded(WarehouseLead $lead, ?string $oldPaymentStatus, ?string $oldTransactionId): void
+    {
+        if (!in_array($lead->payment_status, ['partial', 'paid', 'refunded'])) {
+            return;
+        }
+
+        $paymentChanged = $oldPaymentStatus !== $lead->payment_status;
+        $transactionChanged = $lead->transaction_id && $oldTransactionId !== $lead->transaction_id;
+
+        if (!$paymentChanged && !$transactionChanged) {
+            return;
+        }
+
+        $this->createWarehouseInvoicePayment($lead);
+    }
+
+    private function createWarehouseInvoicePayment(WarehouseLead $lead): WarehousePayment
+    {
+        $payment = WarehousePayment::create([
+            'invoice_number' => $this->generateWarehouseInvoiceNumber(),
+            'user_id' => $lead->user_id,
+            'warehouse_lead_id' => $lead->id,
+            'amount' => $lead->total_payment,
+            'method' => $lead->payment_method ?: 'cash',
+            'status' => match ($lead->payment_status) {
+                'paid' => 'success',
+                'refunded' => 'refunded',
+                default => 'pending',
+            },
+            'transaction_id' => $lead->transaction_id,
+            'notes' => 'Payment status updated from warehouse lead admin panel.',
+        ]);
+
+        WarehouseQuote::syncFromLead($lead, $payment->invoice_number);
+
+        return $payment;
+    }
+
+    private function warehouseInvoiceCanBeDownloaded(WarehouseLead $lead): bool
+    {
+        return $lead->admin_status === 'delivered';
+    }
+
+    private function generateWarehouseInvoiceNumber(): string
+    {
+        do {
+            $invoiceNumber = 'WINV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (WarehousePayment::where('invoice_number', $invoiceNumber)->exists());
+
+        return $invoiceNumber;
+    }
+
+    private function warehouseAddressForQuote(WarehouseQuote $quote): ?object
+    {
+        $snapshot = $quote->quote_data['warehouse_address'] ?? null;
+
+        if (is_array($snapshot)) {
+            return (object) $snapshot;
+        }
+
+        return WarehouseAddress::where('user_id', $quote->user_id)
             ->latest()
             ->first();
     }

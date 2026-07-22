@@ -10,6 +10,7 @@ use App\Models\TransportAddress;
 use App\Models\TransportLead;
 use App\Models\TransportQuote;
 use App\Models\TransportServicePrice;
+use App\Models\WarehouseLead;
 use App\Services\GuestCartService;
 use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
@@ -18,9 +19,25 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class WebController extends Controller
 {
+    /**
+     * Plain-language labels for shipment item fields, used to turn
+     * Laravel's default validation messages (e.g. "The height_cm field is
+     * required.") into wording a non-technical customer understands.
+     */
+    private const ITEM_FIELD_LABELS = [
+        'item_name' => 'item name',
+        'item_type' => 'item type',
+        'quantity' => 'quantity',
+        'length_cm' => 'length',
+        'width_cm' => 'width',
+        'height_cm' => 'height',
+        'weight_kg' => 'weight',
+    ];
+
     public function __construct(
         private GuestCartService $guestCartService,
         private ShipmentPricingService $pricingService
@@ -65,7 +82,7 @@ class WebController extends Controller
             'items.*.width_cm' => ['nullable', 'numeric', 'min:0'],
             'items.*.height_cm' => ['required', 'numeric', 'min:0.01'],
             'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
-        ]);
+        ], [], $this->itemFieldAttributes($request->input('items', [])));
 
         $cityRoute = CityRoute::where('is_active', true)
             ->where('from_city', $validated['from_city'])
@@ -112,16 +129,23 @@ class WebController extends Controller
 
     public function estimateShipmentItems(Request $request)
     {
-        $validated = $request->validate([
-            'from_city' => ['required', 'string', 'max:255'],
-            'to_city' => ['required', 'string', 'max:255'],
-            'items' => ['required', 'array', 'min:1', 'max:100'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.length_cm' => ['nullable', 'numeric', 'min:0'],
-            'items.*.width_cm' => ['nullable', 'numeric', 'min:0'],
-            'items.*.height_cm' => ['required', 'numeric', 'min:0.01'],
-            'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'from_city' => ['required', 'string', 'max:255'],
+                'to_city' => ['required', 'string', 'max:255'],
+                'items' => ['required', 'array', 'min:1', 'max:100'],
+                'items.*.quantity' => ['required', 'integer', 'min:1'],
+                'items.*.length_cm' => ['nullable', 'numeric', 'min:0'],
+                'items.*.width_cm' => ['nullable', 'numeric', 'min:0'],
+                'items.*.height_cm' => ['required', 'numeric', 'min:0.01'],
+                'items.*.weight_kg' => ['required', 'numeric', 'min:0.01'],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $this->friendlyEstimateValidationMessage($e),
+            ], 422);
+        }
 
         $route = CityRoute::where('is_active', true)
             ->where('from_city', $validated['from_city'])
@@ -131,7 +155,7 @@ class WebController extends Controller
         if (!$route) {
             return response()->json([
                 'success' => false,
-                'message' => 'Please select a valid active city route to calculate an estimate.',
+                'message' => 'We don\'t have pricing set up for this route yet. Please pick a different pickup or delivery city.',
             ]);
         }
 
@@ -154,6 +178,7 @@ class WebController extends Controller
         }
 
         $itemsTotal = round($itemsTotal, 2);
+        $grandTotal = $this->pricingService->floorShipmentTotal($itemsTotal, $route);
 
         return response()->json([
             'success' => true,
@@ -162,17 +187,92 @@ class WebController extends Controller
                 'to_city' => $route->to_city,
                 'transit_days' => $route->transit_days,
             ],
-            // Min charge is a per-item floor (already applied inside each
-            // item's charge above), not an additive fee — kept here only
-            // for display.
+            // Min charge is a shipment-level floor applied once to the
+            // combined items_total below (see grand_total), not per item.
             'min_charge' => $minCharge,
             'items' => $itemBreakdowns,
             'items_total' => $itemsTotal,
-            'grand_total' => $itemsTotal,
+            'grand_total' => $grandTotal,
         ]);
     }
 
+    /**
+     * Turns Laravel's raw validation errors (e.g. "The items.0.height_cm
+     * field is required.") into a plain-language message a non-technical
+     * customer can act on, naming the item number and field in the UI.
+     */
+    private function friendlyEstimateValidationMessage(ValidationException $e): string
+    {
+        $fieldLabels = [
+            'quantity' => 'quantity',
+            'length_cm' => 'length',
+            'width_cm' => 'width',
+            'height_cm' => 'height',
+            'weight_kg' => 'weight',
+        ];
+
+        $firstField = array_key_first($e->errors());
+        $firstMessage = $e->errors()[$firstField][0];
+
+        if (preg_match('/^items\.(\d+)\.(\w+)$/', $firstField, $matches)) {
+            $itemNumber = ((int) $matches[1]) + 1;
+            $label = $fieldLabels[$matches[2]] ?? str_replace('_', ' ', $matches[2]);
+
+            return str_contains($firstMessage, 'required')
+                ? "Please enter the {$label} for item {$itemNumber}."
+                : "Please double-check the {$label} for item {$itemNumber} — the value entered isn't valid.";
+        }
+
+        if (in_array($firstField, ['from_city', 'to_city'], true)) {
+            return 'Please select both a pickup city and a delivery city.';
+        }
+
+        if ($firstField === 'items') {
+            return 'Please add at least one item before calculating an estimate.';
+        }
+
+        return 'Some item details are missing or invalid. Please check the form and try again.';
+    }
+
+    /**
+     * Builds "items.0.height_cm" => "item 1 height" style attribute labels
+     * so Laravel's validation error list reads in plain language instead of
+     * raw field/array-index names.
+     */
+    private function itemFieldAttributes(array $items): array
+    {
+        $attributes = [];
+
+        foreach (array_keys($items) as $index) {
+            $itemNumber = ((int) $index) + 1;
+
+            foreach (self::ITEM_FIELD_LABELS as $field => $label) {
+                $attributes["items.{$index}.{$field}"] = "item {$itemNumber} {$label}";
+            }
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Cart is a shared page across Shipment and Warehouse — both
+     * `shipment.cart` and `warehouse.cart` render this same combined view
+     * so a customer sees (and can act on) both kinds of requests together.
+     */
     public function shipmentCart()
+    {
+        $shipment = $this->shipmentCartData();
+        $warehouse = app(WarehouseController::class)->warehouseCartData();
+
+        return view('web.cart', [
+            'shipmentCartItems' => $shipment['cartItems'],
+            'shipmentCartTotal' => $shipment['cartTotal'],
+            'warehouseCartItems' => $warehouse['cartItems'],
+            'warehouseCartTotal' => $warehouse['cartTotal'],
+        ]);
+    }
+
+    public function shipmentCartData(): array
     {
         $cartItems = $this->cartQuery()
             ->with('cityRoute')
@@ -190,7 +290,7 @@ class WebController extends Controller
             $route = $this->findRoute($item);
 
             if (!$route) {
-                $item->price_error = 'Route not found';
+                $item->price_error = 'This route is no longer available. Please edit this item and choose a different pickup or delivery city.';
                 return;
             }
 
@@ -216,9 +316,15 @@ class WebController extends Controller
 
         $cartTotal = $cartItems
             ->filter(fn (TransportCartItem $item) => !$item->price_error && !$item->booking_status)
-            ->sum('calculated_price');
+            ->groupBy(fn (TransportCartItem $item) => $this->shipmentGroupKey($item))
+            ->sum(function ($shipmentItems) {
+                $route = $shipmentItems->first()->cityRoute;
+                $rawTotal = $shipmentItems->sum('calculated_price');
 
-        return view('web.shipment-cart', compact('cartItems', 'cartTotal'));
+                return $route ? $this->pricingService->floorShipmentTotal($rawTotal, $route) : $rawTotal;
+            });
+
+        return ['cartItems' => $cartItems, 'cartTotal' => $cartTotal];
     }
 
     public function shipmentLeads()
@@ -231,10 +337,16 @@ class WebController extends Controller
         return view('web.shipment-leads', compact('leads'));
     }
 
+    /**
+     * Tracking is a shared page across Shipment and Warehouse — both
+     * `shipment.track` and `warehouse.track` render this same combined
+     * lookup so one tracking number search covers either kind of request.
+     */
     public function trackShipment(Request $request)
     {
         $trackingNumber = $request->query('tracking_number');
         $lead = null;
+        $leadType = null;
         $userLeads = collect();
 
         if ($trackingNumber) {
@@ -244,17 +356,45 @@ class WebController extends Controller
                     $query->where('user_id', auth()->id());
                 })
                 ->first();
+
+            if ($lead) {
+                $leadType = 'shipment';
+            } else {
+                $lead = WarehouseLead::with(['warehouse', 'user', 'latestPayment'])
+                    ->where('tracking_number', $trackingNumber)
+                    ->when(auth()->check(), function ($query) {
+                        $query->where('user_id', auth()->id());
+                    })
+                    ->first();
+
+                if ($lead) {
+                    $leadType = 'warehouse';
+                }
+            }
         }
 
         if (auth()->check() && !$trackingNumber) {
-            $userLeads = TransportLead::with('cityRoute')
+            $shipments = TransportLead::with('cityRoute')
                 ->where('user_id', auth()->id())
                 ->latest()
                 ->limit(10)
-                ->get();
+                ->get()
+                ->map(fn (TransportLead $item) => (object) ['type' => 'shipment', 'lead' => $item]);
+
+            $warehouses = WarehouseLead::with('warehouse')
+                ->where('user_id', auth()->id())
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (WarehouseLead $item) => (object) ['type' => 'warehouse', 'lead' => $item]);
+
+            $userLeads = $shipments->concat($warehouses)
+                ->sortByDesc(fn ($entry) => $entry->lead->created_at)
+                ->values()
+                ->take(10);
         }
 
-        return view('web.track-shipment', compact('lead', 'trackingNumber', 'userLeads'));
+        return view('web.track', compact('lead', 'leadType', 'trackingNumber', 'userLeads'));
     }
 
     public function downloadShipmentInvoice(string $trackingNumber, ShipmentInvoicePdfService $invoicePdfService)
@@ -371,7 +511,7 @@ class WebController extends Controller
             'width_cm' => ['nullable', 'numeric', 'min:0'],
             'height_cm' => ['required', 'numeric', 'min:0.01'],
             'weight_kg' => ['required', 'numeric', 'min:0.01'],
-        ]);
+        ], [], self::ITEM_FIELD_LABELS);
 
         $cityRoute = CityRoute::where('is_active', true)
             ->where('from_city', $validated['from_city'])
@@ -652,9 +792,9 @@ class WebController extends Controller
             'subtotal' => $itemsTotal,
             'tax_amount' => $breakdowns->sum('tax_amount'),
             'discount_amount' => $breakdowns->sum('discount_amount'),
-            // min_charge is a per-item floor already baked into each
-            // breakdown's total_payment above — not added again here.
-            'total_payment' => round($itemsTotal, 2),
+            // min_charge is a shipment-level floor applied once to the
+            // combined item total, not per individual item.
+            'total_payment' => $this->pricingService->floorShipmentTotal($itemsTotal, $route),
         ];
     }
 

@@ -37,12 +37,11 @@
         font-size: 14px;
     }
 
-    /* ===== stat strip ===== */
     .cart-stat-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
-        margin-bottom: 24px;
+        margin-bottom: 30px;
     }
 
     .cart-stat {
@@ -70,7 +69,49 @@
         line-height: 1.1;
     }
 
-    /* ===== layout ===== */
+    .cart-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .cart-section-head h3 {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .cart-section-count {
+        color: var(--ot-muted);
+        font-size: 12.5px;
+        font-weight: 600;
+    }
+
+    .cart-section-empty {
+        background: var(--ot-panel);
+        border: 1px dashed var(--ot-line);
+        border-radius: 14px;
+        padding: 28px 24px;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .cart-section-empty p {
+        color: var(--ot-muted);
+        margin: 0 0 14px;
+        font-size: 14px;
+    }
+
+    .cart-section-block {
+        margin-bottom: 46px;
+    }
+
+    .cart-section-block:last-child {
+        margin-bottom: 0;
+    }
+
     .cart-grid {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 352px;
@@ -90,7 +131,6 @@
         gap: 20px;
     }
 
-    /* ===== shipment card ===== */
     .cart-item-card {
         background: var(--ot-panel);
         border: 1px solid var(--ot-line);
@@ -195,6 +235,8 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        margin-left: auto;
+        min-width: 260px;
     }
 
     .cart-price {
@@ -287,7 +329,6 @@
         box-shadow: 0 14px 26px rgba(14, 143, 122, .32);
     }
 
-    /* ===== route + meta strip ===== */
     .cart-route-row {
         align-items: center;
         display: flex;
@@ -345,7 +386,6 @@
     .text-ready { color: var(--ot-green-dark) !important; }
     .text-review { color: #B42318 !important; }
 
-    /* ===== item rows ===== */
     .cart-item-list {
         display: flex;
         flex-direction: column;
@@ -538,7 +578,6 @@
         font-size: 14px;
     }
 
-    /* ===== order summary ===== */
     .cart-summary-panel {
         position: sticky;
         top: 96px;
@@ -648,29 +687,6 @@
         margin-top: 16px;
     }
 
-    .cart-trust-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
-        margin-top: 18px;
-        padding-top: 16px;
-        border-top: 1px solid var(--ot-line);
-    }
-
-    .cart-trust-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        text-align: center;
-        font-size: 9.5px;
-        font-weight: 700;
-        color: var(--ot-muted);
-    }
-
-    .cart-trust-item svg { width: 17px; height: 17px; stroke: var(--ot-green-dark); }
-
-    /* ===== empty state ===== */
     .cart-empty-state {
         background: var(--ot-panel);
         border: 1px solid var(--ot-line);
@@ -709,8 +725,9 @@
         .cart-page-head { align-items: stretch; flex-direction: column; }
         .cart-page-head h2 { font-size: 26px; }
         .cart-stat-grid { grid-template-columns: 1fr; }
+        .cart-section-head { align-items: stretch; flex-direction: column; }
         .cart-item-top { align-items: stretch; flex-direction: column; }
-        .cart-shipment-side { align-items: flex-start; }
+        .cart-shipment-side { align-items: flex-start; margin-left: 0; min-width: 0; }
         .cart-route-row { align-items: flex-start; flex-direction: column; }
         .cart-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-left: 20px; margin-right: 20px; }
     }
@@ -730,40 +747,26 @@
     <symbol id="ico-box" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l12-6 12 6-12 6z"></path><path d="M4 10v12l12 6 12-6V10"></path><path d="M16 16v12"></path></symbol>
     <symbol id="ico-bike" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="22" r="5"></circle><circle cx="24" cy="22" r="5"></circle><path d="M8 22l6-11h6l4 11"></path><path d="M14 11h6"></path><path d="M14 22h10"></path></symbol>
     <symbol id="ico-electronics" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="24" height="16" rx="1.6"></rect><path d="M12 26h8M16 22v4"></path></symbol>
+    <symbol id="ico-warehouse" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-6 9 6v12"></path><path d="M7 21v-8h10v8"></path></symbol>
 </svg>
 
 @php
-    $itemCount = $cartItems->count();
-    $totalQuantity = $cartItems->sum('quantity');
-    $hasPriceIssue = $cartItems->contains(fn ($item) => !empty($item->price_error));
-    $hasCheckoutableItems = $cartItems->contains(fn ($item) => empty($item->booking_status));
-    $cartShipments = $cartItems->groupBy(fn ($item) => implode('|', [
-        $item->city_route_id,
-        optional($item->pickup_date)->format('Y-m-d'),
-        optional($item->delivery_date)->format('Y-m-d'),
-    ]));
-
-    $itemIcon = function ($type) {
-        return match ($type) {
-            'bike' => 'ico-bike',
-            'electronics' => 'ico-electronics',
-            default => 'ico-box',
-        };
-    };
+    $totalShipmentItems = $shipmentCartItems->count();
+    $totalWarehouseItems = $warehouseCartItems->count();
+    $totalRequests = $shipmentCartItems->groupBy(fn ($item) => implode('|', [$item->city_route_id, optional($item->pickup_date)->format('Y-m-d'), optional($item->delivery_date)->format('Y-m-d')]))->count()
+        + $warehouseCartItems->groupBy(fn ($item) => implode('|', [$item->warehouse_id, optional($item->pickup_date)->format('Y-m-d')]))->count();
+    $combinedTotal = $shipmentCartTotal + $warehouseCartTotal;
+    $bothEmpty = $shipmentCartItems->isEmpty() && $warehouseCartItems->isEmpty();
 @endphp
 
 <section class="shipment-cart-section">
     <div class="container">
         <div class="cart-page-head">
             <div>
-                <span class="cart-eyebrow">Shipment Cart</span>
-                <h2>Review Your Shipment</h2>
-                <p class="cart-subtitle">Check route, dimensions and estimated pricing before saving items to leads.</p>
+                <span class="cart-eyebrow">Your Cart</span>
+                <h2>Shipment &amp; Warehouse Requests</h2>
+                <p class="cart-subtitle">Review both your shipment and storage items together, and track either from the same place.</p>
             </div>
-            <a href="{{ route('shipment.add_item') }}" class="primary-btn1 btn-hover">
-                Add Shipment
-                <span></span>
-            </a>
         </div>
 
         @if(session('success'))
@@ -773,249 +776,44 @@
             <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
-        @if($cartItems->isEmpty())
+        @if($bothEmpty)
             <div class="cart-empty-state">
                 <i class="bi bi-box-seam"></i>
                 <h4>Your cart is empty</h4>
-                <p>Add shipment items with pickup and delivery cities to see pricing here.</p>
-                <a href="{{ route('shipment.add_item') }}" class="primary-btn1 btn-hover">
-                    Add First Item
-                    <span></span>
-                </a>
+                <p>Add a shipment or a warehouse storage item to see it here.</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ route('shipment.add_item') }}" class="primary-btn1 btn-hover">
+                        Add Shipment
+                        <span></span>
+                    </a>
+                    <a href="{{ route('warehouse.add_item') }}" class="primary-btn1 btn-hover">
+                        Store an Item
+                        <span></span>
+                    </a>
+                </div>
             </div>
         @else
             <div class="cart-stat-grid">
                 <div class="cart-stat">
-                    <span>Shipments</span>
-                    <strong>{{ $cartShipments->count() }}</strong>
+                    <span>Requests</span>
+                    <strong>{{ $totalRequests }}</strong>
                 </div>
                 <div class="cart-stat">
                     <span>Total Items</span>
-                    <strong>{{ $itemCount }}</strong>
+                    <strong>{{ $totalShipmentItems + $totalWarehouseItems }}</strong>
                 </div>
                 <div class="cart-stat">
-                    <span>Estimated Total</span>
-                    <strong>₹{{ number_format($cartTotal, 2) }}</strong>
+                    <span>Combined Estimated Total</span>
+                    <strong>₹{{ number_format($combinedTotal, 2) }}</strong>
                 </div>
             </div>
 
-            <div class="cart-grid">
-                <div class="cart-list">
-                    @foreach($cartShipments as $shipmentItems)
-                        @php
-                            $firstItem = $shipmentItems->first();
-                            $route = $firstItem->cityRoute;
-                            $pickupDate = optional($firstItem->pickup_date)->format('d M Y') ?? '-';
-                            $deliveryDate = optional($firstItem->delivery_date)->format('d M Y') ?? '-';
-                            $shipmentMinCharge = round((float) optional($route)->min_charge, 2);
-                            $shipmentTotal = $shipmentItems->sum('calculated_price');
-                            $shipmentHasError = $shipmentItems->contains(fn ($item) => !empty($item->price_error));
-                            $shipmentIsPending = (bool) optional($firstItem)->booking_status;
-                            $shipmentLeadId = optional($firstItem)->transport_lead_id;
-                        @endphp
+            <div class="cart-section-block">
+                @include('web.partials.cart-section', ['items' => $shipmentCartItems, 'total' => $shipmentCartTotal, 'mode' => 'shipment'])
+            </div>
 
-                        <article class="cart-item-card ship-group {{ $shipmentIsPending ? 'is-pending' : '' }}">
-                            <div class="cart-item-top">
-                                <div class="cart-item-title">
-                                    <span class="cart-shipment-name-row">
-                                        <h5>Shipment {{ $loop->iteration }}</h5>
-                                        @if($shipmentIsPending)
-                                            <span class="cart-pending-badge">
-                                                <svg><use href="#ico-clock"></use></svg>
-                                                Pending Approval
-                                            </span>
-                                        @endif
-                                    </span>
-                                    <span class="cart-route-chip">
-                                        <svg viewBox="0 0 24 24"><use href="#ico-pin"></use></svg>
-                                        {{ optional($route)->from_city ?? '-' }} → {{ optional($route)->to_city ?? '-' }}
-                                    </span>
-                                    <div class="cart-shipment-count" style="width:100%;">{{ $shipmentItems->count() }} item{{ $shipmentItems->count() > 1 ? 's' : '' }} in this shipment</div>
-                                </div>
-
-                                <div class="cart-shipment-side">
-                                    @if($shipmentHasError)
-                                        <div class="cart-error"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor"><use href="#ico-alert"></use></svg> Needs Review</div>
-                                    @else
-                                        <div class="cart-price">
-                                            <span>Shipment Total</span>
-                                            ₹{{ number_format($shipmentTotal, 2) }}
-                                            @if($shipmentMinCharge > 0)
-                                                <small class="cart-min-note">min ₹{{ number_format($shipmentMinCharge, 2) }} per item</small>
-                                            @endif
-                                        </div>
-                                    @endif
-
-                                    <div class="cart-actions-row">
-                                        @if($shipmentIsPending && $shipmentLeadId)
-                                            <form action="{{ route('shipment.cart.cancel', $shipmentLeadId) }}" method="POST" data-confirm="Cancel this entire shipment request? This cannot be undone." data-confirm-ok="Yes, cancel it" data-confirm-danger>
-                                                @csrf
-                                                <button type="submit" class="cart-btn cart-cancel-shipment-btn">
-                                                    <svg><use href="#ico-x"></use></svg> Cancel Shipment
-                                                </button>
-                                            </form>
-                                        @elseif(!$shipmentIsPending)
-                                            @if(!$shipmentHasError)
-                                                <form action="{{ route('shipment.cart.checkout_one') }}" method="POST" data-confirm="Proceed to booking for this shipment only? The other shipments in your cart will stay untouched." data-confirm-ok="Yes, proceed">
-                                                    @csrf
-                                                    @foreach($shipmentItems as $shipmentItem)
-                                                        <input type="hidden" name="item_ids[]" value="{{ $shipmentItem->id }}">
-                                                    @endforeach
-                                                    <button type="submit" class="cart-btn cart-book-shipment-btn">
-                                                        <svg><use href="#ico-check"></use></svg> Proceed to Booking
-                                                    </button>
-                                                </form>
-                                            @endif
-                                            <form action="{{ route('shipment.cart.cancel_fresh') }}" method="POST" data-confirm="Cancel this entire shipment? All items in it will be removed from your cart." data-confirm-ok="Yes, cancel it" data-confirm-danger>
-                                                @csrf
-                                                @foreach($shipmentItems as $shipmentItem)
-                                                    <input type="hidden" name="item_ids[]" value="{{ $shipmentItem->id }}">
-                                                @endforeach
-                                                <button type="submit" class="cart-btn cart-cancel-shipment-btn">
-                                                    <svg><use href="#ico-x"></use></svg> Cancel Shipment
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="cart-route-row">
-                                <div>
-                                    <small class="text-muted d-block" style="font-size:11px; color:var(--ot-muted);">Pickup City</small>
-                                    <div class="cart-city">{{ optional($route)->from_city ?? '-' }}</div>
-                                </div>
-                                <span class="cart-route-arrow"><svg viewBox="0 0 24 24"><use href="#ico-arrow"></use></svg></span>
-                                <div class="text-lg-end">
-                                    <small class="text-muted d-block" style="font-size:11px; color:var(--ot-muted);">Deliver To</small>
-                                    <div class="cart-city">{{ optional($route)->to_city ?? '-' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="cart-meta-grid">
-                                <div class="cart-meta">
-                                    <span>Pickup Date</span>
-                                    <strong>{{ $pickupDate }}</strong>
-                                </div>
-                                <div class="cart-meta">
-                                    <span>Delivery Date</span>
-                                    <strong>{{ $deliveryDate }}</strong>
-                                </div>
-                                <div class="cart-meta">
-                                    <span>Transit Time</span>
-                                    <strong>{{ optional($route)->transit_days ? $route->transit_days . ' Day' . ($route->transit_days > 1 ? 's' : '') : '-' }}</strong>
-                                </div>
-                                <div class="cart-meta">
-                                    <span>Status</span>
-                                    <strong class="{{ $shipmentHasError ? 'text-review' : 'text-ready' }}">
-                                        {{ $shipmentHasError ? 'Needs Review' : 'Ready' }}
-                                    </strong>
-                                </div>
-                            </div>
-
-                            <div class="cart-item-list">
-                                @foreach($shipmentItems as $item)
-                                    @php
-                                        $volumetricWeight = $item->price_breakdown['volumetric_weight_kg'] ?? $item->volumetric_weight_kg;
-                                        $actualTotalWeight = round((float) $item->weight_kg * (int) $item->quantity, 2);
-                                        $isVolumeBasis = $item->charge_basis === 'volume';
-                                    @endphp
-                                    <div class="item-row">
-                                        <div class="item-thumb"><svg viewBox="0 0 32 32"><use href="#{{ $itemIcon($item->item_type) }}"></use></svg></div>
-
-                                        <div class="item-info">
-                                            <div class="item-name">{{ $item->item_name }}</div>
-                                            <div class="item-type">{{ $item->item_type ? str_replace('_', ' ', $item->item_type) : 'Shipment item' }}</div>
-                                            <div class="item-specs">
-                                                <span class="mono">{{ $item->length_cm ? number_format($item->length_cm, 0) : '-' }}×{{ $item->width_cm ? number_format($item->width_cm, 0) : '-' }}×{{ number_format($item->height_cm, 0) }} cm</span>
-                                                <span class="sep"></span>
-                                                <span class="mono">Qty {{ $item->quantity }}</span>
-                                            </div>
-                                        </div>
-
-                                        @if($item->price_error)
-                                            <span class="cart-row-error" title="{{ $item->price_error }}" style="grid-column: span 3;">
-                                                <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor"><use href="#ico-alert"></use></svg> {{ $item->price_error }}
-                                            </span>
-                                        @else
-                                            <div class="weight-compare">
-                                                <div class="metric {{ !$isVolumeBasis ? 'winner' : '' }}"><span>Actual</span><b>{{ number_format($actualTotalWeight, 2) }} kg</b></div>
-                                                <div class="metric {{ $isVolumeBasis ? 'winner' : '' }}"><span>Volumetric</span><b>{{ $volumetricWeight !== null ? number_format($volumetricWeight, 2) : '0.00' }} kg</b></div>
-                                            </div>
-
-                                            <span class="basis-chip {{ $item->charge_basis }}">{{ $isVolumeBasis ? 'Volume' : 'Weight' }}</span>
-
-                                            <div class="item-price">
-                                                <span class="amount">₹{{ number_format($item->calculated_price, 2) }}</span>
-                                                <span class="rate">{{ number_format($item->charge_weight_kg, 2) }} kg billed</span>
-                                            </div>
-                                        @endif
-
-                                        <div class="item-actions">
-                                            @unless($item->booking_status)
-                                                <a href="{{ route('shipment.cart.edit', $item->id) }}" class="icon-btn" title="Edit item">
-                                                    <svg viewBox="0 0 24 24"><use href="#ico-edit"></use></svg>
-                                                </a>
-                                                <a href="{{ route('shipment.cart.delete', $item->id) }}" class="icon-btn danger" title="Remove item" data-confirm="Remove this item from your cart?" data-confirm-ok="Yes, remove it" data-confirm-danger>
-                                                    <svg viewBox="0 0 24 24"><use href="#ico-trash"></use></svg>
-                                                </a>
-                                            @endunless
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-
-                            <footer class="ship-group-foot">
-                                <span>{{ $shipmentIsPending ? 'Awaiting admin review — locked from edits' : 'Min charge applies per item only if the calculated price falls below it' }}</span>
-                                <span>Shipment Subtotal <b>₹{{ number_format($shipmentTotal, 2) }}</b></span>
-                            </footer>
-                        </article>
-                    @endforeach
-                </div>
-
-                <div class="cart-summary-panel">
-                    <h4>Order Summary</h4>
-
-                    <div class="cart-summary-line">
-                        <span>Shipment items</span>
-                        <strong>{{ $itemCount }}</strong>
-                    </div>
-                    <div class="cart-summary-line">
-                        <span>Total quantity</span>
-                        <strong>{{ $totalQuantity }}</strong>
-                    </div>
-                    <div class="cart-summary-line">
-                        <span>Pricing status</span>
-                        <strong>{{ $hasPriceIssue ? 'Review needed' : 'Ready' }}</strong>
-                    </div>
-
-                    <div class="cart-summary-total">
-                        <span>Estimated total amount</span>
-                        <strong>₹{{ number_format($cartTotal, 2) }}</strong>
-                    </div>
-
-                    <div class="cart-summary-actions">
-                        <form action="{{ route('shipment.cart.checkout') }}" method="POST" data-confirm="Are you sure you want to proceed with the checkout?" data-confirm-ok="Yes, proceed">
-                            @csrf
-                            <button type="submit" class="btn-cta" {{ !$hasCheckoutableItems || $hasPriceIssue ? 'disabled' : '' }}>
-                                Proceed to Booking
-                                <svg viewBox="0 0 24 24"><use href="#ico-arrow"></use></svg>
-                            </button>
-                        </form>
-                        <a href="{{ route('shipment.add_item') }}" class="cart-secondary-btn">
-                            <svg viewBox="0 0 24 24"><use href="#ico-plus"></use></svg>
-                            Add More Items
-                        </a>
-                    </div>
-
-                    <p class="cart-checkout-note">Each item is billed on whichever is higher — actual weight or volumetric weight — at the route's per-kg rate, with a per-item minimum applied automatically.</p>
-
-                    <div class="cart-trust-grid">
-                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-pin"></use></svg>Live Tracking</div>
-                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-shield"></use></svg>Insured Move</div>
-                        <div class="cart-trust-item"><svg viewBox="0 0 24 24"><use href="#ico-check"></use></svg>Verified Fleet</div>
-                    </div>
-                </div>
+            <div class="cart-section-block">
+                @include('web.partials.cart-section', ['items' => $warehouseCartItems, 'total' => $warehouseCartTotal, 'mode' => 'warehouse'])
             </div>
         @endif
     </div>

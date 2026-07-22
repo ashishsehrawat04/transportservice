@@ -88,32 +88,32 @@
         width: 1px !important;
     }
 
-    .shipment-city-select + .select2-container {
+    .warehouse-select + .select2-container {
         width: 100% !important;
     }
 
-    .shipment-city-select + .select2-container .select2-selection--single {
+    .warehouse-select + .select2-container .select2-selection--single {
         height: 48px;
         border: 1px solid var(--ot-line);
         border-radius: 8px;
     }
 
-    .shipment-city-select + .select2-container .select2-selection__rendered {
+    .warehouse-select + .select2-container .select2-selection__rendered {
         line-height: 48px;
         padding-left: 12px;
         padding-right: 34px;
     }
 
-    .shipment-city-select + .select2-container .select2-selection__arrow {
+    .warehouse-select + .select2-container .select2-selection__arrow {
         height: 48px;
         right: 8px;
     }
 
-    .select2-dropdown.shipment-city-dropdown {
+    .select2-dropdown.warehouse-dropdown {
         border-color: var(--ot-line);
     }
 
-    .select2-dropdown.shipment-city-dropdown .select2-search__field {
+    .select2-dropdown.warehouse-dropdown .select2-search__field {
         min-height: 40px;
         border: 1px solid var(--ot-line);
         border-radius: 4px;
@@ -524,8 +524,6 @@
     <symbol id="ai-plus" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></symbol>
     <symbol id="ai-trash" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></symbol>
     <symbol id="ai-box" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l12-6 12 6-12 6z"></path><path d="M4 10v12l12 6 12-6V10"></path><path d="M16 16v12"></path></symbol>
-    <symbol id="ai-bike" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="22" r="5"></circle><circle cx="24" cy="22" r="5"></circle><path d="M8 22l6-11h6l4 11"></path><path d="M14 11h6"></path><path d="M14 22h10"></path></symbol>
-    <symbol id="ai-electronics" viewBox="0 0 32 32" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="24" height="16" rx="1.6"></rect><path d="M12 26h8M16 22v4"></path></symbol>
     <symbol id="ai-sparkle" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path></symbol>
 </svg>
 
@@ -536,13 +534,9 @@
                 <div class="booking-panel">
                     <div class="booking-head">
                         <div>
-                            <span class="booking-eyebrow">Shipment</span>
-                            <h2>Add Shipment</h2>
+                            <span class="booking-eyebrow">Warehouse</span>
+                            <h2>Store an Item</h2>
                         </div>
-                        <!-- <a href="{{ route('shipment.cart') }}" class="primary-btn1 btn-hover">
-                            My Cart
-                            <span></span>
-                        </a> -->
                     </div>
 
                     @if ($errors->any())
@@ -555,62 +549,42 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('shipment.save_items') }}" method="POST" id="shipmentItemForm">
+                    <form action="{{ route('warehouse.save_items') }}" method="POST" id="warehouseItemForm">
                         @csrf
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">From City</label>
-                                <select name="from_city" class="form-control shipment-city-select" data-placeholder="Select from city" required>
-                                    <option value="">select city</option>
-                                    @foreach($fromCities as $city)
-                                        <option value="{{ $city }}" {{ old('from_city') === $city ? 'selected' : '' }}>
-                                            {{ $city }}
+                                <label class="form-label">Warehouse</label>
+                                <select name="warehouse_id" class="form-control warehouse-select" data-placeholder="Select a warehouse" required>
+                                    <option value="">select warehouse</option>
+                                    @foreach($warehouses as $warehouse)
+                                        <option value="{{ $warehouse->id }}" {{ (string) old('warehouse_id') === (string) $warehouse->id ? 'selected' : '' }}>
+                                            {{ $warehouse->name }} — {{ $warehouse->city }}
                                         </option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Deliver To</label>
-                                <select name="to_city"  class="form-control shipment-city-select"  data-placeholder="Select delivery city" required>
-                                    <option value="">select city</option>
-
-                                    @foreach($toCities as $city)
-                                        <option value="{{ $city }}" {{ old('to_city') === $city ? 'selected' : '' }}>
-                                            {{ $city }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <div class="text-danger small mb-3 d-none" id="cityRouteError">
-                                    Please select a valid active route.
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Transport Pickup Address</label>
-                                <textarea name="pickup_address" class="form-control" rows="3" placeholder="Enter pickup address">{{ old('pickup_address') }}</textarea>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Transport Delivery Address</label>
-                                <textarea name="delivery_address" class="form-control" rows="3" placeholder="Enter delivery address">{{ old('delivery_address') }}</textarea>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Pickup Date</label>
                                 <input type="date" name="pickup_date" class="form-control" value="{{ old('pickup_date') }}" required>
                             </div>
-                            <!-- <div class="col-md-6 mb-3">
-                                <label class="form-label">Delivery Date</label>
-                                <input type="date" name="delivery_date" class="form-control" value="{{ old('delivery_date') }}" required>
-                            </div> -->
+                            <div class="col-12">
+                                <div class="text-danger small mb-3 d-none" id="warehouseError">
+                                    Please select a valid active warehouse.
+                                </div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Pickup Address</label>
+                                <textarea name="pickup_address" class="form-control" rows="3" placeholder="Address where the item should be picked up from">{{ old('pickup_address') }}</textarea>
+                            </div>
                         </div>
 
                         <div class="booking-section-title">Item Details</div>
-                        <div id="shipmentItems">
-                            <div class="shipment-item-row item-card">
+                        <div id="warehouseItems">
+                            <div class="warehouse-item-row item-card">
                                 <div class="item-card-head">
                                     <div class="item-card-title">
-                                        <span class="item-card-icon"><svg viewBox="0 0 32 32"><use href="#ai-box" class="item-type-icon-use"></use></svg></span>
+                                        <span class="item-card-icon"><svg viewBox="0 0 32 32"><use href="#ai-box"></use></svg></span>
                                         <h5>Item 1</h5>
                                     </div>
                                     <button type="button" class="btn-remove-item remove-item" style="display:none;">
@@ -619,19 +593,12 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label"> Shipment Item Name</label>
+                                        <label class="form-label">Item Name</label>
                                         <input type="text" name="items[0][item_name]" class="form-control" placeholder="Box, chair, fridge..." required>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <label class="form-label"> Shipment Item Type</label>
-                                        <select name="items[0][item_type]" class="form-control item-type-select" required>
-                                            <option value="">Select item type</option>
-                                            @foreach($itemTypes as $itemType)
-                                                <option value="{{ $itemType }}" {{ old('items.0.item_type') == $itemType ? 'selected' : '' }}>
-                                                    {{ $itemType }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <label class="form-label">Item Type</label>
+                                        <input type="text" name="items[0][item_type]" class="form-control" placeholder="Furniture, electronics...">
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Quantity</label>
@@ -652,6 +619,10 @@
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Weight (KG)</label>
                                         <input type="number" step="0.01" name="items[0][weight_kg]" class="form-control" min="0.01" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Storage Days</label>
+                                        <input type="number" name="items[0][storage_days]" class="form-control" value="1" min="1" required>
                                     </div>
                                 </div>
                             </div>
@@ -686,11 +657,11 @@
                             <div id="estimateItemsList"></div>
                             <div class="estimate-summary">
                                 <div class="estimate-summary-line">
-                                    <span>Transit Time</span>
-                                    <span id="estimateTransitTime">-</span>
+                                    <span>Rate</span>
+                                    <span id="estimateRate">-</span>
                                 </div>
                                 <div class="estimate-summary-line">
-                                    <span>Min Charge (per shipment)</span>
+                                    <span>Min Charge (per request)</span>
                                     <span id="estimateMinCharge">₹0.00</span>
                                 </div>
                                 <div class="estimate-summary-line">
@@ -715,36 +686,18 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let itemIndex = 1;
-        const itemsWrapper = document.getElementById('shipmentItems');
+        const itemsWrapper = document.getElementById('warehouseItems');
         const addButton = document.getElementById('addMoreItem');
-        const shipmentForm = document.getElementById('shipmentItemForm');
-        const fromCitySelect = shipmentForm.querySelector('[name="from_city"]');
-        const toCitySelect = shipmentForm.querySelector('[name="to_city"]');
-        const cityRouteError = document.getElementById('cityRouteError');
-        const activeRoutes = @json($cityRoutes->map(fn ($route) => [
-            'from_city' => $route->from_city,
-            'to_city' => $route->to_city,
-        ])->values());
-
-        const typeIconMap = { bike: 'ai-bike', electronics: 'ai-electronics' };
-
-        function iconForType(type) {
-            return typeIconMap[type] || 'ai-box';
-        }
-
-        function syncTypeIcon(row) {
-            const select = row.querySelector('.item-type-select');
-            const use = row.querySelector('.item-type-icon-use');
-            if (select && use) {
-                use.setAttribute('href', '#' + iconForType(select.value));
-            }
-        }
+        const warehouseForm = document.getElementById('warehouseItemForm');
+        const warehouseSelect = warehouseForm.querySelector('[name="warehouse_id"]');
+        const warehouseError = document.getElementById('warehouseError');
+        const activeWarehouses = @json($warehouses->pluck('id')->values());
 
         if (window.jQuery && jQuery.fn.select2) {
-            jQuery('.shipment-city-select').select2({
+            jQuery('.warehouse-select').select2({
                 width: '100%',
                 allowClear: true,
-                dropdownCssClass: 'shipment-city-dropdown',
+                dropdownCssClass: 'warehouse-dropdown',
                 placeholder: function () {
                     return jQuery(this).data('placeholder');
                 }
@@ -752,32 +705,25 @@
         }
 
         function refreshRows() {
-            const rows = itemsWrapper.querySelectorAll('.shipment-item-row');
+            const rows = itemsWrapper.querySelectorAll('.warehouse-item-row');
             rows.forEach((row, index) => {
                 row.querySelector('h5').textContent = 'Item ' + (index + 1);
                 row.querySelector('.remove-item').style.display = rows.length > 1 ? 'inline-flex' : 'none';
             });
         }
 
-        itemsWrapper.addEventListener('change', function (event) {
-            if (event.target.classList.contains('item-type-select')) {
-                syncTypeIcon(event.target.closest('.shipment-item-row'));
-            }
-        });
-
         addButton.addEventListener('click', function () {
-            const firstRow = itemsWrapper.querySelector('.shipment-item-row');
+            const firstRow = itemsWrapper.querySelector('.warehouse-item-row');
             const newRow = firstRow.cloneNode(true);
 
             newRow.querySelectorAll('input').forEach(function (input) {
                 input.name = input.name.replace(/items\[\d+\]/, 'items[' + itemIndex + ']');
-                input.value = input.type === 'number' && input.name.includes('[quantity]') ? 1 : '';
+                if (input.name.includes('[quantity]') || input.name.includes('[storage_days]')) {
+                    input.value = 1;
+                } else {
+                    input.value = '';
+                }
             });
-            newRow.querySelectorAll('select').forEach(function (select) {
-                select.name = select.name.replace(/items\[\d+\]/, 'items[' + itemIndex + ']');
-                select.value = '';
-            });
-            syncTypeIcon(newRow);
 
             newRow.classList.add('item-card-enter');
             itemsWrapper.appendChild(newRow);
@@ -789,37 +735,32 @@
 
         itemsWrapper.addEventListener('click', function (event) {
             if (event.target.closest('.remove-item')) {
-                event.target.closest('.shipment-item-row').remove();
+                event.target.closest('.warehouse-item-row').remove();
                 refreshRows();
                 autoRecalcIfOpen();
             }
         });
 
-        function hasActiveRoute() {
-            const fromCity = fromCitySelect.value.trim().toLowerCase();
-            const toCity = toCitySelect.value.trim().toLowerCase();
-
-            return activeRoutes.some(function (route) {
-                return route.from_city.toLowerCase() === fromCity && route.to_city.toLowerCase() === toCity;
+        function hasActiveWarehouse() {
+            return activeWarehouses.some(function (id) {
+                return String(id) === String(warehouseSelect.value);
             });
         }
 
-        [fromCitySelect, toCitySelect].forEach(function (select) {
-            select.addEventListener('change', function () {
-                cityRouteError.classList.add('d-none');
-                autoRecalcIfOpen();
-            });
+        warehouseSelect.addEventListener('change', function () {
+            warehouseError.classList.add('d-none');
+            autoRecalcIfOpen();
         });
 
-        shipmentForm.addEventListener('submit', function (event) {
-            if (!hasActiveRoute()) {
+        warehouseForm.addEventListener('submit', function (event) {
+            if (!hasActiveWarehouse()) {
                 event.preventDefault();
-                cityRouteError.classList.remove('d-none');
+                warehouseError.classList.remove('d-none');
 
                 if (window.jQuery && jQuery.fn.select2) {
-                    jQuery(toCitySelect).select2('open');
+                    jQuery(warehouseSelect).select2('open');
                 } else {
-                    toCitySelect.focus();
+                    warehouseSelect.focus();
                 }
             }
         });
@@ -830,7 +771,7 @@
         const estimateSkeleton = document.getElementById('estimateSkeleton');
         const estimateResult = document.getElementById('estimateResult');
         const estimateItemsList = document.getElementById('estimateItemsList');
-        const estimateTransitTime = document.getElementById('estimateTransitTime');
+        const estimateRate = document.getElementById('estimateRate');
         const estimateMinCharge = document.getElementById('estimateMinCharge');
         const estimateItemsSubtotal = document.getElementById('estimateItemsSubtotal');
         const estimateGrandTotal = document.getElementById('estimateGrandTotal');
@@ -850,8 +791,8 @@
         async function runEstimate() {
             estimateError.classList.add('d-none');
 
-            if (!hasActiveRoute()) {
-                estimateError.textContent = 'Please select a valid active route first.';
+            if (!hasActiveWarehouse()) {
+                estimateError.textContent = 'Please select a valid active warehouse first.';
                 estimateError.classList.remove('d-none');
                 estimateResult.classList.add('d-none');
                 return;
@@ -862,31 +803,31 @@
             calculateEstimateLabel.textContent = 'Calculating...';
 
             const items = [];
-            itemsWrapper.querySelectorAll('.shipment-item-row').forEach(function (row) {
+            itemsWrapper.querySelectorAll('.warehouse-item-row').forEach(function (row) {
                 items.push({
                     quantity: parseInt(row.querySelector('input[name$="[quantity]"]').value, 10) || 1,
                     length_cm: parseFloat(row.querySelector('input[name$="[length_cm]"]').value) || 0,
                     width_cm: parseFloat(row.querySelector('input[name$="[width_cm]"]').value) || 0,
                     height_cm: parseFloat(row.querySelector('input[name$="[height_cm]"]').value) || 0,
                     weight_kg: parseFloat(row.querySelector('input[name$="[weight_kg]"]').value) || 0,
+                    storage_days: parseInt(row.querySelector('input[name$="[storage_days]"]').value, 10) || 1,
                 });
             });
 
             const payload = {
-                from_city: fromCitySelect.value,
-                to_city: toCitySelect.value,
+                warehouse_id: warehouseSelect.value,
                 items: items,
             };
 
             estimateSkeleton.classList.remove('d-none');
 
             try {
-                const response = await fetch("{{ route('shipment.estimate_items') }}", {
+                const response = await fetch("{{ route('warehouse.estimate_items') }}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': shipmentForm.querySelector('input[name="_token"]').value,
+                        'X-CSRF-TOKEN': warehouseForm.querySelector('input[name="_token"]').value,
                     },
                     body: JSON.stringify(payload),
                 });
@@ -905,7 +846,7 @@
                     const isVolume = item.charge_basis === 'volume';
                     const chipClass = isVolume ? 'basis-chip volume' : 'basis-chip weight';
                     const chipLabel = isVolume ? 'Volume' : 'Weight';
-                    const figure = Number(item.charge_weight_kg).toFixed(2) + ' kg';
+                    const figure = Number(item.charge_weight_kg).toFixed(2) + ' kg × ' + item.storage_days + ' day' + (item.storage_days > 1 ? 's' : '');
 
                     const row = document.createElement('div');
                     row.className = 'estimate-item-row';
@@ -917,8 +858,8 @@
                     estimateItemsList.appendChild(row);
                 });
 
-                const transitDays = data.route && data.route.transit_days;
-                estimateTransitTime.textContent = transitDays ? transitDays + (transitDays > 1 ? ' Days' : ' Day') : '-';
+                const rate = data.warehouse && data.warehouse.price_per_day_per_kg;
+                estimateRate.textContent = rate ? '₹' + Number(rate).toFixed(2) + ' / kg / day' : '-';
                 estimateMinCharge.textContent = '₹' + Number(data.min_charge).toFixed(2);
                 estimateItemsSubtotal.textContent = '₹' + Number(data.items_total).toFixed(2);
                 estimateGrandTotal.textContent = '₹' + Number(data.grand_total).toFixed(2);
@@ -949,7 +890,7 @@
         }
 
         itemsWrapper.addEventListener('input', function (event) {
-            if (event.target.matches('input[name$="[length_cm]"], input[name$="[width_cm]"], input[name$="[height_cm]"], input[name$="[weight_kg]"], input[name$="[quantity]"]')) {
+            if (event.target.matches('input[name$="[length_cm]"], input[name$="[width_cm]"], input[name$="[height_cm]"], input[name$="[weight_kg]"], input[name$="[quantity]"], input[name$="[storage_days]"]')) {
                 debouncedAutoRecalc();
             }
         });
@@ -959,36 +900,32 @@
             runEstimate();
         });
 
-        function resetShipmentForm() {
-            shipmentForm.reset();
+        function resetWarehouseForm() {
+            warehouseForm.reset();
 
             if (window.jQuery && jQuery.fn.select2) {
-                jQuery('.shipment-city-select').val('').trigger('change');
+                jQuery('.warehouse-select').val('').trigger('change');
             }
 
-            itemsWrapper.querySelectorAll('.shipment-item-row').forEach(function (row, index) {
+            itemsWrapper.querySelectorAll('.warehouse-item-row').forEach(function (row, index) {
                 if (index > 0) {
                     row.remove();
                 }
             });
             itemIndex = 1;
 
-            const firstRow = itemsWrapper.querySelector('.shipment-item-row');
+            const firstRow = itemsWrapper.querySelector('.warehouse-item-row');
             if (firstRow) {
                 firstRow.querySelectorAll('input').forEach(function (input) {
-                    input.value = input.name.includes('[quantity]') ? 1 : '';
+                    input.value = (input.name.includes('[quantity]') || input.name.includes('[storage_days]')) ? 1 : '';
                 });
-                firstRow.querySelectorAll('select').forEach(function (select) {
-                    select.value = '';
-                });
-                syncTypeIcon(firstRow);
             }
             refreshRows();
 
             estimateResult.classList.add('d-none');
             estimateSkeleton.classList.add('d-none');
             estimateError.classList.add('d-none');
-            cityRouteError.classList.add('d-none');
+            warehouseError.classList.add('d-none');
         }
 
         function isBackForwardNavigation() {
@@ -1001,22 +938,17 @@
             return false;
         }
 
-        // Using the browser's Back button to return here — whether the page
-        // is served from bfcache or the browser just restores old field
-        // values on a fresh load — must not leave stale item data behind,
-        // or a stray "Add to Cart" click resubmits the same shipment again.
-        // Chrome applies its own field-value restoration late (after load,
-        // not at DOMContentLoaded), so the reset has to happen after that —
-        // hooking `load` plus a short fallback delay covers it reliably.
+        // Same back/forward-cache guard as the shipment add-item page — avoids
+        // resubmitting stale items when returning via the browser Back button.
         if (isBackForwardNavigation()) {
-            resetShipmentForm();
-            window.addEventListener('load', resetShipmentForm);
-            setTimeout(resetShipmentForm, 300);
+            resetWarehouseForm();
+            window.addEventListener('load', resetWarehouseForm);
+            setTimeout(resetWarehouseForm, 300);
         }
 
         window.addEventListener('pageshow', function (event) {
             if (event.persisted) {
-                resetShipmentForm();
+                resetWarehouseForm();
             }
         });
     });
