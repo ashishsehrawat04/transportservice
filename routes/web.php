@@ -6,6 +6,7 @@ use App\Http\Controllers\admin\AdminController;
 use App\Http\Controllers\admin\ApiController;
 use App\Http\Controllers\web\WebController;
 use App\Http\Controllers\web\WarehouseController;
+use App\Http\Controllers\web\PackersMoverController;
 
 
 Route::get('/', function () {
@@ -61,6 +62,21 @@ Route::get('/warehouse/leads', [WarehouseController::class, 'warehouseLeads'])->
 Route::get('/track-storage', [WarehouseController::class, 'trackWarehouse'])->name('warehouse.track');
 Route::get('/track-storage/{trackingNumber}/invoice', [WarehouseController::class, 'downloadWarehouseInvoice'])->name('warehouse.invoice.download');
 
+Route::get('/packers-movers/add-item', [PackersMoverController::class, 'addPackersMoverItem'])->name('packers_movers.add_item');
+Route::post('/packers-movers/add-item', [PackersMoverController::class, 'savePackersMoverItems'])->name('packers_movers.save_items');
+Route::post('/packers-movers/estimate-items', [PackersMoverController::class, 'estimatePackersMoverItems'])->name('packers_movers.estimate_items');
+Route::get('/packers-movers/cart', [PackersMoverController::class, 'packersMoverCart'])->name('packers_movers.cart');
+Route::post('/packers-movers/cart/checkout', [PackersMoverController::class, 'checkoutPackersMoverCart'])->middleware('auth')->name('packers_movers.cart.checkout');
+Route::post('/packers-movers/cart/checkout-one', [PackersMoverController::class, 'checkoutOnePackersMover'])->middleware('auth')->name('packers_movers.cart.checkout_one');
+Route::get('/packers-movers/cart/edit/{id}', [PackersMoverController::class, 'editPackersMoverCartItem'])->name('packers_movers.cart.edit');
+Route::post('/packers-movers/cart/update/{id}', [PackersMoverController::class, 'updatePackersMoverCartItem'])->name('packers_movers.cart.update');
+Route::get('/packers-movers/cart/delete/{id}', [PackersMoverController::class, 'deletePackersMoverCartItem'])->name('packers_movers.cart.delete');
+Route::post('/packers-movers/cart/cancel/{leadId}', [PackersMoverController::class, 'cancelPackersMover'])->middleware('auth')->name('packers_movers.cart.cancel');
+Route::post('/packers-movers/cart/cancel-fresh', [PackersMoverController::class, 'cancelFreshPackersMover'])->middleware('auth')->name('packers_movers.cart.cancel_fresh');
+Route::get('/packers-movers/leads', [PackersMoverController::class, 'packersMoverLeads'])->middleware('auth')->name('packers_movers.leads');
+Route::get('/track-move', [PackersMoverController::class, 'trackPackersMover'])->name('packers_movers.track');
+Route::get('/track-move/{trackingNumber}/invoice', [PackersMoverController::class, 'downloadPackersMoverInvoice'])->name('packers_movers.invoice.download');
+
 
 // admin routes
 
@@ -94,6 +110,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/warehouse-leads/delete/{id}', [AdminController::class, 'AdminDeleteWarehouseLead'])->name('admin.delete.warehouse_lead');
     Route::get('/get-warehouse-leads', [ApiController::class, 'AdminGetWarehouseLeads'])->name('adminget.warehouse_leads');
     Route::get('/get-warehouse-payments', [ApiController::class, 'AdminGetWarehousePayments'])->name('adminget.warehouse_payments');
+
+    Route::get('/packers-movers', [AdminController::class, 'AdminPackersMovers'])->name('admin.packers_movers');
+    Route::get('/packers-movers/manage/{id?}', [AdminController::class, 'AdminManagePackersMover'])->name('admin.manage.packers_mover');
+    Route::post('/packers-movers/manage/{id?}', [AdminController::class, 'AdminSavePackersMover'])->name('admin.save.packers_mover');
+    Route::get('/packers-movers/delete/{id}', [AdminController::class, 'AdminDeletePackersMover'])->name('admin.delete.packers_mover');
+    Route::get('/get-packers-movers', [ApiController::class, 'AdminGetPackersMovers'])->name('adminget.packers_movers');
+
+    Route::get('/packers-mover-leads', [AdminController::class, 'AdminPackersMoverLeads'])->name('admin.packers_mover_leads');
+    Route::get('/packers-mover-leads/manage/{id?}', [AdminController::class, 'AdminManagePackersMoverLead'])->name('admin.manage.packers_mover_lead');
+    Route::post('/packers-mover-leads/manage/{id?}', [AdminController::class, 'AdminSavePackersMoverLead'])->name('admin.save.packers_mover_lead');
+    Route::get('/packers-mover-leads/{id}/quote', [AdminController::class, 'AdminViewPackersMoverLeadQuote'])->name('admin.packers_mover_lead.quote');
+    Route::get('/packers-mover-leads/{id}/quote/download', [AdminController::class, 'AdminDownloadPackersMoverLeadQuote'])->name('admin.packers_mover_lead.quote.download');
+    Route::get('/packers-mover-leads/{id}/invoice', [AdminController::class, 'AdminDownloadPackersMoverLeadInvoice'])->name('admin.packers_mover_lead.invoice');
+    Route::get('/packers-mover-leads/delete/{id}', [AdminController::class, 'AdminDeletePackersMoverLead'])->name('admin.delete.packers_mover_lead');
+    Route::get('/get-packers-mover-leads', [ApiController::class, 'AdminGetPackersMoverLeads'])->name('adminget.packers_mover_leads');
+    Route::get('/get-packers-mover-payments', [ApiController::class, 'AdminGetPackersMoverPayments'])->name('adminget.packers_mover_payments');
 
     Route::get('/transport-prices', [AdminController::class, 'AdminTransportPrices'])->name('admin.transport_prices');
     Route::get('/transport-prices/manage/{id?}', [AdminController::class, 'AdminManageTransportPrice'])->name('admin.manage.transport_price');

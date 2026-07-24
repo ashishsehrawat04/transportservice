@@ -55,7 +55,7 @@
                     </div>
                     <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                            <p class="card-category">Shipment Leads</p>
+                            <p class="card-category">Transport Leads</p>
                             <h4 class="card-title">{{ number_format($dashboard['totalLeads']) }}</h4>
                             <small>{{ number_format($dashboard['pendingLeads']) }} pending</small>
                         </div>
@@ -70,15 +70,79 @@
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-icon">
+                        <div class="icon-big text-center icon-warning bubble-shadow-small">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Warehouse Leads</p>
+                            <h4 class="card-title">{{ number_format($dashboard['totalWarehouseLeads']) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
                         <div class="icon-big text-center icon-secondary bubble-shadow-small">
                             <i class="fas fa-rupee-sign"></i>
                         </div>
                     </div>
                     <div class="col col-stats ms-3 ms-sm-0">
                         <div class="numbers">
-                            <p class="card-category">Revenue</p>
+                            <p class="card-category">Transport Revenue</p>
                             <h4 class="card-title">{{ number_format($dashboard['totalRevenue'], 2) }}</h4>
                             <small>{{ number_format($dashboard['todayRevenue'], 2) }} today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-info bubble-shadow-small">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Warehouse Revenue</p>
+                            <h4 class="card-title">{{ number_format($dashboard['warehouseRevenue'], 2) }}</h4>
+                            <small>{{ number_format($dashboard['todayWarehouseRevenue'], 2) }} today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-md-4">
+        <div class="card card-stats card-round">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-icon">
+                        <div class="icon-big text-center icon-primary bubble-shadow-small">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                    <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                            <p class="card-category">Total Revenue</p>
+                            <h4 class="card-title">{{ number_format($dashboard['combinedRevenue'], 2) }}</h4>
+                            <small>Transport + Warehouse</small>
                         </div>
                     </div>
                 </div>
@@ -266,10 +330,18 @@
                             fill: true,
                         },
                         {
-                            label: 'Revenue',
+                            label: 'Transport Revenue',
                             data: @json($monthlyRevenue),
                             borderColor: '#31ce36',
                             backgroundColor: 'rgba(49, 206, 54, 0.12)',
+                            tension: 0.35,
+                            fill: true,
+                        },
+                        {
+                            label: 'Warehouse Revenue',
+                            data: @json($monthlyWarehouseRevenue),
+                            borderColor: '#f3545d',
+                            backgroundColor: 'rgba(243, 84, 93, 0.12)',
                             tension: 0.35,
                             fill: true,
                         }

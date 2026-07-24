@@ -15,6 +15,128 @@
     @endif
 
     <div class="row">
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-primary bubble-shadow-small">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Total</p>
+                                <h4 class="card-title">{{ number_format($stats['total']) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-warning bubble-shadow-small">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Pending</p>
+                                <h4 class="card-title">{{ number_format($stats['pending']) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-info bubble-shadow-small">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">In Progress</p>
+                                <h4 class="card-title">{{ number_format($stats['inProgress']) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-success bubble-shadow-small">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Delivered</p>
+                                <h4 class="card-title">{{ number_format($stats['delivered']) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-danger bubble-shadow-small">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Cancelled</p>
+                                <h4 class="card-title">{{ number_format($stats['cancelled']) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-2">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-icon">
+                            <div class="icon-big text-center icon-secondary bubble-shadow-small">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                        </div>
+                        <div class="col col-stats ms-3 ms-sm-0">
+                            <div class="numbers">
+                                <p class="card-category">Revenue</p>
+                                <h4 class="card-title">{{ number_format($stats['revenue'], 0) }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -134,13 +256,22 @@
                     {
                         data: 'admin_status',
                         render: function(data) {
-                            return `<span class="badge bg-info">${data}</span>`;
+                            const colors = {
+                                pending: 'bg-warning', reviewed: 'bg-info', approved: 'bg-primary',
+                                dispatched: 'bg-info', delivered: 'bg-success',
+                                cancelled: 'bg-danger', rejected: 'bg-danger'
+                            };
+                            return `<span class="badge ${colors[data] || 'bg-secondary'}">${data}</span>`;
                         }
                     },
                     {
                         data: 'payment_status',
                         render: function(data) {
-                            return `<span class="badge bg-secondary">${data}</span>`;
+                            const colors = {
+                                unpaid: 'bg-danger', partial: 'bg-warning',
+                                paid: 'bg-success', refunded: 'bg-secondary'
+                            };
+                            return `<span class="badge ${colors[data] || 'bg-secondary'}">${data}</span>`;
                         }
                     },
                     {

@@ -372,6 +372,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.packers_movers') || request()->routeIs('admin.manage.packers_mover') ? 'active' : '' }}">
+                    <a href="{{ route('admin.packers_movers') }} ">
+                    <i class="fas fa-people-carry"></i>
+                    <p>Packers & Movers</p>
+                    </a>
+                </li>
+
                 <!-- <li class="nav-item {{ request()->routeIs('admin.transport_prices') ? 'active' : '' }}">
                     <a href="{{ route('admin.transport_prices') }} ">
                     <i class="fas fa-dollar-sign"></i>
@@ -390,6 +397,13 @@
                     <a href="{{ route('admin.warehouse_leads') }} ">
                     <i class="fas fa-boxes-stacked"></i>
                     <p>Warehouse Leads</p>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ request()->routeIs('admin.packers_mover_leads') || request()->routeIs('admin.manage.packers_mover_lead') ? 'active' : '' }}">
+                    <a href="{{ route('admin.packers_mover_leads') }} ">
+                    <i class="fas fa-truck-moving"></i>
+                    <p>Packers & Movers Leads</p>
                     </a>
                 </li>
 

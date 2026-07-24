@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Already inside /public (or a real file/folder in there) — leave it alone.
+    RewriteCond %{REQUEST_URI} ^/public/
+    RewriteRule ^(.*)$ - [L]
+
+    # Everything else gets served out of /public, so the app works at the
+    # domain root without needing /public in the URL.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

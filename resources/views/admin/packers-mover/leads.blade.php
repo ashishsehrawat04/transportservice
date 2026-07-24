@@ -21,7 +21,7 @@
                     <div class="row align-items-center">
                         <div class="col-icon">
                             <div class="icon-big text-center icon-primary bubble-shadow-small">
-                                <i class="fas fa-truck"></i>
+                                <i class="fas fa-truck-moving"></i>
                             </div>
                         </div>
                         <div class="col col-stats ms-3 ms-sm-0">
@@ -61,7 +61,7 @@
                     <div class="row align-items-center">
                         <div class="col-icon">
                             <div class="icon-big text-center icon-info bubble-shadow-small">
-                                <i class="fas fa-route"></i>
+                                <i class="fas fa-boxes"></i>
                             </div>
                         </div>
                         <div class="col col-stats ms-3 ms-sm-0">
@@ -140,9 +140,9 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title">Transport Leads</h4>
-                    <a href="{{ route('admin.manage.transport_lead') }}" class="btn btn-primary btn-sm">
-                        Add Transport Lead
+                    <h4 class="card-title">Packers &amp; Movers Leads</h4>
+                    <a href="{{ route('admin.manage.packers_mover_lead') }}" class="btn btn-primary btn-sm">
+                        Add Lead
                     </a>
                 </div>
                 <div class="card-body">
@@ -154,7 +154,8 @@
                                     <th>Tracking</th>
                                     <th>User</th>
                                     <th>Item</th>
-                                    <th>Route</th>
+                                    <th>Branch</th>
+                                    <th>Distance</th>
                                     <th>Base Price</th>
                                     <th>Discount</th>
                                     <th>Total</th>
@@ -178,7 +179,7 @@
                 serverSide: false,
 
                 ajax: {
-                    url: "{{ route('adminget.transport.leads') }}",
+                    url: "{{ route('adminget.packers_mover_leads') }}",
 
                     dataSrc: function (json) {
                         if (json.status) {
@@ -219,15 +220,19 @@
                     {
                         data: null,
                         render: function(row) {
-                            return `${row.item_name}<br><small>${row.quantity} x ${row.item_type}</small>`;
+                            return `${row.item_name}<br><small>${row.quantity} x ${row.item_type || '-'}</small>`;
                         }
                     },
                     {
-                        data: null,
-                        render: function(row) {
-                            let fromCity = row.city_route ? row.city_route.from_city : '-';
-                            let toCity = row.city_route ? row.city_route.to_city : '-';
-                            return `${fromCity} to ${toCity}`;
+                        data: 'packers_mover',
+                        render: function(packersMover) {
+                            return packersMover ? `${packersMover.name}<br><small>${packersMover.city}</small>` : '-';
+                        }
+                    },
+                    {
+                        data: 'distance_km',
+                        render: function(data) {
+                            return data ? parseFloat(data).toFixed(1) + ' KM' : '-';
                         }
                     },
                     {
@@ -274,11 +279,11 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            let editUrl = "{{ url('admin/transport-leads/manage') }}/" + row.id;
-                            let quoteUrl = "{{ url('admin/transport-leads') }}/" + row.id + "/quote";
+                            let editUrl = "{{ url('admin/packers-mover-leads/manage') }}/" + row.id;
+                            let quoteUrl = "{{ url('admin/packers-mover-leads') }}/" + row.id + "/quote";
                             let quoteDownloadUrl = quoteUrl + "/download";
-                            let invoiceUrl = "{{ url('admin/transport-leads') }}/" + row.id + "/invoice";
-                            let deleteUrl = "{{ url('admin/transport-leads/delete') }}/" + row.id;
+                            let invoiceUrl = "{{ url('admin/packers-mover-leads') }}/" + row.id + "/invoice";
+                            let deleteUrl = "{{ url('admin/packers-mover-leads/delete') }}/" + row.id;
                             let invoiceButton = row.admin_status === 'delivered'
                                 ? `<a href="${invoiceUrl}" class="btn btn-sm btn-success">Invoice PDF</a>`
                                 : '';

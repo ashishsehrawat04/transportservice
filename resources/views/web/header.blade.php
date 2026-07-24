@@ -720,6 +720,9 @@
                         <li class="{{ request()->is('/') ? 'active' : '' }}">
                             <a href="{{ url('/') }}">Home</a>
                         </li>
+                        <li>
+                            <a href="{{ url('/') }}#services">Services</a>
+                        </li>
                         <li class="menu-item-has-children">
                             <a href="{{ route('shipment.cart') }}" class="drop-down">
                                 Shipment
@@ -749,9 +752,24 @@
                                 <li><a href="{{ route('warehouse.track') }}">Track Storage</a></li>
                             </ul>
                         </li>
-                        <li class="{{ request()->routeIs('shipment.track') ? 'active' : '' }}">
-                            <a href="{{ route('shipment.track') }}">Track & Trace</a>
+                        <li class="menu-item-has-children">
+                            <a href="{{ route('packers_movers.cart') }}" class="drop-down">
+                                Packers &amp; Movers
+                                <i class="bi bi-caret-down-fill"></i>
+                            </a>
+                            <i class="bi bi-plus dropdown-icon"></i>
+                            <ul class="sub-menu">
+                                <li><a href="{{ route('packers_movers.add_item') }}">Book Your Move</a></li>
+                                <li><a href="{{ route('packers_movers.cart') }}">My Move Cart</a></li>
+                                @auth
+                                    <li><a href="{{ route('packers_movers.leads') }}">Move Requests</a></li>
+                                @endauth
+                                <li><a href="{{ route('packers_movers.track') }}">Track Move</a></li>
+                            </ul>
                         </li>
+                        <!-- <li class="{{ request()->routeIs('shipment.track') ? 'active' : '' }}">
+                            <a href="{{ route('shipment.track') }}">Track & Trace</a>
+                        </li> -->
                     </ul>
                     <!-- <a class="primary-btn1 btn-hover d-xl-none" href="{{ route('shipment.track') }}">
                         Track & Trace
@@ -787,7 +805,8 @@
                             @auth
                                 @php
                                     $cartCount = \App\Models\TransportCartItem::where('user_id', Auth::id())->count()
-                                        + \App\Models\WarehouseCartItem::where('user_id', Auth::id())->count();
+                                        + \App\Models\WarehouseCartItem::where('user_id', Auth::id())->count()
+                                        + \App\Models\PackersMoverCartItem::where('user_id', Auth::id())->count();
                                     $userInitial = strtoupper(substr(Auth::user()->name ?? 'U', 0, 1));
                                 @endphp
 
@@ -836,7 +855,7 @@
                             @endauth
                     </div>
                     <a class="primary-btn1 white-bg btn-hover d-xl-flex d-none" href="{{ route('shipment.track') }}">
-                        Track & Trace
+                        Track & Traces
                         <svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
                             <g>
                                 <path

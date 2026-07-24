@@ -14,6 +14,9 @@ use App\Models\ShipmentPayment;
 use App\Models\Warehouse;
 use App\Models\WarehouseLead;
 use App\Models\WarehousePayment;
+use App\Models\PackersMover;
+use App\Models\PackersMoverLead;
+use App\Models\PackersMoverPayment;
 
 
 class ApiController extends Controller
@@ -308,6 +311,92 @@ class ApiController extends Controller
             return Response::success(
                 $payments,
                 'Warehouse payments fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetPackersMovers()
+    {
+        try {
+            $packersMovers = PackersMover::get();
+
+            if ($packersMovers->isEmpty()) {
+                return Response::error(
+                    'No packers & movers branches found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $packersMovers,
+                'Packers & movers branches fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetPackersMoverLeads()
+    {
+        try {
+            $leads = PackersMoverLead::with(['user:id,name,email', 'packersMover', 'assignedUser:id,name'])
+                ->latest()
+                ->get();
+
+            if ($leads->isEmpty()) {
+                return Response::error(
+                    'No packers & movers leads found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $leads,
+                'Packers & movers leads fetched successfully',
+                200
+            );
+
+            } catch (\Exception $e) {
+                return Response::error(
+                    $e->getMessage(),
+                    500
+                );
+            }
+    }
+
+    public function AdminGetPackersMoverPayments()
+    {
+        try {
+            $payments = PackersMoverPayment::with([
+                    'user:id,name,email,mobile',
+                    'packersMoverLead:id,tracking_number,item_name,packers_mover_id',
+                    'packersMoverLead.packersMover',
+                ])
+                ->latest()
+                ->get();
+
+            if ($payments->isEmpty()) {
+                return Response::error(
+                    'No packers & movers payments found',
+                    404
+                );
+            }
+
+            return Response::success(
+                $payments,
+                'Packers & movers payments fetched successfully',
                 200
             );
 

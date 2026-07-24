@@ -64,10 +64,24 @@ button,
 }
 
 .header-area.style-1 {
-  backdrop-filter: blur(18px);
   /* background: rgba(255, 255, 255, .9); */
   border-bottom: 1px solid rgba(223, 232, 229, .86);
   box-shadow: 0 14px 38px rgba(16, 24, 32, .07);
+}
+
+/* backdrop-filter lives on this pseudo-element, not on .header-area.style-1
+   itself — putting it directly on the header creates a new containing block
+   for any position:fixed descendant (the mobile .main-menu slide-out panel
+   included), which shrinks that panel down to the header's own tiny height
+   instead of the full viewport. Isolating the blur here keeps the frosted
+   header look without breaking the mobile menu. */
+.header-area.style-1::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(18px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .header-area.style-1 .container-fluid {

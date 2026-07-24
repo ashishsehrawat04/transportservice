@@ -165,6 +165,52 @@
 </style>
 
 <main class="transport-home-content">
+    <section class="home-band" id="services">
+        <div class="container">
+            <div class="home-section-title text-center mb-5">
+                <span>What We Do</span>
+                <h2>One platform for shipment, storage &amp; relocation.</h2>
+                <p class="mx-auto">OneTrack brings city-to-city courier shipping, secure warehouse storage, and full-service packers &amp; movers under one account — pick a service, get an instant weight &amp; volume based price, and track your request from booking to delivery.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="service-tile h-100">
+                        <div class="tile-icon"><i class="bi bi-truck"></i></div>
+                        <h4>Shipment / Transport</h4>
+                        <p>Send items city-to-city on our route network. Add item weight and dimensions, get an instant route-based price, and track pickup, dispatch and delivery.</p>
+                        <a href="{{ route('shipment.add_item') }}" class="primary-btn1 btn-hover mt-3">
+                            Create Booking
+                            <span></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="service-tile h-100">
+                        <div class="tile-icon"><i class="bi bi-building"></i></div>
+                        <h4>Warehouse Storage</h4>
+                        <p>Store your goods safely with our partner warehouses. Billed per day per kg with a transparent minimum charge, and trackable right up to retrieval.</p>
+                        <a href="{{ route('warehouse.add_item') }}" class="primary-btn1 btn-hover mt-3">
+                            Store an Item
+                            <span></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="service-tile h-100">
+                        <div class="tile-icon"><i class="bi bi-box-seam"></i></div>
+                        <h4>Packers &amp; Movers</h4>
+                        <p>Full house or office relocation with packing support. Tell us your pickup &amp; drop address and distance — we take care of the move end-to-end.</p>
+                        <a href="{{ route('packers_movers.add_item') }}" class="primary-btn1 btn-hover mt-3">
+                            Book Your Move
+                            <span></span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="home-band">
         <div class="container">
             <div class="home-section-title text-center mb-5">

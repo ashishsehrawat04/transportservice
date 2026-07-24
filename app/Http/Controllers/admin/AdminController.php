@@ -20,12 +20,21 @@ use App\Models\WarehouseCartItem;
 use App\Models\WarehouseLead;
 use App\Models\WarehousePayment;
 use App\Models\WarehouseQuote;
+use App\Models\PackersMover;
+use App\Models\PackersMoverAddress;
+use App\Models\PackersMoverCartItem;
+use App\Models\PackersMoverLead;
+use App\Models\PackersMoverPayment;
+use App\Models\PackersMoverQuote;
 use App\Services\ShipmentInvoicePdfService;
 use App\Services\ShipmentPricingService;
 use App\Services\TransportQuotePdfService;
 use App\Services\WarehouseInvoicePdfService;
 use App\Services\WarehousePricingService;
 use App\Services\WarehouseQuotePdfService;
+use App\Services\PackersMoverInvoicePdfService;
+use App\Services\PackersMoverPricingService;
+use App\Services\PackersMoverQuotePdfService;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -33,7 +42,8 @@ class AdminController extends Controller
 {
     public function __construct(
         private ShipmentPricingService $pricingService,
-        private WarehousePricingService $warehousePricingService
+        private WarehousePricingService $warehousePricingService,
+        private PackersMoverPricingService $packersMoverPricingService
     ) {
     }
 
@@ -51,6 +61,7 @@ class AdminController extends Controller
         $monthlyLabels = [];
         $monthlyLeadCounts = [];
         $monthlyRevenue = [];
+        $monthlyWarehouseRevenue = [];
 
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
@@ -62,7 +73,15 @@ class AdminController extends Controller
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->sum('amount');
+            $monthlyWarehouseRevenue[] = (float) WarehousePayment::where('status', 'success')
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->sum('amount');
         }
+
+        $transportRevenue = (float) ShipmentPayment::where('status', 'success')->sum('amount');
+        $warehouseRevenue = (float) WarehousePayment::where('status', 'success')->sum('amount');
+        $packersMoverRevenue = (float) PackersMoverPayment::where('status', 'success')->sum('amount');
 
         $dashboard = [
             'totalUsers' => User::where('role', 'user')->count(),
@@ -75,8 +94,15 @@ class AdminController extends Controller
             'deliveredLeads' => (int) ($leadStatusCounts['delivered'] ?? 0),
             'paidLeads' => (int) ($paymentStatusCounts['paid'] ?? 0),
             'unpaidLeads' => (int) ($paymentStatusCounts['unpaid'] ?? 0),
-            'totalRevenue' => (float) ShipmentPayment::where('status', 'success')->sum('amount'),
+            'totalRevenue' => $transportRevenue,
             'todayRevenue' => (float) ShipmentPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+            'totalWarehouseLeads' => WarehouseLead::count(),
+            'warehouseRevenue' => $warehouseRevenue,
+            'todayWarehouseRevenue' => (float) WarehousePayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+            'totalPackersMoverLeads' => PackersMoverLead::count(),
+            'packersMoverRevenue' => $packersMoverRevenue,
+            'todayPackersMoverRevenue' => (float) PackersMoverPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+            'combinedRevenue' => $transportRevenue + $warehouseRevenue + $packersMoverRevenue,
         ];
 
 
@@ -96,7 +122,7 @@ class AdminController extends Controller
 
 
 
-        return view('admin.dashboard', compact('dashboard', 'recentLeads', 'recentPayments', 'recentUsers', 'monthlyLabels', 'monthlyLeadCounts', 'monthlyRevenue'));
+        return view('admin.dashboard', compact('dashboard', 'recentLeads', 'recentPayments', 'recentUsers', 'monthlyLabels', 'monthlyLeadCounts', 'monthlyRevenue', 'monthlyWarehouseRevenue'));
     }
 
     public function AdminUsers()
@@ -235,6 +261,67 @@ class AdminController extends Controller
         return redirect()->route('admin.warehouses')->with('error', 'Warehouse not found');
     }
 
+    public function AdminPackersMovers()
+    {
+        return view('admin.packers-mover.index');
+    }
+
+    public function AdminManagePackersMover($id = null)
+    {
+        $packersMover = $id ? PackersMover::find($id) : new PackersMover();
+
+        if ($id && !$packersMover) {
+            return redirect()->route('admin.packers_movers')->with('error', 'Packers & movers branch not found');
+        }
+
+        return view('admin.packers-mover.manage', compact('packersMover'));
+    }
+
+    public function AdminSavePackersMover(Request $request, $id = null)
+    {
+        $packersMover = $id ? PackersMover::find($id) : null;
+
+        if ($id && !$packersMover) {
+            return redirect()->route('admin.packers_movers')->with('error', 'Packers & movers branch not found');
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255',
+                        Rule::unique('packers_movers')->where(function ($query) use ($request) {
+                            return $query->where('city', $request->city);
+                        })->ignore($packersMover?->id),],
+            'city' => ['required', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:2000'],
+            'price_per_km_per_kg' => ['required', 'numeric', 'min:0'],
+            'min_charge' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $validated['is_active'] = $request->has('is_active') ? 1 : 0;
+
+        if ($packersMover) {
+            $packersMover->update($validated);
+            $message = 'Packers & movers branch updated successfully';
+        } else {
+            PackersMover::create($validated);
+            $message = 'Packers & movers branch added successfully';
+        }
+
+        return redirect()->route('admin.packers_movers')->with('success', $message);
+    }
+
+    public function AdminDeletePackersMover($id)
+    {
+        $packersMover = PackersMover::find($id);
+
+        if ($packersMover) {
+            $packersMover->delete();
+            return redirect()->route('admin.packers_movers')->with('success', 'Packers & movers branch deleted successfully');
+        }
+
+        return redirect()->route('admin.packers_movers')->with('error', 'Packers & movers branch not found');
+    }
+
     public function AdminEditUsers($slug)
     {
         $user = User::where('slug', $slug)->first();
@@ -366,17 +453,43 @@ class AdminController extends Controller
 
     public function AdminTransportLeads()
     {
-        return view('admin.transport-leads');
+        $statusCounts = TransportLead::selectRaw('admin_status, COUNT(*) as total')
+            ->groupBy('admin_status')
+            ->pluck('total', 'admin_status');
+
+        $stats = [
+            'total' => TransportLead::count(),
+            'pending' => (int) ($statusCounts['pending'] ?? 0) + (int) ($statusCounts['reviewed'] ?? 0),
+            'inProgress' => (int) ($statusCounts['approved'] ?? 0) + (int) ($statusCounts['dispatched'] ?? 0),
+            'delivered' => (int) ($statusCounts['delivered'] ?? 0),
+            'cancelled' => (int) ($statusCounts['cancelled'] ?? 0) + (int) ($statusCounts['rejected'] ?? 0),
+            'revenue' => (float) ShipmentPayment::where('status', 'success')->sum('amount'),
+        ];
+
+        return view('admin.transport-leads', compact('stats'));
     }
 
     public function AdminWarehouseLeads()
     {
-        return view('admin.warehouse.leads');
+        $statusCounts = WarehouseLead::selectRaw('admin_status, COUNT(*) as total')
+            ->groupBy('admin_status')
+            ->pluck('total', 'admin_status');
+
+        $stats = [
+            'total' => WarehouseLead::count(),
+            'pending' => (int) ($statusCounts['pending'] ?? 0) + (int) ($statusCounts['reviewed'] ?? 0),
+            'inProgress' => (int) ($statusCounts['approved'] ?? 0) + (int) ($statusCounts['dispatched'] ?? 0),
+            'delivered' => (int) ($statusCounts['delivered'] ?? 0),
+            'cancelled' => (int) ($statusCounts['cancelled'] ?? 0) + (int) ($statusCounts['rejected'] ?? 0),
+            'revenue' => (float) WarehousePayment::where('status', 'success')->sum('amount'),
+        ];
+
+        return view('admin.warehouse.leads', compact('stats'));
     }
 
     public function AdminManageWarehouseLead($id = null)
     {
-        $warehouseLead = $id ? WarehouseLead::find($id) : new WarehouseLead();
+        $warehouseLead = $id ? WarehouseLead::with(['user', 'warehouse', 'latestPayment'])->find($id) : new WarehouseLead();
 
         if ($id && !$warehouseLead) {
             return redirect()->route('admin.warehouse_leads')->with('error', 'Warehouse lead not found');
@@ -388,7 +501,18 @@ class AdminController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.warehouse.manage-lead', compact('warehouseLead', 'users', 'warehouses'));
+        // Read-only summary (customer, pickup info, per-item breakdown) for
+        // the top of the edit page — built from the same quote snapshot the
+        // quote-show page uses, so it still works after the lead's own cart
+        // items get cleared out on status change.
+        $quote = null;
+        $warehouseAddress = null;
+        if ($warehouseLead->exists) {
+            $quote = WarehouseQuote::syncFromLead($warehouseLead);
+            $warehouseAddress = $this->warehouseAddressForQuote($quote);
+        }
+
+        return view('admin.warehouse.manage-lead', compact('warehouseLead', 'users', 'warehouses', 'quote', 'warehouseAddress'));
     }
 
     public function AdminSaveWarehouseLead(Request $request, $id = null)
@@ -548,6 +672,209 @@ class AdminController extends Controller
         ]);
     }
 
+    public function AdminPackersMoverLeads()
+    {
+        $statusCounts = PackersMoverLead::selectRaw('admin_status, COUNT(*) as total')
+            ->groupBy('admin_status')
+            ->pluck('total', 'admin_status');
+
+        $stats = [
+            'total' => PackersMoverLead::count(),
+            'pending' => (int) ($statusCounts['pending'] ?? 0) + (int) ($statusCounts['reviewed'] ?? 0),
+            'inProgress' => (int) ($statusCounts['approved'] ?? 0) + (int) ($statusCounts['dispatched'] ?? 0),
+            'delivered' => (int) ($statusCounts['delivered'] ?? 0),
+            'cancelled' => (int) ($statusCounts['cancelled'] ?? 0) + (int) ($statusCounts['rejected'] ?? 0),
+            'revenue' => (float) PackersMoverPayment::where('status', 'success')->sum('amount'),
+        ];
+
+        return view('admin.packers-mover.leads', compact('stats'));
+    }
+
+    public function AdminManagePackersMoverLead($id = null)
+    {
+        $packersMoverLead = $id ? PackersMoverLead::with(['user', 'packersMover', 'latestPayment'])->find($id) : new PackersMoverLead();
+
+        if ($id && !$packersMoverLead) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+        }
+
+        $users = User::orderBy('name')->get();
+        $packersMovers = PackersMover::where('is_active', true)
+            ->orderBy('city')
+            ->orderBy('name')
+            ->get();
+
+        // Read-only summary (customer, pickup info, per-item breakdown) for
+        // the top of the edit page — built from the same quote snapshot the
+        // quote-show page uses, so it still works after the lead's own cart
+        // items get cleared out on status change.
+        $quote = null;
+        $packersMoverAddress = null;
+        if ($packersMoverLead->exists) {
+            $quote = PackersMoverQuote::syncFromLead($packersMoverLead);
+            $packersMoverAddress = $this->packersMoverAddressForQuote($quote);
+        }
+
+        return view('admin.packers-mover.manage-lead', compact('packersMoverLead', 'users', 'packersMovers', 'quote', 'packersMoverAddress'));
+    }
+
+    public function AdminSavePackersMoverLead(Request $request, $id = null)
+    {
+        $packersMoverLead = $id ? PackersMoverLead::find($id) : null;
+
+        if ($id && !$packersMoverLead) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+        }
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'item_name' => ['required', 'string', 'max:255'],
+            'item_type' => ['nullable', 'string', 'max:255'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'length_cm' => ['nullable', 'numeric', 'min:0'],
+            'width_cm' => ['nullable', 'numeric', 'min:0'],
+            'height_cm' => ['nullable', 'numeric', 'min:0'],
+            'weight_kg' => ['required', 'numeric', 'min:0.01'],
+            'packers_mover_id' => ['required', 'exists:packers_movers,id'],
+            'distance_km' => ['required', 'numeric', 'min:0.1'],
+            'tax_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
+            'requested_pickup_date' => ['required', 'date'],
+            'admin_status' => ['required', Rule::in(['pending', 'reviewed', 'approved', 'dispatched', 'delivered', 'cancelled', 'rejected'])],
+            'admin_description' => ['nullable', 'string'],
+            'assigned_to' => ['nullable', 'exists:users,id'],
+            'user_status' => ['required', Rule::in(['pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'])],
+            'payment_status' => ['required', Rule::in(['unpaid', 'partial', 'paid', 'refunded'])],
+            'payment_method' => ['nullable', Rule::in(['cash', 'online', 'upi', 'bank_transfer'])],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
+            'special_instructions' => ['nullable', 'string'],
+        ]);
+
+        $packersMover = PackersMover::where('is_active', true)->find($validated['packers_mover_id']);
+
+        if (!$packersMover) {
+            return back()->withInput()->with('error', 'Please select an active packers & movers branch first');
+        }
+
+        $breakdown = $this->packersMoverPricingService->calculateFromDimensions($validated, $packersMover);
+        // This lead is a single-item move request on its own, so the
+        // branch's min_charge floor applies directly to its total here.
+        $breakdown['total_payment'] = $this->packersMoverPricingService->floorShipmentTotal($breakdown['total_payment'], $packersMover);
+        $leadPricing = array_intersect_key($breakdown, array_flip([
+            'volume_cft', 'calculation_type', 'base_price',
+            'weight_charge', 'volume_charge',
+            'multiplier_applied', 'subtotal', 'tax_amount', 'discount_amount',
+            'total_payment',
+        ]));
+        $validated = array_merge($validated, $leadPricing);
+
+        if (!$packersMoverLead) {
+            $validated['tracking_number'] = $this->generatePackersMoverTrackingNumber();
+        }
+
+        $oldPaymentStatus = $packersMoverLead?->payment_status;
+        $oldTransactionId = $packersMoverLead?->transaction_id;
+
+        if ($packersMoverLead) {
+            $packersMoverLead->update($validated);
+            $message = 'Packers & movers lead updated successfully';
+        } else {
+            $packersMoverLead = PackersMoverLead::create($validated);
+            $message = 'Packers & movers lead added successfully';
+        }
+
+        $this->recordPackersMoverLeadPaymentIfNeeded($packersMoverLead->fresh(), $oldPaymentStatus, $oldTransactionId);
+        PackersMoverQuote::syncFromLead($packersMoverLead->fresh(['user', 'packersMover', 'latestPayment']));
+
+        // Once admin moves the lead past pending/reviewed, the cart items that
+        // were awaiting this decision are done — drop them so they stop
+        // showing up in the customer's moving cart.
+        if (!in_array($packersMoverLead->admin_status, ['pending', 'reviewed'])) {
+            PackersMoverCartItem::where('packers_mover_lead_id', $packersMoverLead->id)->delete();
+        }
+
+        return redirect()->route('admin.packers_mover_leads')->with('success', $message);
+    }
+
+    public function AdminDeletePackersMoverLead($id)
+    {
+        $packersMoverLead = PackersMoverLead::find($id);
+
+        if ($packersMoverLead) {
+            $packersMoverLead->delete();
+            return redirect()->route('admin.packers_mover_leads')->with('success', 'Packers & movers lead deleted successfully');
+        }
+
+        return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+    }
+
+    public function AdminViewPackersMoverLeadQuote($id)
+    {
+        $packersMoverLead = PackersMoverLead::with(['user', 'packersMover', 'latestPayment'])->find($id);
+
+        if (!$packersMoverLead) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+        }
+
+        $quote = PackersMoverQuote::syncFromLead($packersMoverLead);
+        $quote->load('user');
+        $packersMoverAddress = $this->packersMoverAddressForQuote($quote);
+
+        return view('admin.packers-mover.quote-show', compact('quote', 'packersMoverAddress'));
+    }
+
+    public function AdminDownloadPackersMoverLeadQuote($id, PackersMoverQuotePdfService $quotePdfService)
+    {
+        $packersMoverLead = PackersMoverLead::with(['user', 'packersMover', 'latestPayment'])->find($id);
+
+        if (!$packersMoverLead) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+        }
+
+        $quote = PackersMoverQuote::syncFromLead($packersMoverLead);
+        $quote->load('user');
+        $fileName = ($quote->invoice_number ?: $quote->tracking_number ?: 'packers-mover-quote-' . $quote->id);
+
+        $result = $quotePdfService->output($quote, $this->packersMoverAddressForQuote($quote));
+
+        if (is_array($result) && isset($result['content'], $result['mimetype'])) {
+            $content = $result['content'];
+            $mimetype = $result['mimetype'];
+        } else {
+            $content = is_string($result) ? $result : '';
+            $mimetype = 'application/pdf';
+        }
+
+        $ext = $mimetype === 'text/html' ? 'html' : 'pdf';
+
+        return response($content, 200, [
+            'Content-Type' => $mimetype,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '.' . $ext . '"',
+        ]);
+    }
+
+    public function AdminDownloadPackersMoverLeadInvoice($id, PackersMoverInvoicePdfService $invoicePdfService)
+    {
+        $packersMoverLead = PackersMoverLead::with(['user', 'packersMover', 'latestPayment'])->find($id);
+
+        if (!$packersMoverLead) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Packers & movers lead not found');
+        }
+
+        if (!$this->packersMoverInvoiceCanBeDownloaded($packersMoverLead)) {
+            return redirect()->route('admin.packers_mover_leads')->with('error', 'Mark move as delivered before downloading invoice.');
+        }
+
+        $payment = $packersMoverLead->latestPayment ?: $this->createPackersMoverInvoicePayment($packersMoverLead);
+        PackersMoverQuote::syncFromLead($packersMoverLead, $payment->invoice_number);
+        $fileName = ($payment->invoice_number ?: $packersMoverLead->tracking_number) . '.pdf';
+
+        return response($invoicePdfService->output($packersMoverLead, $payment), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        ]);
+    }
+
     public function AdminPayments()
     {
         $paymentStatusCounts = ShipmentPayment::selectRaw('status, COUNT(*) as total')
@@ -578,7 +905,21 @@ class AdminController extends Controller
             'todayRevenue' => (float) WarehousePayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
         ];
 
-        return view('admin.payments', compact('paymentStats', 'warehousePaymentStats'));
+        $packersMoverPaymentStatusCounts = PackersMoverPayment::selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $packersMoverPaymentStats = [
+            'totalPayments' => PackersMoverPayment::count(),
+            'successPayments' => (int) ($packersMoverPaymentStatusCounts['success'] ?? 0),
+            'pendingPayments' => (int) ($packersMoverPaymentStatusCounts['pending'] ?? 0),
+            'refundedPayments' => (int) ($packersMoverPaymentStatusCounts['refunded'] ?? 0),
+            'failedPayments' => (int) ($packersMoverPaymentStatusCounts['failed'] ?? 0),
+            'totalRevenue' => (float) PackersMoverPayment::where('status', 'success')->sum('amount'),
+            'todayRevenue' => (float) PackersMoverPayment::where('status', 'success')->whereDate('created_at', today())->sum('amount'),
+        ];
+
+        return view('admin.payments', compact('paymentStats', 'warehousePaymentStats', 'packersMoverPaymentStats'));
     }
 
     public function AdminTransportQuotes()
@@ -629,7 +970,7 @@ class AdminController extends Controller
 
     public function AdminManageTransportLead($id = null)
     {
-        $transportLead = $id ? TransportLead::find($id) : new TransportLead();
+        $transportLead = $id ? TransportLead::with(['user', 'cityRoute', 'latestPayment'])->find($id) : new TransportLead();
 
         if ($id && !$transportLead) {
             return redirect()->route('admin.transport_leads')->with('error', 'Transport lead not found');
@@ -642,7 +983,18 @@ class AdminController extends Controller
             ->get();
         $quoteMode = request()->boolean('quote');
 
-        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cityRoutes', 'quoteMode'));
+        // Read-only summary (customer, pickup info, per-item breakdown) for
+        // the top of the edit page — built from the same quote snapshot the
+        // quote-show page uses, so it still works after the lead's own cart
+        // items get cleared out on status change.
+        $quote = null;
+        $transportAddress = null;
+        if ($transportLead->exists) {
+            $quote = TransportQuote::syncFromLead($transportLead);
+            $transportAddress = $this->transportAddressForQuote($quote);
+        }
+
+        return view('admin.manage-transport-lead', compact('transportLead', 'users', 'cityRoutes', 'quoteMode', 'quote', 'transportAddress'));
     }
 
     public function AdminSaveTransportLead(Request $request, $id = null)
@@ -989,6 +1341,80 @@ class AdminController extends Controller
         }
 
         return WarehouseAddress::where('user_id', $quote->user_id)
+            ->latest()
+            ->first();
+    }
+
+    private function generatePackersMoverTrackingNumber(): string
+    {
+        do {
+            $trackingNumber = 'PM-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (PackersMoverLead::where('tracking_number', $trackingNumber)->exists());
+
+        return $trackingNumber;
+    }
+
+    private function recordPackersMoverLeadPaymentIfNeeded(PackersMoverLead $lead, ?string $oldPaymentStatus, ?string $oldTransactionId): void
+    {
+        if (!in_array($lead->payment_status, ['partial', 'paid', 'refunded'])) {
+            return;
+        }
+
+        $paymentChanged = $oldPaymentStatus !== $lead->payment_status;
+        $transactionChanged = $lead->transaction_id && $oldTransactionId !== $lead->transaction_id;
+
+        if (!$paymentChanged && !$transactionChanged) {
+            return;
+        }
+
+        $this->createPackersMoverInvoicePayment($lead);
+    }
+
+    private function createPackersMoverInvoicePayment(PackersMoverLead $lead): PackersMoverPayment
+    {
+        $payment = PackersMoverPayment::create([
+            'invoice_number' => $this->generatePackersMoverInvoiceNumber(),
+            'user_id' => $lead->user_id,
+            'packers_mover_lead_id' => $lead->id,
+            'amount' => $lead->total_payment,
+            'method' => $lead->payment_method ?: 'cash',
+            'status' => match ($lead->payment_status) {
+                'paid' => 'success',
+                'refunded' => 'refunded',
+                default => 'pending',
+            },
+            'transaction_id' => $lead->transaction_id,
+            'notes' => 'Payment status updated from packers & movers lead admin panel.',
+        ]);
+
+        PackersMoverQuote::syncFromLead($lead, $payment->invoice_number);
+
+        return $payment;
+    }
+
+    private function packersMoverInvoiceCanBeDownloaded(PackersMoverLead $lead): bool
+    {
+        return $lead->admin_status === 'delivered';
+    }
+
+    private function generatePackersMoverInvoiceNumber(): string
+    {
+        do {
+            $invoiceNumber = 'PMINV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        } while (PackersMoverPayment::where('invoice_number', $invoiceNumber)->exists());
+
+        return $invoiceNumber;
+    }
+
+    private function packersMoverAddressForQuote(PackersMoverQuote $quote): ?object
+    {
+        $snapshot = $quote->quote_data['packers_mover_address'] ?? null;
+
+        if (is_array($snapshot)) {
+            return (object) $snapshot;
+        }
+
+        return PackersMoverAddress::where('user_id', $quote->user_id)
             ->latest()
             ->first();
     }
