@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\CityRoute;
+use App\Models\PricingSetting;
 use App\Models\TransportAuthSetting;
 use App\Models\TransportLead;
 use App\Models\TransportQuote;
@@ -822,6 +823,26 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.auth_settings')->with('success', 'Auth settings updated successfully');
+    }
+
+    public function AdminPricingSettings()
+    {
+        $settings = PricingSetting::current();
+
+        return view('admin.pricing-settings', compact('settings'));
+    }
+
+    public function AdminSavePricingSettings(Request $request)
+    {
+        $request->validate([
+            'gst_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        PricingSetting::current()->update([
+            'gst_percent' => $request->gst_percent,
+        ]);
+
+        return redirect()->route('admin.pricing_settings')->with('success', 'Pricing settings updated successfully');
     }
 
     private function generateTrackingNumber(): string

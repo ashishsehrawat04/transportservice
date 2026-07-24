@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\web;
 
 use App\Http\Controllers\Controller;
+use App\Models\PricingSetting;
 use App\Models\Warehouse;
 use App\Models\WarehouseAddress;
 use App\Models\WarehouseCartItem;
@@ -674,6 +675,12 @@ class WarehouseController extends Controller
         $calculationTypes = $breakdowns->pluck('calculation_type')->filter()->unique();
         $minCharge = round((float) $warehouse->min_charge, 2);
         $itemsTotal = $breakdowns->sum('total_payment');
+        $discountAmount = $breakdowns->sum('discount_amount');
+
+        // min_charge is a request-level floor applied once to the
+        // combined item total, not per individual item.
+        $billableSubtotal = $this->pricingService->floorShipmentTotal($itemsTotal, $warehouse);
+        $taxAmount = round($billableSubtotal * PricingSetting::gstPercent() / 100, 2);
 
         return [
             'calculation_type' => $calculationTypes->count() === 1 ? $calculationTypes->first() : 'mixed',
@@ -681,12 +688,10 @@ class WarehouseController extends Controller
             'weight_charge' => $breakdowns->sum('weight_charge'),
             'volume_charge' => $breakdowns->sum('volume_charge'),
             'multiplier_applied' => 1,
-            'subtotal' => $itemsTotal,
-            'tax_amount' => $breakdowns->sum('tax_amount'),
-            'discount_amount' => $breakdowns->sum('discount_amount'),
-            // min_charge is a request-level floor applied once to the
-            // combined item total, not per individual item.
-            'total_payment' => $this->pricingService->floorShipmentTotal($itemsTotal, $warehouse),
+            'subtotal' => $billableSubtotal,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'total_payment' => max(0.0, round($billableSubtotal + $taxAmount - $discountAmount, 2)),
         ];
     }
 

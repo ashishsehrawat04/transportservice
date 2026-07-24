@@ -21,7 +21,7 @@
         'cancelled', 'rejected' => -1,
         default => 0,
     };
-    $hasDiscount = (float) optional($lead)->discount_amount > 0;
+    $hasPriceBreakdown = (float) optional($lead)->discount_amount > 0 || (float) optional($lead)->tax_amount > 0;
     $stepCount = count($steps);
     $stepperPercent = $current > 0 ? round(($current / ($stepCount - 1)) * 100, 2) : 0;
     // The connector line spans the middle 76% of the stepper (12% inset on each side).
@@ -634,7 +634,7 @@
                         </div>
 
                         <div class="track-summary">
-                            @if($hasDiscount)
+                            @if($hasPriceBreakdown)
                                 <div class="track-summary-line">
                                     <span>Subtotal</span>
                                     <strong>{{ number_format($lead->subtotal, 2) }}</strong>

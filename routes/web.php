@@ -121,4 +121,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
     Route::get('/auth-settings', [AdminController::class, 'AdminAuthSettings'])->name('admin.auth_settings');
     Route::post('/auth-settings', [AdminController::class, 'AdminSaveAuthSettings'])->name('admin.save.auth_settings');
 
+    Route::get('/pricing-settings', [AdminController::class, 'AdminPricingSettings'])->name('admin.pricing_settings');
+    Route::post('/pricing-settings', [AdminController::class, 'AdminSavePricingSettings'])->name('admin.save.pricing_settings');
+
 });

@@ -414,6 +414,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item {{ request()->routeIs('admin.pricing_settings') ? 'active' : '' }}">
+                    <a href="{{ route('admin.pricing_settings') }} ">
+                    <i class="fas fa-percentage"></i>
+                    <p>Pricing Settings</p>
+                    </a>
+                </li>
+
             </ul>
           </div>
         </div>

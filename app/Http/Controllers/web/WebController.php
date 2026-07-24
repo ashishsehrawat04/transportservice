@@ -4,6 +4,7 @@ namespace App\Http\Controllers\web;
 
 use App\Http\Controllers\Controller;
 use App\Models\CityRoute;
+use App\Models\PricingSetting;
 use App\Models\ShipmentPayment;
 use App\Models\TransportCartItem;
 use App\Models\TransportAddress;
@@ -269,6 +270,7 @@ class WebController extends Controller
             'shipmentCartTotal' => $shipment['cartTotal'],
             'warehouseCartItems' => $warehouse['cartItems'],
             'warehouseCartTotal' => $warehouse['cartTotal'],
+            'activeCartTab' => request()->routeIs('warehouse.cart') ? 'warehouse' : 'shipment',
         ]);
     }
 
@@ -781,6 +783,12 @@ class WebController extends Controller
         $calculationTypes = $breakdowns->pluck('calculation_type')->filter()->unique();
         $minCharge = round((float) $route->min_charge, 2);
         $itemsTotal = $breakdowns->sum('total_payment');
+        $discountAmount = $breakdowns->sum('discount_amount');
+
+        // min_charge is a shipment-level floor applied once to the
+        // combined item total, not per individual item.
+        $billableSubtotal = $this->pricingService->floorShipmentTotal($itemsTotal, $route);
+        $taxAmount = round($billableSubtotal * PricingSetting::gstPercent() / 100, 2);
 
         return [
             'calculation_type' => $calculationTypes->count() === 1 ? $calculationTypes->first() : 'mixed',
@@ -789,12 +797,10 @@ class WebController extends Controller
             'volume_charge' => $breakdowns->sum('volume_charge'),
             'distance_charge' => $breakdowns->sum('distance_charge'),
             'multiplier_applied' => 1,
-            'subtotal' => $itemsTotal,
-            'tax_amount' => $breakdowns->sum('tax_amount'),
-            'discount_amount' => $breakdowns->sum('discount_amount'),
-            // min_charge is a shipment-level floor applied once to the
-            // combined item total, not per individual item.
-            'total_payment' => $this->pricingService->floorShipmentTotal($itemsTotal, $route),
+            'subtotal' => $billableSubtotal,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'total_payment' => max(0.0, round($billableSubtotal + $taxAmount - $discountAmount, 2)),
         ];
     }
 

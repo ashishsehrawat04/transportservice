@@ -731,6 +731,58 @@
         .cart-route-row { align-items: flex-start; flex-direction: column; }
         .cart-meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-left: 20px; margin-right: 20px; }
     }
+
+    .cart-mode-switch {
+        display: inline-flex;
+        gap: 6px;
+        background: var(--ot-panel);
+        border: 1px solid var(--ot-line);
+        border-radius: 12px;
+        padding: 6px;
+        margin-bottom: 28px;
+        box-shadow: var(--ot-shadow-sm);
+    }
+
+    .cart-mode-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--ot-display);
+        font-size: 13.5px;
+        font-weight: 600;
+        letter-spacing: .02em;
+        color: var(--ot-muted);
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 18px;
+        cursor: pointer;
+        transition: background .15s ease, color .15s ease;
+    }
+
+    .cart-mode-btn svg { width: 15px; height: 15px; stroke: currentColor; }
+
+    .cart-mode-btn:hover { color: var(--ot-ink); }
+
+    .cart-mode-btn.active {
+        background: linear-gradient(135deg, var(--ot-green), var(--ot-green-dark));
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(14, 143, 122, .25);
+    }
+
+    .cart-mode-count {
+        font-family: var(--ot-mono);
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(0, 0, 0, .08);
+        border-radius: 999px;
+        padding: 1px 8px;
+    }
+
+    .cart-mode-btn.active .cart-mode-count { background: rgba(255, 255, 255, .25); }
+
+    .cart-section-block[data-cart-panel] { display: none; }
+    .cart-section-block[data-cart-panel].active { display: block; }
 </style>
 
 <svg style="position:absolute; width:0; height:0; overflow:hidden" aria-hidden="true">
@@ -808,11 +860,25 @@
                 </div>
             </div>
 
-            <div class="cart-section-block">
+            @php $activeCartTab = $activeCartTab ?? 'shipment'; @endphp
+            <div class="cart-mode-switch" role="tablist">
+                <button type="button" class="cart-mode-btn {{ $activeCartTab === 'shipment' ? 'active' : '' }}" data-cart-tab="shipment" role="tab" aria-selected="{{ $activeCartTab === 'shipment' ? 'true' : 'false' }}">
+                    <svg viewBox="0 0 24 24"><use href="#ico-pin"></use></svg>
+                    Transport
+                    @if($totalShipmentItems > 0)<span class="cart-mode-count">{{ $totalShipmentItems }}</span>@endif
+                </button>
+                <button type="button" class="cart-mode-btn {{ $activeCartTab === 'warehouse' ? 'active' : '' }}" data-cart-tab="warehouse" role="tab" aria-selected="{{ $activeCartTab === 'warehouse' ? 'true' : 'false' }}">
+                    <svg viewBox="0 0 24 24"><use href="#ico-warehouse"></use></svg>
+                    Warehouse
+                    @if($totalWarehouseItems > 0)<span class="cart-mode-count">{{ $totalWarehouseItems }}</span>@endif
+                </button>
+            </div>
+
+            <div class="cart-section-block {{ $activeCartTab === 'shipment' ? 'active' : '' }}" data-cart-panel="shipment">
                 @include('web.partials.cart-section', ['items' => $shipmentCartItems, 'total' => $shipmentCartTotal, 'mode' => 'shipment'])
             </div>
 
-            <div class="cart-section-block">
+            <div class="cart-section-block {{ $activeCartTab === 'warehouse' ? 'active' : '' }}" data-cart-panel="warehouse">
                 @include('web.partials.cart-section', ['items' => $warehouseCartItems, 'total' => $warehouseCartTotal, 'mode' => 'warehouse'])
             </div>
         @endif
@@ -828,6 +894,29 @@
             setTimeout(function () {
                 card.classList.add('in-view');
             }, delay);
+        });
+    })();
+
+    (function () {
+        var buttons = document.querySelectorAll('.cart-mode-btn');
+        var panels = document.querySelectorAll('[data-cart-panel]');
+
+        if (!buttons.length) return;
+
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var tab = btn.getAttribute('data-cart-tab');
+
+                buttons.forEach(function (b) {
+                    var isActive = b === btn;
+                    b.classList.toggle('active', isActive);
+                    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                panels.forEach(function (panel) {
+                    panel.classList.toggle('active', panel.getAttribute('data-cart-panel') === tab);
+                });
+            });
         });
     })();
 </script>
